@@ -49,6 +49,17 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-15 — seja 5
+**Fix: animacija vrtenja kolesa (SpinFlow) ni delovala.** Vzrok: rotacija je bila na SVG `transform`
+**atributu** (`<g transform="rotate(...)">`) — CSS `transition` animira samo CSS *property-je*, NE SVG
+atributov, zato je kolo preskočilo brez animacije. Popravek: rotacijo zdaj nosi **wrapper `<div>`
+okoli SVG-ja** prek CSS `transform: rotate(Ndeg)` + `transition: transform 4.4s cubic-bezier(...)`
+(zunanji obroč + pesto sta simetrična kroga → vrtenje neopazno; kazalec in ZAVRTI gumb sta zunaj
+vrtečega diva). Mehanika preverjena: klik → div dobi `rotate(2127deg)` (5 obratov + pristanek na
+"Brezplačna kava") → po 4.4s preklop na "Zadetek". Opomba: preview brskalnik globalno onemogoča CSS
+prehode (tudi navaden div tam ne animira), zato vizualne animacije ni mogoče potrdit v orodju — dela
+pa v pravem brskalniku.
+
 ### 2026-06-14 — seja 4
 Implementiran **Spin Page** design (SpinFlow.dc.html). Nova komponenta `app/components/SpinFlow.tsx` —
 5-koračni flow: 🎡 kolo (6 polj, rigged na "Brezplačna kava") → 🎉 zadetek → prijava (**Google ALI

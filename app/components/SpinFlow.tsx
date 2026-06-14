@@ -116,14 +116,22 @@ export default function SpinFlow({
       );
     }
     return (
-      <svg width="286" height="286" viewBox="0 0 200 200" style={{ display: "block", filter: "drop-shadow(0 10px 24px rgba(43,29,23,0.16))" }}>
-        <g transform={`rotate(${rotation} ${cx} ${cy})`} style={{ transition: "transform 4.2s cubic-bezier(0.16,0.7,0.18,1)", transformOrigin: `${cx}px ${cy}px` }}>
-          {paths}
-          {labels}
-        </g>
-        <circle cx={cx} cy={cy} r={r + 2} fill="none" stroke="#2B1D17" strokeWidth={4} />
-        <circle cx={cx} cy={cy} r={27} fill="#2B1D17" stroke="#FFFCF6" strokeWidth={3} />
-      </svg>
+      <div
+        style={{
+          transform: `rotate(${rotation}deg)`,
+          transition: "transform 4.4s cubic-bezier(0.16,0.7,0.18,1)",
+          willChange: "transform",
+        }}
+      >
+        <svg width="286" height="286" viewBox="0 0 200 200" style={{ display: "block", filter: "drop-shadow(0 10px 24px rgba(43,29,23,0.16))" }}>
+          <g>
+            {paths}
+            {labels}
+          </g>
+          <circle cx={cx} cy={cy} r={r + 2} fill="none" stroke="#2B1D17" strokeWidth={4} />
+          <circle cx={cx} cy={cy} r={27} fill="#2B1D17" stroke="#FFFCF6" strokeWidth={3} />
+        </svg>
+      </div>
     );
   })();
 

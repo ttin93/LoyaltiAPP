@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon, FakeQr } from "@/app/components/icons";
+import { createBrowserSupabase } from "@/lib/supabase/ssrClient";
 
 const SEGS = ["Brezplačna kava", "−10 %", "+30 točk", "Piškot gratis", "−15 %", "Sirup gratis"];
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -30,14 +31,14 @@ export default function SpinFlow({
   brandColor?: string;
   tagline?: string;
 }) {
-  const [step, setStep] = useState<"wheel" | "won" | "register" | "otp" | "coupon">("wheel");
+  const [step, setStep] = useState<"wheel" | "won" | "register" | "coupon">("wheel");
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
   const [method, setMethod] = useState<"phone" | "google">("phone");
   const [couponCode, setCouponCode] = useState("");
   const [busy, setBusy] = useState(false);
+  const [gErr, setGErr] = useState("");
 
   function spin() {
     if (spinning || step !== "wheel") return;
@@ -65,31 +66,68 @@ export default function SpinFlow({
     } catch {
       /* best-effort */
     } finally {
-      // podeli kupon (lokalno — pobere ga glavna stran /p/[code])
+      // kupon dobrodošlice v denarnico — samo 1× na napravo (strežnik dedupe po telefonu/emailu)
       const ck = `loyalty:${code}:coupons`;
-      let coupons: { id: string; name: string }[] = [];
-      try {
-        coupons = JSON.parse(localStorage.getItem(ck) || "[]");
-      } catch {}
-      coupons.push({ id: "c" + coupons.length, name: "Brezplačna kava" });
-      localStorage.setItem(ck, JSON.stringify(coupons));
+      const already = localStorage.getItem(`loyalty:${code}:welcomeClaimed`) === "1";
+      if (!already) {
+        let coupons: { id: string; name: string }[] = [];
+        try {
+          coupons = JSON.parse(localStorage.getItem(ck) || "[]");
+        } catch {}
+        coupons.push({ id: "c" + coupons.length, name: "Brezplačna kava" });
+        localStorage.setItem(ck, JSON.stringify(coupons));
+        localStorage.setItem(`loyalty:${code}:welcomeClaimed`, "1");
+      }
       setCouponCode(`${code.slice(0, 4).toUpperCase()}-${Math.random().toString(16).slice(2, 6).toUpperCase()}`);
       setBusy(false);
       setStep("coupon");
     }
   }
 
-  function pressKey(d: string) {
-    if (d === "del") return setOtp((o) => o.slice(0, -1));
-    if (d === "ok") {
-      if (otp.length === 4) doRegister({ phone: "+386 " + phone });
-      return;
+  // Google: pravi OAuth prek Supabase (brezplačen, neomejen). Preusmeri na Google in nazaj.
+  async function googleSignIn() {
+    setGErr("");
+    setBusy(true);
+    try {
+      const sb = createBrowserSupabase();
+      localStorage.setItem(`loyalty:${code}:pendingGoogle`, "1");
+      const { error } = await sb.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/p/${code}/spin?gwin=1` },
+      });
+      if (error) throw error;
+      // sicer brskalnik preusmeri na Google → vrne na /spin?gwin=1
+    } catch {
+      localStorage.removeItem(`loyalty:${code}:pendingGoogle`);
+      setBusy(false);
+      setGErr("Google prijava še ni nastavljena. Uporabi telefonsko.");
     }
-    if (otp.length >= 4) return;
-    const next = otp + d;
-    setOtp(next);
-    if (next.length === 4) setTimeout(() => doRegister({ phone: "+386 " + phone }), 480);
   }
+
+  // vrnitev z Googla: vzpostavi sejo → registriraj po emailu → kupon
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const pending = localStorage.getItem(`loyalty:${code}:pendingGoogle`) === "1";
+    if (url.searchParams.get("gwin") !== "1" && !pending) return;
+    (async () => {
+      try {
+        const sb = createBrowserSupabase();
+        const { data } = await sb.auth.getSession();
+        const email = data.session?.user?.email;
+        if (!email) return;
+        localStorage.removeItem(`loyalty:${code}:pendingGoogle`);
+        url.searchParams.delete("gwin");
+        window.history.replaceState({}, "", url.pathname + (url.search || ""));
+        setMethod("google");
+        setStep("won");
+        await doRegister({ email });
+      } catch {
+        localStorage.removeItem(`loyalty:${code}:pendingGoogle`);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const wheel = (() => {
     const cx = 100, cy = 100, r = 92;
@@ -200,45 +238,19 @@ export default function SpinFlow({
                 <div className="font-display text-[24px] font-extrabold leading-[1.1]">Skoraj tvoje ☕</div>
                 <div className="text-[14.5px] leading-snug text-[#5C4C3E]">Prijavi se, da shranimo tvoj kupon in ti pošljemo nagrado.</div>
               </div>
-              <button onClick={() => { setMethod("google"); doRegister({ email: `gost-${Math.random().toString(36).slice(2, 8)}@gmail.com` }); }} disabled={busy} className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-[14px] border-[1.5px] border-[#DDD2C0] bg-white text-[15px] font-semibold text-[#2B1D17] disabled:opacity-50">
+              <button onClick={googleSignIn} disabled={busy} className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-[14px] border-[1.5px] border-[#DDD2C0] bg-white text-[15px] font-semibold text-[#2B1D17] disabled:opacity-50">
                 <GoogleLogo /> Nadaljuj z Googlom
               </button>
+              {gErr && <div className="-mt-1.5 text-center text-[12.5px] font-medium text-[#C8512B]">{gErr}</div>}
               <div className="flex items-center gap-3"><div className="h-px flex-1 bg-[#E6DCC9]" /><span className="text-[12.5px] text-[#A6967F]">ali s telefonsko</span><div className="h-px flex-1 bg-[#E6DCC9]" /></div>
               <div className="flex flex-col gap-2.5">
                 <div className="flex h-[52px] items-center overflow-hidden rounded-[14px] border-[1.5px] border-[#2B1D17] bg-white">
                   <div className="flex h-full items-center bg-[#F1E7D2] px-3.5 text-[15px] font-semibold text-[#5C4C3E]">🇸🇮 +386</div>
                   <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="31 204 412" className="h-full min-w-0 flex-1 bg-transparent px-3.5 text-[17px] font-semibold text-[#2B1D17] outline-none" />
                 </div>
-                <button onClick={() => phone.trim() && setStep("otp")} className="h-[52px] w-full rounded-[14px] text-[15px] font-bold text-[#2B1D17]" style={{ background: "var(--brand)" }}>Pošlji kodo na telefon</button>
+                <button onClick={() => { if (phone.trim()) { setMethod("phone"); doRegister({ phone: "+386 " + phone.trim() }); } }} disabled={busy} className="h-[52px] w-full rounded-[14px] text-[15px] font-bold text-[#2B1D17] disabled:opacity-60" style={{ background: "var(--brand)" }}>Prevzemi nagrado</button>
               </div>
               <div className="text-center text-[12px] leading-snug text-[#A6967F]">S prijavo se strinjaš s pogoji. Brez gesla, brez spama.</div>
-            </div>
-          )}
-
-          {/* OTP */}
-          {step === "otp" && (
-            <div className="flex flex-col items-center gap-4">
-              <button onClick={() => setStep("register")} aria-label="Nazaj" className="flex h-9 w-9 items-center justify-center self-start rounded-full" style={{ background: "rgba(43,29,23,0.06)" }}><Icon name="chevronL" color="#2B1D17" size={16} strokeWidth={2} /></button>
-              <div className="flex flex-col items-center gap-1.5 text-center">
-                <div className="font-display text-[24px] font-extrabold leading-[1.1]">Vnesi kodo</div>
-                <div className="max-w-[260px] text-[14px] leading-snug text-[#5C4C3E]">Poslali smo 4-mestno kodo na <strong>+386 {phone}</strong></div>
-              </div>
-              <div className="flex gap-3">
-                {[0, 1, 2, 3].map((i) => (
-                  <div key={i} className="font-display flex h-[62px] w-[54px] items-center justify-center rounded-[14px] border-2 bg-white text-[26px] font-bold text-[#2B1D17]" style={{ borderColor: i === otp.length ? "var(--brand)" : otp[i] ? "#2B1D17" : "#E0D4BF" }}>{otp[i] || ""}</div>
-                ))}
-              </div>
-              <div className="mt-1 grid w-full max-w-[280px] grid-cols-3 gap-[9px]">
-                {["1", "2", "3", "4", "5", "6", "7", "8", "9", "del", "0", "ok"].map((k) => {
-                  const isOk = k === "ok", isDel = k === "del";
-                  return (
-                    <button key={k} onClick={() => pressKey(k)} disabled={busy} className="font-display flex h-[52px] items-center justify-center rounded-[14px] border border-[#EEE3D0] text-[21px] font-bold" style={{ background: isOk ? "var(--brand)" : "#FFFFFF", color: isOk ? "#2B1D17" : isDel ? "#8A7A66" : "#2B1D17" }}>
-                      {isOk ? "✓" : isDel ? "⌫" : k}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="mt-0.5 text-[13px] text-[#8A7A66]">Nisi prejel kode? <span className="font-semibold text-[#2B1D17] underline">Pošlji znova</span></div>
             </div>
           )}
 
@@ -248,7 +260,7 @@ export default function SpinFlow({
               <div className="flex h-[62px] w-[62px] items-center justify-center rounded-full border-[2.5px] border-[#5E7F52]" style={{ background: "rgba(94,127,82,0.14)", animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}><Icon name="check" color="#5E7F52" size={28} strokeWidth={2.4} /></div>
               <div className="flex flex-col gap-1">
                 <div className="font-display text-[24px] font-extrabold">Kupon je tvoj!</div>
-                <div className="max-w-[280px] text-[14px] leading-snug text-[#5C4C3E]">{method === "google" ? "Shranili smo ga na tvoj račun in poslali na e-pošto." : "Poslali smo ga tudi kot SMS na tvoj telefon."}</div>
+                <div className="max-w-[280px] text-[14px] leading-snug text-[#5C4C3E]">{method === "google" ? "Shranili smo ga na tvoj račun in poslali na e-pošto." : "Shranili smo ga na tvojo stran zvestobe."}</div>
               </div>
               <div className="relative w-full rounded-[20px] bg-[#2B1D17] px-5 py-[22px] text-[#F5EFE6]">
                 <div className="absolute left-[-10px] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-[#FFFCF6]" />

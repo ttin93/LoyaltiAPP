@@ -40,7 +40,8 @@ create table if not exists customers (
   email       text,
   points      int  not null default 0,
   created_at  timestamptz not null default now(),
-  unique (venue_id, phone)
+  unique (venue_id, phone),
+  unique (venue_id, email)
 );
 
 create table if not exists scans (        -- srce anti-fraud

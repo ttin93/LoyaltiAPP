@@ -24,8 +24,9 @@ export async function POST(req: Request) {
     }
 
     const normalizedPhone = phone ? String(phone).replace(/\s+/g, "") : null;
+    const normalizedEmail = email ? String(email).trim().toLowerCase() : null;
 
-    // poišči obstoječo stranko po telefonu, sicer ustvari novo
+    // poišči obstoječo stranko: najprej po telefonu, sicer po emailu (Google)
     let customer = null;
     if (normalizedPhone) {
       const { data } = await db
@@ -36,17 +37,31 @@ export async function POST(req: Request) {
         .maybeSingle();
       customer = data;
     }
+    if (!customer && normalizedEmail) {
+      const { data } = await db
+        .from("customers")
+        .select("*")
+        .eq("venue_id", venue.id)
+        .eq("email", normalizedEmail)
+        .maybeSingle();
+      customer = data;
+    }
     if (!customer) {
       const { data, error } = await db
         .from("customers")
-        .insert({ venue_id: venue.id, phone: normalizedPhone, email: email ?? null })
+        .insert({ venue_id: venue.id, phone: normalizedPhone, email: normalizedEmail })
         .select("*")
         .single();
       if (error) throw error;
       customer = data;
     }
 
-    return NextResponse.json({ ok: true, customerId: customer.id, points: customer.points });
+    return NextResponse.json({
+      ok: true,
+      customerId: customer.id,
+      points: customer.points,
+      isNew: customer.points === 0,
+    });
   } catch (e) {
     return NextResponse.json({ ok: false, error: errMsg(e) }, { status: 500 });
   }

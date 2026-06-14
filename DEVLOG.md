@@ -49,6 +49,23 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-15 — seja 6
+**Prijava brez stroška na registracijo** (odločitev: SMS OTP @ ~7c/registracijo je predrag, ko je cilj
+čim več prijav). Novo: **Google (pravi OAuth) + telefon BREZ kode**.
+- **Odstranjen SMS OTP korak** v SpinFlow (state machine zdaj wheel→won→register→coupon). Telefon:
+  vpiše številko → "Prevzemi nagrado" → naravnost kupon. Nič SMS-a, €0.
+- **Google** = pravi Supabase OAuth (`signInWithOAuth`, redirect na `/p/[code]/spin?gwin=1`; ob vrnitvi
+  `useEffect` vzpostavi sejo → `/api/register` po emailu → kupon). Brezplačen, neomejen. ⚠️ RABI še
+  **enkraten setup**: Google Cloud OAuth Client ID/Secret + omogočiti Google provider v Supabase
+  (Management API). Dokler ni: gumb pokaže "Google prijava še ni nastavljena. Uporabi telefonsko."
+- **Dedupe**: `/api/register` poišče obstoječo stranko po telefonu, sicer po emailu (lowercase
+  normaliziran). Migracija `supabase/0002_email_unique.sql` → `unique (venue_id, email)` (idempotentno).
+- **Anti-fraud nagrade**: kupon dobrodošlice 1× na napravo (`loyalty:{code}:welcomeClaimed`) + 1× na
+  identiteto (DB unique telefon/email). Pravi ščit = dedupe, ne OTP; unovči se v lokalu pred osebjem.
+- **Preverjeno V ŽIVO** (preview): telefon flow → customer v Postgres (pravi UUID); dedupe telefon 2×
+  → isti id; email case-insensitive → isti id. Testne stranke počiščene.
+- **SMS** pustimo izključno za kasnejše marketing kampanje (plačaš samo ob pošiljanju ponudbe z ROI).
+
 ### 2026-06-15 — seja 5
 **Fix: animacija vrtenja kolesa (SpinFlow) ni delovala.** Vzrok: rotacija je bila na SVG `transform`
 **atributu** (`<g transform="rotate(...)">`) — CSS `transition` animira samo CSS *property-je*, NE SVG

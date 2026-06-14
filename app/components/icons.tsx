@@ -62,6 +62,10 @@ const ICONS: Record<string, IconDef> = {
   store: { paths: ["M4 9l1-4h14l1 4M4 9h16M4 9v10h16V9M9 19v-5h6v5"] },
   bell: { paths: ["M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6M10 20a2 2 0 0 0 4 0"] },
   euro: { paths: ["M16 6.5A5.5 5.5 0 1 0 16 17.5M5 10h7M5 13.5h7"] },
+  shield: { paths: ["M12 3.5l6.5 2.5v5c0 4.3-2.8 7.4-6.5 9-3.7-1.6-6.5-4.7-6.5-9v-5z", "M9.3 12l2 2 3.4-3.6"] },
+  home: { paths: ["M4 20V9l8-5 8 5v11", "M9 20v-6h6v6"] },
+  arrowR: { paths: ["M5 12h14M13 6l6 6-6 6"] },
+  star2: { paths: ["M12 3.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z"] },
 };
 
 export function Icon({

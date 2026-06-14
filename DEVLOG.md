@@ -50,6 +50,15 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-14 — seja 2
+Implementiran NOV namenski **landing** (Landing.dc.html): desktop marketing stran — sticky nav z
+blur, hero z nagnjeno kartico + plavajočimi chip-i (+15 točk, Kava po izbiri), "Kako deluje" 3
+koraki, sekcija dashboard preview (temna), žig-story (opečnat gradient), anti-fraud 4 kartice, cene
+(**Espresso 0€ / Doppio 29€ / Veriga po dogovoru**), FAQ (5), finalni CTA, footer. PRICING v
+lib/demo.ts posodobljen na nove pakete; `/cenik` zdaj preusmeri na `/#cene` (cenik je sekcija
+landinga). Dodane ikone (shield/home/arrowR/star2) + floaty animaciji. Build čist, `/` 200.
+Opomba: preview screenshot tool je bil v tej seji nedelujoč (stran sicer renderira pravilno).
+
 ### 2026-06-13 — seja 1
 Od nič zgrajen cel MVP v demo-mode: design system, gostova izkušnja (wheel, kartonček, skener,
 2-step unovčenje + server timer, kuponi), demo dashboard (5 zavihkov), cenik, embed wheel widget

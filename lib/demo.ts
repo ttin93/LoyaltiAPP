@@ -76,48 +76,55 @@ export const DEMO_MARKETING = [
   { n: "+386 30 ··· 557", v: "4", p: "60", a: "pred 21 dnevi", ac: "#A33E1D" },
 ];
 
-export const PRICING = [
+export type Plan = {
+  key: string;
+  name: string;
+  tagline: string;
+  price: string;
+  period: string;
+  cta: string;
+  featured: boolean;
+  badge?: string;
+  features: string[];
+};
+
+export const PRICING: Plan[] = [
   {
-    key: "osnovni",
-    name: "Osnovni",
-    tagline: "Digitalni kartonček",
-    monthly: 19,
-    features: [
-      "Stamp card — vsak N-ti obisk = nagrada",
-      "Neomejeno strank in skeniranj",
-      "1 nagrada (npr. brezplačna kava)",
-      "QR za stran gosta",
-      "Osnovna zgodovina",
-    ],
-    accent: "#8A7A66",
+    key: "espresso",
+    name: "Espresso",
+    tagline: "Za prvi korak v zvestobo",
+    price: "0 €",
+    period: "/ mesec",
+    cta: "Začni zastonj",
+    featured: false,
+    features: ["1 lokal", "QR stran za goste", "Žigi in nagrade", "Do 50 strank", "Osnovna zgodovina"],
   },
   {
-    key: "pro",
-    name: "Pro",
-    tagline: "Točke + rast",
-    monthly: 39,
-    popular: true,
+    key: "doppio",
+    name: "Doppio",
+    tagline: "Za lokal, ki želi rasti",
+    price: "29 €",
+    period: "/ mesec",
+    cta: "Izberi Doppio",
+    featured: true,
+    badge: "Najbolj priljubljeno",
     features: [
-      "Vse iz Osnovni",
-      "Točke na € (1 € = X točk)",
-      "Več nagrad + napredek",
-      "🎡 Wheel-spin + embed na svoj website",
-      "Analitika in najboljše stranke",
+      "Vse iz Espresso",
+      "Neomejeno strank",
+      "Polna analitika",
+      "Seznam strank in marketing",
+      "PDF in PNG plakati",
+      "Ročno dodajanje točk",
     ],
-    accent: "#E8A23D",
   },
   {
-    key: "premium",
-    name: "Premium",
-    tagline: "Vse vključeno",
-    monthly: 69,
-    features: [
-      "Vse iz Pro",
-      "SMS kampanje po segmentih",
-      "Prilagoditev strani + lastna domena",
-      "POS integracija (eBlagajna) — pride",
-      "Prednostna podpora",
-    ],
-    accent: "#5E7F52",
+    key: "veriga",
+    name: "Veriga",
+    tagline: "Za več lokalov pod eno znamko",
+    price: "Po dogovoru",
+    period: "",
+    cta: "Pogovorimo se",
+    featured: false,
+    features: ["Vse iz Doppio", "Več lokalov, en dashboard", "Skupna analitika verige", "Prioritetna podpora", "Dostop do API"],
   },
 ];

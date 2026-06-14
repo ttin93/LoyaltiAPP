@@ -313,3 +313,50 @@ Vse potrjeno — dashboard zdaj prikazuje vso vsebino (statistike, graf obiskov 
 
 Povej, kaj naprej: ime produkta, desktop različica plošče, ali poglobitev katerega od zaslonov.
 
+## User
+
+Okej zdej rabim se full max optimiziran landigpage za website kjer bomo marketali meli bomo 3 pakete  i ti to vse sredi da bo res zgedlo sick ass hell
+
+## Assistant
+
+Landing page — same warm system, marketing-optimized. Let me build it as its own page with the stamp card as the hero hook and your 3 packages.
+
+_[tool: update_todos]_
+
+_[tool: dc_write]_
+
+_[tool: update_todos]_
+
+_[tool: show_html]_
+
+_[tool: show_html]_
+
+The reveal animation left content hidden (observer didn't fire before capture). Let me make it robust — reveal in-viewport elements immediately and add a fallback.
+
+_[tool: dc_js_str_replace]_
+
+_[tool: show_html]_
+
+The screenshot keeps catching elements mid-reveal (opacity 0). Reliability beats a subtle entrance — I'll remove the JS reveal so everything renders visible immediately.
+
+_[tool: dc_js_str_replace]_
+
+_[tool: show_html]_
+
+The hero renders beautifully now — bold headline, tilted loyalty card with stamps, floating chips. Let me verify the full page scrolls cleanly through all sections and hand off.
+
+_[tool: done]_
+
+Landing je živ — **Landing.dc.html**, isti topel sistem kot mockupi.
+
+Kaj je notri (mobile + desktop responsive):
+- **Hero** — bold "Stalni gosti se ne zgodijo. Zgradiš jih." + nagnjen kartonček z žigi in plavajočima čipoma (signature element kot kavelj).
+- **Kako deluje** — 3 koraki (skenira → žig → unovči).
+- **Za lokale** — z mini dashboard predogledom (analitika + graf obiskov po urah).
+- **Signature sekcija** — opečnati blok o "občutku pravega žiga".
+- **Anti-fraud** — 4 kartice (ZOI dedup, davčna, časovno okno, točke na obisk).
+- **Cene — 3 paketi:** Espresso (0 €), **Doppio (29 €, izpostavljen)**, Veriga (po dogovoru).
+- **FAQ**, končni CTA in footer. Gumbi "Poglej demo" vodijo na tvoj obstoječi prototip.
+
+Opombe: ime znamke je še placeholder **"Žig"**, cene (0/29 €) so moj predlog — povej prave številke in jih zamenjam. Naslednje, če želiš: pravo ime, desktop-only sticky nav z menijem, ali sekcija s socialnim dokazom (mnenja lokalov).
+

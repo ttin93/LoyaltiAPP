@@ -2,7 +2,7 @@ import fs from "fs";
 import zlib from "zlib";
 
 const binPath =
-  String.raw`C:\Users\YouN\.claude\projects\C--Users-YouN-Documents-Ai-Projekti-Loyalti-App\c6d0c33d-5eeb-425e-ad86-755b642f2d77\tool-results\webfetch-1781271320678-cqn70w.bin`;
+  String.raw`C:\Users\YouN\.claude\projects\C--Users-YouN-Documents-Ai-Projekti-Loyalti-App\c6d0c33d-5eeb-425e-ad86-755b642f2d77\tool-results\webfetch-1781450601825-2rjgxj.bin`;
 
 const buf = fs.readFileSync(binPath);
 let out;

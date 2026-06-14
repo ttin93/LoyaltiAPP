@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code tooling
+.claude/
+
+# obdrži env template
+!.env.example

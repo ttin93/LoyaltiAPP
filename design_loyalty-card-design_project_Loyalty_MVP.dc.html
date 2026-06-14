@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #EAE2D3; }
+    @keyframes stampIn { 0% { transform: scale(2.3); opacity: 0; } 55% { transform: scale(0.9); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes scanSweep { from { top: 8%; } to { top: 90%; } }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: 0.001s !important; animation-iteration-count: 1 !important; transition: none !important; }
+    }
+  </style>
+</helmet>
+
+<div style="min-height:100vh;background:#EAE2D3;font-family:'Instrument Sans',sans-serif;color:#2B1D17;padding:56px 36px 80px;box-sizing:border-box;">
+  <div style="max-width:1480px;margin:0 auto;display:flex;flex-direction:column;gap:64px;">
+
+    <!-- ============ HEADER / RATIONALE ============ -->
+    <div data-screen-label="Uvod in izhodišča" style="display:flex;flex-direction:column;gap:20px;max-width:880px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;border-radius:50%;border:2.5px solid #C8512B;background:rgba(200,81,43,0.07);display:flex;align-items:center;justify-content:center;transform:rotate(-6deg);">
+          <svg width="18" height="18" viewBox="0 0 24 24" style="fill:none;stroke:#C8512B;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;"><path d="M5 9h10v5.5A4.5 4.5 0 0 1 10.5 19h-1A4.5 4.5 0 0 1 5 14.5V9Z"></path><path d="M15 10.5h1.6a2.4 2.4 0 0 1 0 4.8H15"></path></svg>
+        </div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8A7A66;">Žig — delovno ime · MVP mockupi · jun 2026</div>
+      </div>
+      <h1 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:44px;line-height:1.05;letter-spacing:-0.01em;">Loyalty na fiskalni račun</h1>
+      <p style="margin:0;font-size:17px;line-height:1.55;color:#5C4C3E;max-width:680px;">Gost skenira QR z računa in dobi žig. Spodaj: usklajen vizualni sistem, interaktiven flow za gosta (klikni <strong>Skeniraj račun</strong> v prvem telefonu) in ključni zasloni nadzorne plošče za lokal.</p>
+      <div style="background:#FFFCF6;border:1px solid #E6DCC9;border-radius:20px;padding:22px 26px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">Odločitve, ki jih zagovarjam</div>
+        <div style="font-size:15px;line-height:1.6;color:#41332A;display:flex;flex-direction:column;gap:8px;">
+          <div><strong>Tveganje: digitalni kartonček.</strong> Točke so primarno prikazane kot žigi na kartončku (1 obisk = 15 točk = 1 žig, kava pri 10 žigih). Številka je sekundarna — zvestoba je čustvena, ne računovodska.</div>
+          <div><strong>Anti-kliše:</strong> topla paleta, ampak brez serifa — karakter nosi groteskna Bricolage Grotesque; opečnata "tinta" je rezervirana izključno za žige in napake, zato štampiljka vedno izstopi.</div>
+          <div><strong>Demo vsebina:</strong> lokal "Kavarna Moka", gost pri 9/10 žigih — namerno tik pred nagrado, da je motivacijski moment viden. Ime produkta je odprto; "Žig" je placeholder.</div>
+          <div><strong>Kakovostni minimum:</strong> viden keyboard focus (tab čez gumbe), spoštovan prefers-reduced-motion, oblikovani error in prazni stati.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ DESIGN SYSTEM ============ -->
+    <div data-screen-label="Design system" style="display:flex;flex-direction:column;gap:24px;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:26px;">Vizualni sistem</div>
+        <div style="font-size:15px;color:#8A7A66;">Paleta · tipografija · osnovne komponente</div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:stretch;">
+        <!-- palette -->
+        <div style="background:#FFFCF6;border:1px solid #E6DCC9;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px;min-width:300px;">
+          <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">Paleta</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+            <div style="display:flex;flex-direction:column;gap:6px;"><div style="height:64px;border-radius:12px;background:#2B1D17;"></div><div style="font-size:13px;font-weight:600;">Espresso</div><div style="font-size:12px;color:#8A7A66;">#2B1D17</div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;"><div style="height:64px;border-radius:12px;background:#F5EFE6;border:1px solid #E6DCC9;"></div><div style="font-size:13px;font-weight:600;">Krema</div><div style="font-size:12px;color:#8A7A66;">#F5EFE6</div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;"><div style="height:64px;border-radius:12px;background:#FFFCF6;border:1px solid #E6DCC9;"></div><div style="font-size:13px;font-weight:600;">Papir</div><div style="font-size:12px;color:#8A7A66;">#FFFCF6</div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;"><div style="height:64px;border-radius:12px;background:#E8A23D;"></div><div style="font-size:13px;font-weight:600;">Jantar</div><div style="font-size:12px;color:#8A7A66;">#E8A23D</div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;"><div style="height:64px;border-radius:12px;background:#C8512B;"></div><div style="font-size:13px;font-weight:600;">Opeka</div><div style="font-size:12px;color:#8A7A66;">#C8512B</div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;"><div style="height:64px;border-radius:12px;background:#5E7F52;"></div><div style="font-size:13px;font-weight:600;">Žajbelj</div><div style="font-size:12px;color:#8A7A66;">#5E7F52</div></div>
+          </div>
+          <div style="font-size:13px;line-height:1.5;color:#8A7A66;">Jantar = akcija in napredek · Opeka = tinta žiga in napake · Žajbelj = uspeh in "dodano".</div>
+        </div>
+
+        <!-- type -->
+        <div style="background:#FFFCF6;border:1px solid #E6DCC9;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:16px;min-width:320px;flex:1;">
+          <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">Tipografija</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:40px;line-height:1.05;">Tvoja stalna kava.</div>
+            <div style="font-size:13px;color:#8A7A66;">Bricolage Grotesque 700–800 · naslovi, številke, ime lokala</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:16px;line-height:1.55;color:#41332A;">Poskeniraj QR na dnu računa in žig je tvoj. Brez aplikacije, brez gesla.</div>
+            <div style="font-size:13px;color:#8A7A66;">Instrument Sans 400–700 · besedilo, gumbi, UI</div>
+          </div>
+        </div>
+
+        <!-- components -->
+        <div style="background:#FFFCF6;border:1px solid #E6DCC9;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:18px;min-width:320px;">
+          <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">Komponente</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <button style="height:48px;padding:0 24px;border:none;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-family:'Instrument Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Skeniraj račun</button>
+            <button style="height:48px;padding:0 22px;border:1.5px solid #2B1D17;border-radius:999px;background:transparent;color:#2B1D17;font-family:'Instrument Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Uredi stran</button>
+            <div style="height:32px;padding:0 14px;border-radius:999px;background:rgba(232,162,61,0.18);color:#8A5B14;font-size:13px;font-weight:600;display:flex;align-items:center;">+15 točk</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px;max-width:300px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="font-weight:600;">Kava po izbiri</span><span style="color:#8A7A66;">135 / 150 točk</span></div>
+            <div style="height:7px;border-radius:99px;background:#EFE6D4;overflow:hidden;"><div style="height:100%;width:90%;border-radius:99px;background:#E8A23D;"></div></div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:center;">
+            <div style="width:48px;height:48px;border-radius:50%;border:2px dashed #D9CDBA;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#C9BCA5;">3</div>
+            <div style="width:48px;height:48px;border-radius:50%;border:2.5px solid #C8512B;background:rgba(200,81,43,0.07);display:flex;align-items:center;justify-content:center;transform:rotate(-5deg);">
+              <svg width="20" height="20" viewBox="0 0 24 24" style="fill:none;stroke:#C8512B;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;"><path d="M5 9h10v5.5A4.5 4.5 0 0 1 10.5 19h-1A4.5 4.5 0 0 1 5 14.5V9Z"></path><path d="M15 10.5h1.6a2.4 2.4 0 0 1 0 4.8H15"></path></svg>
+            </div>
+            <div style="width:48px;height:48px;border-radius:50%;border:2px dashed #E8A23D;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.05em;color:#B97F1F;">KAVA</div>
+            <div style="font-size:13px;color:#8A7A66;line-height:1.45;">Žig: prazen · odtisnjen ·<br>nagradno polje</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SECTION A — GOST ============ -->
+    <div data-screen-label="A — Stran za gosta" style="display:flex;flex-direction:column;gap:24px;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:26px;">A · Stran za gosta <span style="color:#C8512B;">— interaktivno</span></div>
+        <div style="font-size:15px;color:#8A7A66;">Javna PWA stran, odprta prek QR na mizi. Prvi telefon je klikabilen prototip: Skeniraj račun → simuliraj rezultate → žig → unovči.</div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+
+        <!-- A1 interactive device -->
+        <div data-screen-label="A1 Interaktivni flow gosta" style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+          <div style="font-size:12.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8A7A66;">A1 · Interaktivni flow</div>
+          <x-import component="IOSDevice" from="./ios-frame.jsx" dark="{{ isScanner }}" hint-size="402px,874px">
+
+            <!-- HOME -->
+            <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+              <div style="height:100%;display:flex;flex-direction:column;background:#F5EFE6;color:#2B1D17;font-family:'Instrument Sans',sans-serif;">
+                <div style="flex:1;overflow:auto;padding:64px 20px 40px;box-sizing:border-box;">
+                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                    <div style="width:44px;height:44px;border-radius:50%;background:#2B1D17;color:#F5EFE6;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:20px;">M</div>
+                    <div style="display:flex;flex-direction:column;">
+                      <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:19px;">Kavarna Moka</div>
+                      <div style="font-size:13px;color:#8A7A66;">Trubarjeva cesta 21, Ljubljana</div>
+                    </div>
+                  </div>
+
+                  <div style="background:#FFFCF6;border:1px solid #EFE6D4;border-radius:24px;padding:22px 20px;box-shadow:0 2px 10px rgba(43,29,23,0.05), 0 14px 34px rgba(43,29,23,0.08);">
+                    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;">
+                      <div style="font-size:12px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:#8A7A66;">Tvoj kartonček</div>
+                      <div style="font-size:13px;color:#8A7A66;">{{ stampCountLabel }}</div>
+                    </div>
+                    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:18px;">
+                      <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:54px;line-height:1;">{{ points }}</span>
+                      <span style="font-size:16px;color:#8A7A66;font-weight:500;">točk</span>
+                    </div>
+                    {{ stampGridHome }}
+                    <div style="margin-top:16px;padding-top:14px;border-top:1px dashed #E2D7C2;font-size:14px;line-height:1.45;color:#5C4C3E;">{{ nextHint }}</div>
+                  </div>
+
+                  <sc-if value="{{ rewardReady }}" hint-placeholder-val="{{ false }}">
+                    <div style="margin-top:16px;background:#5E7F52;border-radius:20px;padding:16px 18px;display:flex;align-items:center;gap:14px;color:#F5EFE6;">
+                      <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+                        <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:17px;">Kava po izbiri te čaka</div>
+                        <div style="font-size:13px;opacity:0.85;">Pokaži kodo osebju in uživaj.</div>
+                      </div>
+                      <button onClick="{{ goRedeem }}" style="height:42px;padding:0 18px;border:none;border-radius:999px;background:#F5EFE6;color:#3E5536;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Unovči</button>
+                    </div>
+                  </sc-if>
+
+                  <button onClick="{{ goScan }}" style="margin-top:18px;width:100%;height:58px;border:none;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-family:'Instrument Sans',sans-serif;font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;box-shadow:0 10px 24px rgba(43,29,23,0.22);" style-focus="outline:3px solid #E8A23D;outline-offset:3px;">
+                    <svg width="21" height="21" viewBox="0 0 24 24" style="fill:none;stroke:#F5EFE6;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 8.6A2.6 2.6 0 0 1 6.6 6h1.5l1.5-2h4.8l1.5 2h1.5A2.6 2.6 0 0 1 20 8.6v7.8A2.6 2.6 0 0 1 17.4 19H6.6A2.6 2.6 0 0 1 4 16.4V8.6Z"></path><circle cx="12" cy="12.7" r="3.4"></circle></svg>
+                    <span>Skeniraj račun</span>
+                  </button>
+
+                  <div style="margin-top:28px;display:flex;align-items:baseline;justify-content:space-between;">
+                    <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:20px;">Nagrade</div>
+                    <div style="font-size:13px;color:#8A7A66;">1 obisk = 15 točk</div>
+                  </div>
+                  <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px;">
+                    <sc-for list="{{ rewards }}" as="r" hint-placeholder-count="3">
+                      <div style="background:#FFFCF6;border:1px solid #EFE6D4;border-radius:18px;padding:14px;display:flex;align-items:center;gap:14px;">
+                        <div style="width:52px;height:52px;border-radius:14px;background:#F1E7D2;display:flex;align-items:center;justify-content:center;flex-shrink:0;">{{ r.icon }}</div>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px;">
+                          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+                            <span style="font-weight:600;font-size:15px;">{{ r.name }}</span>
+                            <span style="font-size:12.5px;font-weight:{{ r.lblW }};color:{{ r.lblColor }};white-space:nowrap;">{{ r.label }}</span>
+                          </div>
+                          <div style="height:7px;border-radius:99px;background:#EFE6D4;overflow:hidden;">
+                            <div style="height:100%;border-radius:99px;background:{{ r.barColor }};width:{{ r.pctW }};"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- SCANNER -->
+            <sc-if value="{{ isScanner }}" hint-placeholder-val="{{ false }}">
+              <div style="height:100%;display:flex;flex-direction:column;background:#1A120D;color:#F5EFE6;font-family:'Instrument Sans',sans-serif;padding:64px 20px 36px;box-sizing:border-box;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <button onClick="{{ backHome }}" aria-label="Zapri" style="width:40px;height:40px;border-radius:50%;border:none;background:rgba(245,239,230,0.12);display:flex;align-items:center;justify-content:center;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" style="fill:none;stroke:#F5EFE6;stroke-width:2;stroke-linecap:round;"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"></path></svg>
+                  </button>
+                  <span style="font-weight:600;font-size:16px;">Skeniraj račun</span>
+                  <div style="width:40px;"></div>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;">
+                  <div style="position:relative;width:248px;height:248px;">
+                    <div style="position:absolute;top:0;left:0;width:40px;height:40px;border-top:3px solid #E8A23D;border-left:3px solid #E8A23D;border-radius:10px 0 0 0;"></div>
+                    <div style="position:absolute;top:0;right:0;width:40px;height:40px;border-top:3px solid #E8A23D;border-right:3px solid #E8A23D;border-radius:0 10px 0 0;"></div>
+                    <div style="position:absolute;bottom:0;left:0;width:40px;height:40px;border-bottom:3px solid #E8A23D;border-left:3px solid #E8A23D;border-radius:0 0 0 10px;"></div>
+                    <div style="position:absolute;bottom:0;right:0;width:40px;height:40px;border-bottom:3px solid #E8A23D;border-right:3px solid #E8A23D;border-radius:0 0 10px 0;"></div>
+                    <div style="position:absolute;inset:14px;border-radius:8px;background:rgba(245,239,230,0.04);display:flex;align-items:center;justify-content:center;">{{ qrGhost }}</div>
+                    {{ scanline }}
+                  </div>
+                  <div style="font-size:15px;line-height:1.5;color:rgba(245,239,230,0.75);text-align:center;max-width:260px;">Poišči QR kodo na dnu računa in jo poravnaj v okvir.</div>
+                </div>
+                <div style="background:rgba(245,239,230,0.07);border:1px dashed rgba(245,239,230,0.28);border-radius:18px;padding:14px;">
+                  <div style="font-size:10.5px;letter-spacing:0.12em;font-weight:700;color:#E8A23D;margin-bottom:10px;">DEMO · SIMULIRAJ REZULTAT SKENIRANJA</div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <button onClick="{{ simOk }}" style="height:42px;border:none;border-radius:12px;background:#5E7F52;color:#F5EFE6;font-family:'Instrument Sans',sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Veljaven račun</button>
+                    <button onClick="{{ simDup }}" style="height:42px;border:1px solid rgba(245,239,230,0.3);border-radius:12px;background:transparent;color:rgba(245,239,230,0.85);font-family:'Instrument Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Že unovčen</button>
+                    <button onClick="{{ simForeign }}" style="height:42px;border:1px solid rgba(245,239,230,0.3);border-radius:12px;background:transparent;color:rgba(245,239,230,0.85);font-family:'Instrument Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Tuj lokal</button>
+                    <button onClick="{{ simOld }}" style="height:42px;border:1px solid rgba(245,239,230,0.3);border-radius:12px;background:transparent;color:rgba(245,239,230,0.85);font-family:'Instrument Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Prestar račun</button>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- SUCCESS -->
+            <sc-if value="{{ isSuccess }}" hint-placeholder-val="{{ false }}">
+              <div style="height:100%;display:flex;flex-direction:column;background:#F5EFE6;color:#2B1D17;font-family:'Instrument Sans',sans-serif;padding:64px 24px 40px;box-sizing:border-box;align-items:center;justify-content:center;gap:22px;">
+                {{ plusBadge }}
+                <div style="width:100%;background:#FFFCF6;border:1px solid #EFE6D4;border-radius:24px;padding:22px 20px;box-shadow:0 2px 10px rgba(43,29,23,0.05), 0 14px 34px rgba(43,29,23,0.08);">
+                  {{ stampGridSuccess }}
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;">
+                  <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:28px;">{{ successTitle }}</div>
+                  <div style="font-size:15.5px;line-height:1.5;color:#5C4C3E;max-width:280px;">{{ successMsg }}</div>
+                </div>
+                <sc-if value="{{ rewardReady }}" hint-placeholder-val="{{ false }}">
+                  <div style="width:100%;display:flex;flex-direction:column;gap:10px;">
+                    <button onClick="{{ goRedeem }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#5E7F52;color:#F5EFE6;font-family:'Instrument Sans',sans-serif;font-size:16.5px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(94,127,82,0.3);" style-focus="outline:3px solid #E8A23D;outline-offset:3px;">Unovči pri osebju</button>
+                    <button onClick="{{ backHome }}" style="width:100%;height:48px;border:none;border-radius:999px;background:transparent;color:#8A7A66;font-family:'Instrument Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Kasneje</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ rewardNotReady }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ backHome }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-family:'Instrument Sans',sans-serif;font-size:16.5px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:3px;">Super, nazaj na kartonček</button>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <!-- ERROR -->
+            <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+              <div style="height:100%;display:flex;flex-direction:column;background:#F5EFE6;color:#2B1D17;font-family:'Instrument Sans',sans-serif;padding:64px 24px 40px;box-sizing:border-box;align-items:center;justify-content:center;gap:18px;text-align:center;">
+                <div style="width:76px;height:76px;border-radius:50%;background:rgba(200,81,43,0.12);display:flex;align-items:center;justify-content:center;transform:rotate(-5deg);border:2.5px solid #C8512B;">
+                  <svg width="30" height="30" viewBox="0 0 24 24" style="fill:none;stroke:#C8512B;stroke-width:2.1;stroke-linecap:round;"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"></path></svg>
+                </div>
+                <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:24px;line-height:1.2;max-width:300px;">{{ errTitle }}</div>
+                <div style="font-size:15px;line-height:1.55;color:#5C4C3E;max-width:280px;">{{ errHint }}</div>
+                <div style="font-size:13.5px;color:#8A7A66;">Tvoje točke ostajajo: <strong>{{ points }}</strong></div>
+                <div style="width:100%;display:flex;flex-direction:column;gap:10px;margin-top:8px;">
+                  <button onClick="{{ retry }}" style="width:100%;height:56px;border:none;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-family:'Instrument Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:3px;">Skeniraj drug račun</button>
+                  <button onClick="{{ backHome }}" style="width:100%;height:48px;border:none;border-radius:999px;background:transparent;color:#8A7A66;font-family:'Instrument Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Nazaj na kartonček</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- REDEEM -->
+            <sc-if value="{{ isRedeem }}" hint-placeholder-val="{{ false }}">
+              <div style="height:100%;display:flex;flex-direction:column;background:#F5EFE6;color:#2B1D17;font-family:'Instrument Sans',sans-serif;padding:64px 24px 40px;box-sizing:border-box;">
+                <sc-if value="{{ notConfirmed }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <button onClick="{{ backHome }}" aria-label="Nazaj" style="width:40px;height:40px;border-radius:50%;border:none;background:rgba(43,29,23,0.07);display:flex;align-items:center;justify-content:center;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">
+                      <svg width="17" height="17" viewBox="0 0 24 24" style="fill:none;stroke:#2B1D17;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M14.5 5.5 8 12l6.5 6.5"></path></svg>
+                    </button>
+                    <span style="font-weight:700;font-size:17px;">Unovči nagrado</span>
+                  </div>
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;">
+                    <div style="background:#FFFCF6;border:1px solid #EFE6D4;border-radius:24px;padding:26px 30px;display:flex;flex-direction:column;align-items:center;gap:16px;box-shadow:0 2px 10px rgba(43,29,23,0.05), 0 14px 34px rgba(43,29,23,0.08);">
+                      <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:22px;">Kava po izbiri</div>
+                      <div style="background:#FFFFFF;border:1px solid #EFE6D4;border-radius:14px;padding:14px;">{{ qrRedeem }}</div>
+                      <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:19px;letter-spacing:0.22em;">MOKA-7412</div>
+                      <div style="font-size:14px;color:#8A7A66;text-align:center;max-width:220px;line-height:1.45;">Pokaži osebju — potrdijo z enim dotikom.</div>
+                    </div>
+                    <button onClick="{{ confirmRedeem }}" style="height:50px;padding:0 26px;border:1.5px solid #2B1D17;border-radius:999px;background:transparent;color:#2B1D17;font-family:'Instrument Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Osebje potrdi</button>
+                    <div style="font-size:12px;color:#A6967F;">demo: dotik = potrditev osebja</div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ confirmed }}" hint-placeholder-val="{{ false }}">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;">
+                    {{ checkBadge }}
+                    <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:28px;">Kava unovčena</div>
+                    <div style="font-size:15.5px;line-height:1.5;color:#5C4C3E;max-width:260px;">Dober tek! Odšteli smo 150 točk — kartonček se začne polniti znova.</div>
+                    <button onClick="{{ finishRedeem }}" style="margin-top:10px;width:100%;height:56px;border:none;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-family:'Instrument Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:3px;">Nazaj na kartonček</button>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+          </x-import>
+          <button onClick="{{ resetDemo }}" style="height:36px;padding:0 16px;border:1px solid #C9BCA5;border-radius:999px;background:transparent;color:#8A7A66;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Ponastavi demo</button>
+        </div>
+
+        <!-- A2 registration -->
+        <div data-screen-label="A2 Registracija" style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+          <div style="font-size:12.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8A7A66;">A2 · Registracija — en korak, brez gesla</div>
+          <x-import component="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+            <div style="height:100%;display:flex;flex-direction:column;background:#F5EFE6;color:#2B1D17;font-family:'Instrument Sans',sans-serif;padding:64px 24px 40px;box-sizing:border-box;">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:30px;">
+                <div style="width:44px;height:44px;border-radius:50%;background:#2B1D17;color:#F5EFE6;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:20px;">M</div>
+                <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:19px;">Kavarna Moka</div>
+              </div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:32px;line-height:1.1;margin-bottom:10px;">Shrani svoje žige</div>
+              <div style="font-size:15.5px;line-height:1.55;color:#5C4C3E;margin-bottom:28px;">Vpiši telefonsko številko, da točke ostanejo tvoje. Brez gesla, brez aplikacije.</div>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+                <label style="font-size:13px;font-weight:600;color:#5C4C3E;" for="reg-phone">Telefonska številka</label>
+                <div style="display:flex;align-items:center;gap:0;height:56px;border:1.5px solid #D9CDBA;border-radius:16px;background:#FFFCF6;overflow:hidden;">
+                  <div style="padding:0 14px;height:100%;display:flex;align-items:center;background:#F1E7D2;font-weight:600;font-size:15px;color:#5C4C3E;">+386</div>
+                  <input id="reg-phone" value="31 204 412" readOnly="{{ true }}" style="flex:1;border:none;background:transparent;height:100%;padding:0 14px;font-family:'Instrument Sans',sans-serif;font-size:17px;font-weight:600;color:#2B1D17;outline:none;min-width:0;"></input>
+                </div>
+              </div>
+              <button style="width:100%;height:56px;border:none;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-family:'Instrument Sans',sans-serif;font-size:16.5px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:3px;">Pošlji kodo</button>
+              <div style="display:flex;align-items:center;gap:12px;margin:22px 0;">
+                <div style="flex:1;height:1px;background:#D9CDBA;"></div>
+                <div style="font-size:13px;color:#A6967F;">ali</div>
+                <div style="flex:1;height:1px;background:#D9CDBA;"></div>
+              </div>
+              <button style="width:100%;height:52px;border:1.5px solid #2B1D17;border-radius:999px;background:transparent;color:#2B1D17;font-family:'Instrument Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Pošlji mi povezavo na e-pošto</button>
+              <div style="margin-top:34px;background:#FFFCF6;border:1px solid #EFE6D4;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px;">
+                <div style="font-size:13px;font-weight:600;color:#5C4C3E;">Vpiši kodo iz SMS</div>
+                <div style="display:flex;gap:10px;">
+                  <div style="width:52px;height:60px;border-radius:14px;border:1.5px solid #2B1D17;background:#FFFFFF;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:24px;">7</div>
+                  <div style="width:52px;height:60px;border-radius:14px;border:1.5px solid #2B1D17;background:#FFFFFF;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:24px;">3</div>
+                  <div style="width:52px;height:60px;border-radius:14px;border:1.5px solid #D9CDBA;background:#FFFFFF;"></div>
+                  <div style="width:52px;height:60px;border-radius:14px;border:1.5px solid #D9CDBA;background:#FFFFFF;"></div>
+                </div>
+                <div style="font-size:13px;color:#8A7A66;">Koda velja 10 minut. <span style="font-weight:600;color:#2B1D17;text-decoration:underline;">Pošlji znova</span></div>
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <!-- A3 error states static -->
+        <div data-screen-label="A3 Error stati" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="font-size:12.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8A7A66;">A3 · Error stati (tudi v prototipu)</div>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div style="width:312px;background:#F5EFE6;border:1px solid #E6DCC9;border-radius:24px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;">
+              <div style="width:54px;height:54px;border-radius:50%;background:rgba(200,81,43,0.12);border:2.5px solid #C8512B;display:flex;align-items:center;justify-content:center;transform:rotate(-5deg);">
+                <svg width="22" height="22" viewBox="0 0 24 24" style="fill:none;stroke:#C8512B;stroke-width:2.1;stroke-linecap:round;"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"></path></svg>
+              </div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:18px;line-height:1.25;">Ta račun je bil že unovčen.</div>
+              <div style="font-size:13.5px;line-height:1.5;color:#5C4C3E;">Vsak račun prinese točke samo enkrat.</div>
+            </div>
+            <div style="width:312px;background:#F5EFE6;border:1px solid #E6DCC9;border-radius:24px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;">
+              <div style="width:54px;height:54px;border-radius:50%;background:rgba(200,81,43,0.12);border:2.5px solid #C8512B;display:flex;align-items:center;justify-content:center;transform:rotate(4deg);">
+                <svg width="22" height="22" viewBox="0 0 24 24" style="fill:none;stroke:#C8512B;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M7 3.5h10V20l-2-1.4-1.7 1.4-1.6-1.4L10 20l-1.5-1.4L7 20V3.5Z"></path><path d="M9.5 8h5M9.5 11h5"></path></svg>
+              </div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:18px;line-height:1.25;">Ta račun ni iz Kavarne Moka.</div>
+              <div style="font-size:13.5px;line-height:1.5;color:#5C4C3E;">Točke dobiš za račune, izdane v tem lokalu.</div>
+            </div>
+            <div style="width:312px;background:#F5EFE6;border:1px solid #E6DCC9;border-radius:24px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;">
+              <div style="width:54px;height:54px;border-radius:50%;background:rgba(200,81,43,0.12);border:2.5px solid #C8512B;display:flex;align-items:center;justify-content:center;transform:rotate(-3deg);">
+                <svg width="22" height="22" viewBox="0 0 24 24" style="fill:none;stroke:#C8512B;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 8v4.4l2.8 2"></path></svg>
+              </div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:18px;line-height:1.25;">Računi se lahko unovčijo v 24 urah.</div>
+              <div style="font-size:13.5px;line-height:1.5;color:#5C4C3E;">Ta račun je starejši. Naslednjič ga skeniraj kar pri mizi.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SECTION B — LOKAL ============ -->
+    <div data-screen-label="B — Nadzorna plošča lokala" style="display:flex;flex-direction:column;gap:24px;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:26px;">B · Nadzorna plošča za lokal</div>
+        <div style="font-size:15px;color:#8A7A66;">Spodnja navigacija: Zgodovina · Analitika · Sistem · Marketing · Nastavitve. Poudarek na Sistem in Analitika; Nastavitve nosijo ključni onboarding korak (vzorčni račun).</div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+
+        <!-- B1 Sistem -->
+        <div data-screen-label="B1 Sistem" style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+          <div style="font-size:12.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8A7A66;">B1 · Sistem</div>
+          <x-import component="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+            <div style="height:100%;display:flex;flex-direction:column;background:#F5EFE6;color:#2B1D17;font-family:'Instrument Sans',sans-serif;">
+              <div style="flex:1;overflow:auto;padding:64px 20px 20px;box-sizing:border-box;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+                  <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:28px;">Sistem</div>
+                  <div style="height:32px;padding:0 13px;border-radius:999px;background:#FFFCF6;border:1px solid #E6DCC9;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;"><span style="width:8px;height:8px;border-radius:50%;background:#5E7F52;display:inline-block;"></span>Kavarna Moka</div>
+                </div>
+                <div style="background:#FFFCF6;border:1px solid #EFE6D4;border-radius:24px;padding:22px;display:flex;flex-direction:column;align-items:center;gap:16px;box-shadow:0 2px 10px rgba(43,29,23,0.05);">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:#8A7A66;">Tvoja stran za goste</div>
+                  <div style="background:#FFFFFF;border:1px solid #EFE6D4;border-radius:16px;padding:16px;">{{ qrBig }}</div>
+                  <div style="height:40px;padding:0 16px;border-radius:999px;background:#F1E7D2;display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600;color:#5C4C3E;">
+                    zig.app/p/moka
+                    <svg width="15" height="15" viewBox="0 0 24 24" style="fill:none;stroke:#8A7A66;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;"><path d="M9 9h10v10H9z"></path><path d="M5 15V5h10"></path></svg>
+                  </div>
+                  <div style="display:flex;gap:10px;width:100%;">
+                    <button style="flex:1;height:48px;border:1.5px solid #2B1D17;border-radius:999px;background:transparent;color:#2B1D17;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Prenesi PNG</button>
+                    <button style="flex:1;height:48px;border:1.5px solid #2B1D17;border-radius:999px;background:transparent;color:#2B1D17;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Prenesi PDF</button>
+                  </div>
+                  <button style="width:100%;height:52px;border:none;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-family:'Instrument Sans',sans-serif;font-size:15.5px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:3px;">Uredi stran</button>
+                </div>
+                <div style="margin-top:14px;background:rgba(232,162,61,0.14);border:1px dashed #E8A23D;border-radius:18px;padding:14px 16px;font-size:13.5px;line-height:1.5;color:#6E4F14;">Natisni QR in ga postavi na vsako mizo — gostje stran odprejo brez aplikacije.</div>
+              </div>
+              <div style="background:#FFFCF6;border-top:1px solid #E6DCC9;display:flex;padding:10px 6px 30px;">
+                <sc-for list="{{ navSis }}" as="t" hint-placeholder-count="5">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                    {{ t.icon }}
+                    <span style="font-size:10.5px;font-weight:{{ t.w }};color:{{ t.c }};">{{ t.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <!-- B2 Analitika -->
+        <div data-screen-label="B2 Analitika" style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+          <div style="font-size:12.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8A7A66;">B2 · Analitika</div>
+          <x-import component="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+            <div style="height:100%;display:flex;flex-direction:column;background:#F5EFE6;color:#2B1D17;font-family:'Instrument Sans',sans-serif;">
+              <div style="flex:1;overflow:auto;padding:64px 20px 20px;box-sizing:border-box;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+                  <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:28px;">Analitika</div>
+                  <div style="height:32px;padding:0 13px;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-size:13px;font-weight:600;display:flex;align-items:center;">Zadnjih 30 dni</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                  <sc-for list="{{ stats }}" as="s" hint-placeholder-count="8">
+                    <div style="background:#FFFCF6;border:1px solid #EFE6D4;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:3px;">
+                      <div style="font-size:12px;font-weight:600;color:#8A7A66;">{{ s.l }}</div>
+                      <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:26px;color:{{ s.vc }};">{{ s.v }}</div>
+                      <div style="font-size:11.5px;color:#A6967F;">{{ s.s }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="margin-top:14px;background:#FFFCF6;border:1px solid #EFE6D4;border-radius:20px;padding:18px;">
+                  <div style="font-size:13px;font-weight:700;margin-bottom:16px;">Obiski po urah</div>
+                  <div style="display:flex;align-items:flex-end;gap:5px;height:130px;">
+                    <sc-for list="{{ bars }}" as="b" hint-placeholder-count="15">
+                      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;justify-content:flex-end;height:100%;">
+                        <div style="width:100%;height:{{ b.ht }};border-radius:5px 5px 2px 2px;background:{{ b.bg }};"></div>
+                        <div style="font-size:10px;color:#A6967F;height:12px;">{{ b.lbl }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <div style="margin-top:10px;font-size:12.5px;color:#8A7A66;">Vrh: <strong style="color:#2B1D17;">ob 9h</strong> — jutranja kava.</div>
+                </div>
+                <div style="margin-top:14px;background:#FFFCF6;border:1px solid #EFE6D4;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Najboljše stranke</div>
+                  <sc-for list="{{ customers }}" as="c" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid #F1E7D2;">
+                      <div style="width:26px;height:26px;border-radius:50%;background:#F1E7D2;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:12.5px;color:#8A5B14;">{{ c.r }}</div>
+                      <div style="flex:1;font-size:14px;font-weight:600;">{{ c.n }}</div>
+                      <div style="font-size:13px;color:#8A7A66;">{{ c.v }}</div>
+                      <div style="font-size:13px;font-weight:700;color:#B97F1F;">{{ c.p }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="background:#FFFCF6;border-top:1px solid #E6DCC9;display:flex;padding:10px 6px 30px;">
+                <sc-for list="{{ navAna }}" as="t" hint-placeholder-count="5">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                    {{ t.icon }}
+                    <span style="font-size:10.5px;font-weight:{{ t.w }};color:{{ t.c }};">{{ t.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <!-- B3 Zgodovina -->
+        <div data-screen-label="B3 Zgodovina" style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+          <div style="font-size:12.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8A7A66;">B3 · Zgodovina</div>
+          <x-import component="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+            <div style="height:100%;display:flex;flex-direction:column;background:#F5EFE6;color:#2B1D17;font-family:'Instrument Sans',sans-serif;">
+              <div style="flex:1;overflow:auto;padding:64px 20px 20px;box-sizing:border-box;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:28px;margin-bottom:18px;">Zgodovina</div>
+                <div style="display:flex;background:#EDE3D0;border-radius:999px;padding:4px;margin-bottom:16px;">
+                  <div style="flex:1;height:38px;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;">Podarjene</div>
+                  <div style="flex:1;height:38px;border-radius:999px;color:#5C4C3E;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;">Unovčene</div>
+                </div>
+                <div style="background:#FFFCF6;border:1px solid #EFE6D4;border-radius:20px;padding:6px 18px;display:flex;flex-direction:column;">
+                  <sc-for list="{{ hist }}" as="h" hint-placeholder-count="7">
+                    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid #F1E7D2;">
+                      <div style="width:38px;height:38px;border-radius:50%;border:2px solid #C8512B;background:rgba(200,81,43,0.07);display:flex;align-items:center;justify-content:center;transform:rotate(-4deg);flex-shrink:0;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" style="fill:none;stroke:#C8512B;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;"><path d="M5 9h10v5.5A4.5 4.5 0 0 1 10.5 19h-1A4.5 4.5 0 0 1 5 14.5V9Z"></path><path d="M15 10.5h1.6a2.4 2.4 0 0 1 0 4.8H15"></path></svg>
+                      </div>
+                      <div style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0;">
+                        <div style="font-size:14.5px;font-weight:600;">{{ h.n }}</div>
+                        <div style="font-size:12.5px;color:#A6967F;">{{ h.t }}</div>
+                      </div>
+                      <div style="font-size:14.5px;font-weight:700;color:#5E7F52;white-space:nowrap;">{{ h.d }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="background:#FFFCF6;border-top:1px solid #E6DCC9;display:flex;padding:10px 6px 30px;">
+                <sc-for list="{{ navZgo }}" as="t" hint-placeholder-count="5">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                    {{ t.icon }}
+                    <span style="font-size:10.5px;font-weight:{{ t.w }};color:{{ t.c }};">{{ t.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <!-- B4 Marketing -->
+        <div data-screen-label="B4 Marketing" style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+          <div style="font-size:12.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8A7A66;">B4 · Marketing — seznam strank</div>
+          <x-import component="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+            <div style="height:100%;display:flex;flex-direction:column;background:#F5EFE6;color:#2B1D17;font-family:'Instrument Sans',sans-serif;">
+              <div style="flex:1;overflow:auto;padding:64px 20px 20px;box-sizing:border-box;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:28px;margin-bottom:6px;">Marketing</div>
+                <div style="font-size:14px;color:#8A7A66;margin-bottom:16px;">137 strank · kampanje pridejo v naslednji fazi</div>
+                <div style="background:#FFFCF6;border:1px solid #EFE6D4;border-radius:20px;padding:6px 18px;display:flex;flex-direction:column;">
+                  <div style="display:flex;align-items:center;gap:12px;padding:11px 0;font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#A6967F;">
+                    <div style="flex:1;">Stranka</div><div style="width:58px;text-align:right;">Obiski</div><div style="width:64px;text-align:right;">Točke</div><div style="width:74px;text-align:right;">Aktivnost</div>
+                  </div>
+                  <sc-for list="{{ marketing }}" as="m" hint-placeholder-count="6">
+                    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid #F1E7D2;">
+                      <div style="flex:1;font-size:14px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.n }}</div>
+                      <div style="width:58px;text-align:right;font-size:13.5px;color:#5C4C3E;">{{ m.v }}</div>
+                      <div style="width:64px;text-align:right;font-size:13.5px;font-weight:700;color:#B97F1F;">{{ m.p }}</div>
+                      <div style="width:74px;text-align:right;font-size:12.5px;color:{{ m.ac }};font-weight:600;">{{ m.a }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="background:#FFFCF6;border-top:1px solid #E6DCC9;display:flex;padding:10px 6px 30px;">
+                <sc-for list="{{ navMar }}" as="t" hint-placeholder-count="5">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                    {{ t.icon }}
+                    <span style="font-size:10.5px;font-weight:{{ t.w }};color:{{ t.c }};">{{ t.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <!-- B5 Nastavitve / aktivacija -->
+        <div data-screen-label="B5 Nastavitve in aktivacija skeniranja" style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+          <div style="font-size:12.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8A7A66;">B5 · Nastavitve → aktivacija skeniranja</div>
+          <x-import component="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+            <div style="height:100%;display:flex;flex-direction:column;background:#F5EFE6;color:#2B1D17;font-family:'Instrument Sans',sans-serif;">
+              <div style="flex:1;overflow:auto;padding:64px 20px 20px;box-sizing:border-box;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:28px;margin-bottom:18px;">Nastavitve</div>
+                <div style="background:#FFFCF6;border:2px solid #E8A23D;border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 2px 10px rgba(43,29,23,0.05);">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                    <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:18px;line-height:1.25;">Aktiviraj skeniranje računov</div>
+                    <div style="height:28px;padding:0 11px;border-radius:999px;background:rgba(200,81,43,0.12);color:#A33E1D;font-size:12px;font-weight:700;display:flex;align-items:center;white-space:nowrap;">Ni aktivirano</div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:26px;height:26px;border-radius:50%;background:#2B1D17;color:#F5EFE6;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+                      <div style="font-size:14px;line-height:1.5;color:#41332A;padding-top:2px;">Fotografiraj <strong>vzorčni račun</strong> svojega lokala.</div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:26px;height:26px;border-radius:50%;background:#2B1D17;color:#F5EFE6;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+                      <div style="font-size:14px;line-height:1.5;color:#41332A;padding-top:2px;">Iz njega preberemo tvojo <strong>davčno številko</strong>.</div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:26px;height:26px;border-radius:50%;background:#2B1D17;color:#F5EFE6;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+                      <div style="font-size:14px;line-height:1.5;color:#41332A;padding-top:2px;">Od takrat točke prinesejo <strong>samo tvoji računi</strong>.</div>
+                    </div>
+                  </div>
+                  <div style="border:2px dashed #D9CDBA;border-radius:18px;background:#FBF7EE;padding:22px;display:flex;flex-direction:column;align-items:center;gap:10px;">
+                    <svg width="30" height="30" viewBox="0 0 24 24" style="fill:none;stroke:#8A7A66;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;"><path d="M7 3.5h10V20l-2-1.4-1.7 1.4-1.6-1.4L10 20l-1.5-1.4L7 20V3.5Z"></path><path d="M9.5 8h5M9.5 11h5M9.5 14h3"></path></svg>
+                    <div style="font-size:13.5px;color:#8A7A66;text-align:center;line-height:1.45;">Račun naj bo raven in dobro osvetljen,<br>QR koda v celoti viden.</div>
+                  </div>
+                  <button style="width:100%;height:54px;border:none;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-family:'Instrument Sans',sans-serif;font-size:15.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:3px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" style="fill:none;stroke:#F5EFE6;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><path d="M4 8.6A2.6 2.6 0 0 1 6.6 6h1.5l1.5-2h4.8l1.5 2h1.5A2.6 2.6 0 0 1 20 8.6v7.8A2.6 2.6 0 0 1 17.4 19H6.6A2.6 2.6 0 0 1 4 16.4V8.6Z"></path><circle cx="12" cy="12.7" r="3.4"></circle></svg>
+                    Fotografiraj račun
+                  </button>
+                </div>
+                <div style="margin-top:14px;background:#FFFCF6;border:1px solid #EFE6D4;border-radius:20px;padding:4px 18px;display:flex;flex-direction:column;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 0;border-bottom:1px solid #F1E7D2;">
+                    <div style="display:flex;flex-direction:column;gap:1px;">
+                      <div style="font-size:14.5px;font-weight:600;">Ročno dodajanje točk</div>
+                      <div style="font-size:12.5px;color:#A6967F;">Osebje lahko točke vpiše brez QR</div>
+                    </div>
+                    <div style="width:50px;height:30px;border-radius:999px;background:#D9CDBA;position:relative;flex-shrink:0;"><div style="position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#FFFCF6;box-shadow:0 1px 3px rgba(43,29,23,0.25);"></div></div>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 0;border-bottom:1px solid #F1E7D2;">
+                    <div style="font-size:14.5px;font-weight:600;">Profil</div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" style="fill:none;stroke:#A6967F;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"></path></svg>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 0;">
+                    <div style="display:flex;flex-direction:column;gap:1px;">
+                      <div style="font-size:14.5px;font-weight:600;">Plačila</div>
+                      <div style="font-size:12.5px;color:#A6967F;">Naročnina · Stripe</div>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" style="fill:none;stroke:#A6967F;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"></path></svg>
+                  </div>
+                </div>
+              </div>
+              <div style="background:#FFFCF6;border-top:1px solid #E6DCC9;display:flex;padding:10px 6px 30px;">
+                <sc-for list="{{ navNas }}" as="t" hint-placeholder-count="5">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                    {{ t.icon }}
+                    <span style="font-size:10.5px;font-weight:{{ t.w }};color:{{ t.c }};">{{ t.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <!-- B6 onboarding + empty state -->
+        <div data-screen-label="B6 Onboarding in prazno stanje" style="display:flex;flex-direction:column;gap:28px;">
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:12.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8A7A66;">B6 · Onboarding lokala — ena kartica</div>
+            <div style="width:400px;background:#FFFCF6;border:1px solid #E6DCC9;border-radius:24px;padding:28px;display:flex;flex-direction:column;gap:18px;box-shadow:0 2px 10px rgba(43,29,23,0.05), 0 14px 34px rgba(43,29,23,0.07);">
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:26px;">Ustvari svojo stran</div>
+                <div style="font-size:14.5px;color:#8A7A66;line-height:1.5;">Tri polja in tvoji gostje že zbirajo žige.</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <label style="font-size:13px;font-weight:600;color:#5C4C3E;" for="ob-name">Ime znamke</label>
+                <input id="ob-name" value="Kavarna Moka" readOnly="{{ true }}" style="height:52px;border:1.5px solid #2B1D17;border-radius:14px;background:#FFFFFF;padding:0 16px;font-family:'Instrument Sans',sans-serif;font-size:16px;font-weight:600;color:#2B1D17;outline:none;"></input>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="font-size:13px;font-weight:600;color:#5C4C3E;">Logo</div>
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <div style="width:60px;height:60px;border-radius:50%;background:#2B1D17;color:#F5EFE6;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:26px;flex-shrink:0;">M</div>
+                  <div style="flex:1;height:60px;border:2px dashed #D9CDBA;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:13.5px;color:#8A7A66;font-weight:600;">Naloži logo (PNG, SVG)</div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="font-size:13px;font-weight:600;color:#5C4C3E;">Barva znamke</div>
+                <div style="display:flex;gap:10px;">
+                  <div style="width:38px;height:38px;border-radius:50%;background:#2B1D17;box-shadow:0 0 0 2.5px #FFFCF6, 0 0 0 5px #E8A23D;"></div>
+                  <div style="width:38px;height:38px;border-radius:50%;background:#C8512B;"></div>
+                  <div style="width:38px;height:38px;border-radius:50%;background:#5E7F52;"></div>
+                  <div style="width:38px;height:38px;border-radius:50%;background:#3D5A80;"></div>
+                  <div style="width:38px;height:38px;border-radius:50%;border:2px dashed #D9CDBA;display:flex;align-items:center;justify-content:center;font-size:16px;color:#8A7A66;">+</div>
+                </div>
+              </div>
+              <button style="width:100%;height:56px;border:none;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-family:'Instrument Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:3px;">Ustvari mojo stran</button>
+              <div style="font-size:13px;color:#A6967F;text-align:center;">Naslednji korak: predogled strani gosta → Objavi</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:12.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8A7A66;">B7 · Analitika — prazno stanje</div>
+            <div style="width:400px;background:#FFFCF6;border:1px solid #E6DCC9;border-radius:24px;padding:32px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;">
+              <div style="width:56px;height:56px;border-radius:50%;border:2px dashed #E8A23D;display:flex;align-items:center;justify-content:center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" style="fill:none;stroke:#B97F1F;stroke-width:1.9;stroke-linecap:round;"><path d="M5 19v-8M12 19V5M19 19v-6"></path></svg>
+              </div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:20px;">Še ni skeniranj</div>
+              <div style="font-size:14px;line-height:1.55;color:#5C4C3E;max-width:280px;">Natisni QR s strani Sistem in ga postavi na mize — prve žige lahko podariš že danes.</div>
+              <button style="margin-top:6px;height:46px;padding:0 22px;border:none;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-family:'Instrument Sans',sans-serif;font-size:14.5px;font-weight:600;cursor:pointer;" style-focus="outline:3px solid #E8A23D;outline-offset:2px;">Odpri Sistem</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ NEXT STEPS ============ -->
+    <div data-screen-label="Naslednji koraki" style="max-width:880px;background:#FFFCF6;border:1px solid #E6DCC9;border-radius:20px;padding:22px 26px;display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">Naslednji koraki</div>
+      <div style="font-size:15px;line-height:1.65;color:#41332A;">Potrdi ime produkta (zamenjam placeholder "Žig") · desktop različica nadzorne plošče · interaktivna registracija in pravi skener kamere · predogled strani gosta v onboardingu · predaja v kodo (build spec za Claude Code je že pripravljen — vizualni sistem zgoraj se 1:1 preslika v Tailwind tokene).</div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { screen: 'home', points: 135, error: 'dup', confirmed: false };
+
+  go(s) { this.setState({ screen: s, confirmed: false }); }
+
+  icon(name, color, size) {
+    const st = { fill: 'none', stroke: color, strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' };
+    const P = (d) => React.createElement('path', { d, style: st });
+    const C = (cx, cy, r, solid) => React.createElement('circle', solid
+      ? { cx, cy, r, style: { fill: '#FFFCF6', stroke: color, strokeWidth: 1.9 } }
+      : { cx, cy, r, style: st });
+    const k = {
+      cup: [P('M5 9h10v5.5A4.5 4.5 0 0 1 10.5 19h-1A4.5 4.5 0 0 1 5 14.5V9Z'), P('M15 10.5h1.6a2.4 2.4 0 0 1 0 4.8H15'), P('M7.8 6c0-1 .9-1 .9-2M11.2 6c0-1 .9-1 .9-2')],
+      croissant: [P('M19.5 13.5A8 8 0 1 1 10.5 4.5a6.2 6.2 0 0 0 9 9Z')],
+      cake: [P('M5 12.5h14V19H5z'), P('M5 15.2c2.3 1.8 4.4-1.8 7 0s4.7 1.8 7 0'), P('M12 12.5V9.8'), C(12, 7.8, 1)],
+      clock: [C(12, 12, 8.5), P('M12 8v4.4l2.8 2')],
+      chart: [P('M5 19v-8'), P('M12 19V5'), P('M19 19v-6')],
+      qr: [P('M4.5 4.5h5.5V10H4.5z'), P('M14 4.5h5.5V10H14z'), P('M4.5 14h5.5v5.5H4.5z'), P('M14 14h2.3v2.3H14z'), P('M17.4 17.4h2.1v2.1h-2.1z')],
+      mega: [P('M18 6 7 9.8H4.5v4.4H7L18 18V6Z'), P('M8.5 14.8 9.6 19h2')],
+      sliders: [P('M4 7.5h16'), P('M4 12h16'), P('M4 16.5h16'), C(15, 7.5, 2.1, true), C(8.5, 12, 2.1, true), C(16, 16.5, 2.1, true)],
+      check: [P('M5.5 12.5l4.2 4.2L18.5 7.5')]
+    };
+    return React.createElement('svg', { width: size || 22, height: size || 22, viewBox: '0 0 24 24', style: { display: 'block' } },
+      k[name].map((el, i) => React.cloneElement(el, { key: i })));
+  }
+
+  stampGrid(stamps, animateNew) {
+    const rots = [-5, 3, -2, 6, -4, 2, -6, 4, -3, 5];
+    const slots = [];
+    for (let i = 0; i < 10; i++) {
+      const filled = i < stamps;
+      const isNew = animateNew && filled && i === stamps - 1;
+      const isReward = i === 9;
+      let inner;
+      if (filled) {
+        inner = React.createElement('div', {
+          style: { position: 'absolute', inset: 0, animation: isNew ? 'stampIn 0.55s cubic-bezier(0.2,1.4,0.5,1) both 0.3s' : 'none' }
+        }, React.createElement('div', {
+          style: { position: 'absolute', inset: 0, borderRadius: '50%', border: '2.5px solid #C8512B', background: 'rgba(200,81,43,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'rotate(' + rots[i] + 'deg)' }
+        }, this.icon('cup', '#C8512B', 24)));
+      } else if (isReward) {
+        inner = React.createElement('span', { style: { fontFamily: '"Bricolage Grotesque",sans-serif', fontWeight: 700, fontSize: 10, letterSpacing: '0.05em', color: '#B97F1F' } }, 'KAVA');
+      } else {
+        inner = React.createElement('span', { style: { fontSize: 12, fontWeight: 600, color: '#C9BCA5' } }, String(i + 1));
+      }
+      slots.push(React.createElement('div', {
+        key: i,
+        style: { position: 'relative', aspectRatio: '1', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: filled ? '2px solid transparent' : '2px dashed ' + (isReward ? '#E8A23D' : '#D9CDBA'), boxSizing: 'border-box' }
+      }, inner));
+    }
+    return React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 12 } }, slots);
+  }
+
+  qrEl(px, seed) {
+    const n = 21;
+    let s = seed;
+    const rnd = () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; };
+    const cells = [];
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        const inF = (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
+        let on;
+        if (inF) {
+          const rr = r >= n - 7 ? r - (n - 7) : r;
+          const cc = c >= n - 7 ? c - (n - 7) : c;
+          on = rr === 0 || rr === 6 || cc === 0 || cc === 6 || (rr >= 2 && rr <= 4 && cc >= 2 && cc <= 4);
+        } else {
+          on = rnd() > 0.52;
+        }
+        cells.push(React.createElement('div', { key: r + '-' + c, style: { background: on ? '#2B1D17' : 'transparent' } }));
+      }
+    }
+    return React.createElement('div', { style: { width: px, height: px, display: 'grid', gridTemplateColumns: 'repeat(21,1fr)', gridTemplateRows: 'repeat(21,1fr)' } }, cells);
+  }
+
+  navFor(active) {
+    const items = [['Zgodovina', 'clock'], ['Analitika', 'chart'], ['Sistem', 'qr'], ['Marketing', 'mega'], ['Nastavitve', 'sliders']];
+    return items.map(([label, ic]) => {
+      const on = label === active;
+      return { label, icon: this.icon(ic, on ? '#2B1D17' : '#A6967F', 22), c: on ? '#2B1D17' : '#A6967F', w: on ? 700 : 500 };
+    });
+  }
+
+  renderVals() {
+    const S = this.state;
+    const P = S.points;
+    const stamps = Math.min(10, Math.floor(P / 15));
+    const rewardReady = P >= 150;
+
+    const rewardDefs = [
+      { name: 'Kava po izbiri', req: 150, ic: 'cup' },
+      { name: 'Domač rogljiček', req: 220, ic: 'croissant' },
+      { name: 'Kos torte dneva', req: 320, ic: 'cake' }
+    ];
+    const rewards = rewardDefs.map((r) => {
+      const pct = Math.min(100, Math.round(P / r.req * 100));
+      const ready = P >= r.req;
+      return {
+        name: r.name,
+        icon: this.icon(r.ic, '#2B1D17', 24),
+        label: ready ? 'lahko unovčiš' : P + ' / ' + r.req + ' točk',
+        lblColor: ready ? '#5E7F52' : '#8A7A66',
+        lblW: ready ? 700 : 500,
+        barColor: ready ? '#5E7F52' : '#E8A23D',
+        pctW: pct + '%'
+      };
+    });
+
+    const left = 150 - P;
+    const visitsLeft = 10 - stamps;
+    const visitWord = visitsLeft === 1 ? 'obisk' : visitsLeft === 2 ? 'obiska' : visitsLeft <= 4 ? 'obiske' : 'obiskov';
+    const nextHint = rewardReady
+      ? 'Kartonček je poln — unovči kavo pri osebju.'
+      : 'Še ' + left + ' točk (' + visitsLeft + ' ' + visitWord + ') do brezplačne kave.';
+
+    const errs = {
+      dup: { t: 'Ta račun je bil že unovčen.', h: 'Vsak račun prinese točke samo enkrat.' },
+      foreign: { t: 'Ta račun ni iz Kavarne Moka.', h: 'Točke dobiš za račune, izdane v tem lokalu.' },
+      old: { t: 'Računi se lahko unovčijo v 24 urah.', h: 'Ta račun je starejši. Naslednjič ga skeniraj kar pri mizi.' }
+    };
+    const err = errs[S.error] || errs.dup;
+
+    const plusBadge = React.createElement('div', {
+      style: { fontFamily: '"Bricolage Grotesque",sans-serif', fontWeight: 800, fontSize: 42, color: '#5E7F52', animation: 'popIn 0.5s cubic-bezier(0.2,1.4,0.5,1) both' }
+    }, '+15 točk');
+
+    const checkBadge = React.createElement('div', {
+      style: { width: 84, height: 84, borderRadius: '50%', background: 'rgba(94,127,82,0.14)', border: '2.5px solid #5E7F52', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'popIn 0.5s cubic-bezier(0.2,1.4,0.5,1) both' }
+    }, this.icon('check', '#5E7F52', 36));
+
+    const scanline = React.createElement('div', {
+      style: { position: 'absolute', left: '7%', right: '7%', height: 2.5, borderRadius: 3, top: '10%', background: 'linear-gradient(90deg, rgba(232,162,61,0), #E8A23D, rgba(232,162,61,0))', boxShadow: '0 0 14px rgba(232,162,61,0.8)', animation: 'scanSweep 2.4s ease-in-out infinite alternate' }
+    });
+    const qrGhost = React.createElement('div', { style: { opacity: 0.18 } }, this.qrEl(150, 41));
+
+    const hours = [['7', 18, '7'], ['8', 34, ''], ['9', 46, ''], ['10', 38, '10'], ['11', 22, ''], ['12', 26, ''], ['13', 20, '13'], ['14', 16, ''], ['15', 30, ''], ['16', 42, '16'], ['17', 28, ''], ['18', 14, ''], ['19', 10, '19'], ['20', 6, ''], ['21', 4, '21']];
+    const bars = hours.map(([h, v, lbl]) => ({ ht: Math.round(v / 46 * 112) + 'px', bg: v === 46 ? '#2B1D17' : '#E8A23D', lbl }));
+
+    const stats = [
+      { l: 'Skupaj skeniranj', v: '482', s: '+18 % na prejšnji mesec', vc: '#2B1D17' },
+      { l: 'Št. strank', v: '137', s: '+12 novih ta mesec', vc: '#2B1D17' },
+      { l: 'Povp. obiski / stranko', v: '3,5', s: 'v zadnjih 30 dneh', vc: '#2B1D17' },
+      { l: 'Pogostost obiskov', v: '8,2 dni', s: 'med obiskoma', vc: '#2B1D17' },
+      { l: 'Podarjene točke', v: '7.230', s: '482 žigov', vc: '#2B1D17' },
+      { l: 'Unovčene točke', v: '2.850', s: '19 nagrad', vc: '#2B1D17' },
+      { l: 'Povp. račun', v: '—', s: 'z OCR · faza 2', vc: '#C9BCA5' },
+      { l: 'Prihodek', v: '—', s: 'z OCR · faza 2', vc: '#C9BCA5' }
+    ];
+
+    const customers = [
+      { r: '1', n: '+386 31 ··· 412', v: '24 obiskov', p: '360 točk' },
+      { r: '2', n: '+386 40 ··· 198', v: '19 obiskov', p: '285 točk' },
+      { r: '3', n: '+386 51 ··· 736', v: '15 obiskov', p: '225 točk' },
+      { r: '4', n: 'ana.k@···.com', v: '12 obiskov', p: '180 točk' }
+    ];
+
+    const hist = [
+      { n: '+386 31 ··· 412', t: 'danes · 9.12', d: '+15 točk' },
+      { n: '+386 51 ··· 736', t: 'danes · 8.47', d: '+15 točk' },
+      { n: 'ana.k@···.com', t: 'danes · 8.21', d: '+15 točk' },
+      { n: '+386 40 ··· 198', t: 'včeraj · 16.30', d: '+15 točk' },
+      { n: '+386 31 ··· 412', t: 'včeraj · 11.05', d: '+15 točk' },
+      { n: '+386 68 ··· 904', t: 'včeraj · 9.58', d: '+15 točk' },
+      { n: '+386 51 ··· 736', t: 'pon · 14.12', d: '+15 točk' }
+    ];
+
+    const marketing = [
+      { n: '+386 31 ··· 412', v: '24', p: '360', a: 'danes', ac: '#5E7F52' },
+      { n: '+386 40 ··· 198', v: '19', p: '285', a: 'včeraj', ac: '#5E7F52' },
+      { n: '+386 51 ··· 736', v: '15', p: '225', a: 'danes', ac: '#5E7F52' },
+      { n: 'ana.k@···.com', v: '12', p: '180', a: 'pred 3 dnevi', ac: '#8A7A66' },
+      { n: '+386 68 ··· 904', v: '9', p: '135', a: 'pred 6 dnevi', ac: '#8A7A66' },
+      { n: '+386 30 ··· 557', v: '4', p: '60', a: 'pred 21 dnevi', ac: '#A33E1D' }
+    ];
+
+    return {
+      points: P,
+      stampCountLabel: stamps + ' / 10 žigov',
+      nextHint,
+      rewards,
+      rewardReady,
+      rewardNotReady: !rewardReady,
+      stampGridHome: this.stampGrid(stamps, false),
+      stampGridSuccess: this.stampGrid(stamps, true),
+      successTitle: stamps >= 10 ? 'Kartonček je poln!' : 'Žig št. ' + stamps + ' je tvoj',
+      successMsg: rewardReady ? 'Brezplačna kava po izbiri te čaka pri osebju.' : 'Še ' + (150 - P) + ' točk do brezplačne kave.',
+      errTitle: err.t,
+      errHint: err.h,
+      plusBadge, checkBadge, scanline, qrGhost,
+      stats, bars, customers, hist, marketing,
+      qrBig: this.qrEl(196, 7),
+      qrRedeem: this.qrEl(132, 99),
+      isHome: S.screen === 'home',
+      isScanner: S.screen === 'scanner',
+      isSuccess: S.screen === 'success',
+      isError: S.screen === 'error',
+      isRedeem: S.screen === 'redeem',
+      confirmed: S.confirmed,
+      notConfirmed: !S.confirmed,
+      goScan: () => this.go('scanner'),
+      backHome: () => this.go('home'),
+      retry: () => this.go('scanner'),
+      goRedeem: () => this.go('redeem'),
+      simOk: () => this.setState({ screen: 'success', points: Math.min(this.state.points + 15, 999) }),
+      simDup: () => this.setState({ screen: 'error', error: 'dup' }),
+      simForeign: () => this.setState({ screen: 'error', error: 'foreign' }),
+      simOld: () => this.setState({ screen: 'error', error: 'old' }),
+      confirmRedeem: () => this.setState({ confirmed: true }),
+      finishRedeem: () => this.setState({ screen: 'home', confirmed: false, points: Math.max(0, this.state.points - 150) }),
+      resetDemo: () => this.setState({ screen: 'home', points: 135, confirmed: false, error: 'dup' }),
+      navZgo: this.navFor('Zgodovina'),
+      navAna: this.navFor('Analitika'),
+      navSis: this.navFor('Sistem'),
+      navMar: this.navFor('Marketing'),
+      navNas: this.navFor('Nastavitve')
+    };
+  }
+}
+</script>
+</body>
+</html>

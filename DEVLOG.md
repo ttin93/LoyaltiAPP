@@ -49,6 +49,16 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-14 — seja 4
+Implementiran **Spin Page** design (SpinFlow.dc.html). Nova komponenta `app/components/SpinFlow.tsx` —
+5-koračni flow: 🎡 kolo (6 polj, rigged na "Brezplačna kava") → 🎉 zadetek → prijava (**Google ALI
+telefon**) → **SMS OTP keypad** (4-mestna koda) → 🎟️ kupon ticket (QR + koda). Vezano na pravo
+registracijo: OTP/Google → `/api/register` → customerId + kupon v localStorage → "Na mojo stran
+zvestobe" (/p/[code]). Nova dedicated stran **`/p/[code]/spin`** (brendirano temno gradient ozadje).
+Embed widget `/embed/[code]` zdaj uporablja SpinFlow; `EmbedWheel.tsx` odstranjen. Build čist, rute 200.
+OTP in Google sta zaenkrat **mock** (pravi SMS ponudnik + Google OAuth = faza 2). Opomba: GuestApp ima
+še starejše preprosto kolo pred registracijo — možno poenotiti (preusmeri na /spin).
+
 ### 2026-06-14 — seja 3
 **Supabase POVEZAN v živo** (projekt ref `xlcmeaeiyapwblivqolo`, ime LoyaltyAPP). Prek Management API
 (Personal Access Token shranjen v `.env.local`): pobrani API ključi → zapisani v `.env.local`,

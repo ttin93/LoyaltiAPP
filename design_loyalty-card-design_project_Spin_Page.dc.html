@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400..700&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #E3DBCC; }
+    @keyframes flo { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+</helmet>
+
+<div style="min-height:100vh;background:#E3DBCC;font-family:'Instrument Sans',sans-serif;color:#2B1D17;padding:54px 36px 90px;box-sizing:border-box;">
+  <div style="max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:60px;">
+
+    <!-- ============ HEADER ============ -->
+    <div data-screen-label="Uvod" style="display:flex;flex-direction:column;gap:18px;max-width:860px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;border-radius:50%;border:2.5px solid #C8512B;background:rgba(200,81,43,0.07);display:flex;align-items:center;justify-content:center;transform:rotate(-6deg);"><svg width="18" height="18" viewBox="0 0 24 24" style="fill:none;stroke:#C8512B;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;"><path d="M5 9h10v5.5A4.5 4.5 0 0 1 10.5 19h-1A4.5 4.5 0 0 1 5 14.5V9Z"></path><path d="M15 10.5h1.6a2.4 2.4 0 0 1 0 4.8H15"></path></svg></div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8A7A66;">Žig · Spin &amp; Win · pridobivanje strank</div>
+      </div>
+      <h1 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:42px;line-height:1.04;letter-spacing:-0.01em;">Zavrti, osvoji, prijavi se</h1>
+      <p style="margin:0;font-size:17px;line-height:1.55;color:#5C4C3E;max-width:680px;">Nova stran za prve obiskovalce: gost zavrti kolo, osvoji nagrado (npr. brezplačno kavo) in jo prevzame šele po hitri prijavi — z Googlom ali telefonsko številko (4-mestna SMS koda). Tako lokal dobi novega registriranega gosta, gost pa takojšnjo nagrado.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:999px;background:#FFFCF6;border:1px solid #E6DCC9;font-size:14px;font-weight:600;"><span style="width:22px;height:22px;border-radius:50%;background:#2B1D17;color:#F5EFE6;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">1</span>Zavrti kolo</div>
+        <div style="display:flex;align-items:center;color:#B6A78F;">→</div>
+        <div style="display:flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:999px;background:#FFFCF6;border:1px solid #E6DCC9;font-size:14px;font-weight:600;"><span style="width:22px;height:22px;border-radius:50%;background:#2B1D17;color:#F5EFE6;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">2</span>Osvoji nagrado</div>
+        <div style="display:flex;align-items:center;color:#B6A78F;">→</div>
+        <div style="display:flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:999px;background:#FFFCF6;border:1px solid #E6DCC9;font-size:14px;font-weight:600;"><span style="width:22px;height:22px;border-radius:50%;background:#2B1D17;color:#F5EFE6;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">3</span>Google / telefon</div>
+        <div style="display:flex;align-items:center;color:#B6A78F;">→</div>
+        <div style="display:flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:999px;background:#FFFCF6;border:1px solid #E6DCC9;font-size:14px;font-weight:600;"><span style="width:22px;height:22px;border-radius:50%;background:#2B1D17;color:#F5EFE6;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">4</span>SMS koda</div>
+        <div style="display:flex;align-items:center;color:#B6A78F;">→</div>
+        <div style="display:flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-size:14px;font-weight:600;">🎟️ Kupon</div>
+      </div>
+      <div style="margin-top:4px;font-size:13.5px;color:#8A7A66;background:#FBF4E8;border:1px dashed #D9C9A8;border-radius:12px;padding:10px 14px;align-self:flex-start;">💡 Vse je interaktivno — zavrti kolo v kateremkoli okviru spodaj.</div>
+    </div>
+
+    <!-- ============ A · MOBILE FULL PAGE ============ -->
+    <div data-screen-label="A — Začetna stran (mobilno)" style="display:flex;flex-direction:column;gap:18px;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:12.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">A · Začetna stran — mobilno</div>
+        <div style="font-size:15px;color:#5C4C3E;max-width:560px;">Polna stran, ki jo gost odpre prek QR / povezave. Brendirano ozadje lokala, kolo v središču.</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+        <!-- phone -->
+        <div style="background:#1A120D;border-radius:46px;padding:12px;box-shadow:0 30px 70px rgba(43,29,23,0.3);flex-shrink:0;">
+          <div style="width:380px;height:800px;border-radius:36px;overflow:hidden;position:relative;background:radial-gradient(120% 80% at 50% 0%, #3A2A20 0%, #2B1D17 52%, #1F140E 100%);">
+            <div style="position:absolute;top:0;left:0;right:0;height:42px;display:flex;align-items:center;justify-content:center;z-index:5;"><div style="width:120px;height:26px;background:#000;border-radius:0 0 16px 16px;"></div></div>
+            <div style="height:100%;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:60px 18px 28px;box-sizing:border-box;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:18px;">
+                <div style="width:60px;height:60px;border-radius:18px;background:#F5EFE6;color:#2B1D17;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:28px;box-shadow:0 8px 20px rgba(0,0,0,0.25);">M</div>
+                <div style="text-align:center;"><div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:24px;color:#F8F1E7;line-height:1.1;">Dobrodošel v Kavarni Moka</div><div style="font-size:14px;color:rgba(245,239,230,0.7);margin-top:4px;">Tvoj prvi obisk si zasluži nagrado 🎁</div></div>
+              </div>
+              <dc-import name="SpinFlow" venue-name="Kavarna Moka" venue-initial="M" brand-color="#E8A23D" tagline="Zavrti kolo in osvoji nagrado za prvi obisk" hint-size="100%,640px"></dc-import>
+              <div style="margin-top:18px;font-size:12px;color:rgba(245,239,230,0.5);text-align:center;">Brez prenosa aplikacije · velja samo v tem lokalu</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- annotations -->
+        <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:16px;padding-top:8px;">
+          <div style="background:#FFFCF6;border:1px solid #E6DCC9;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:8px;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:16px;">Brendirano za vsak lokal</div>
+            <div style="font-size:14px;line-height:1.5;color:#5C4C3E;">Logo, ime, barva in nagrade so nastavljivi — lokal si stran uredi sam. Ozadje prevzame barvo znamke.</div>
+          </div>
+          <div style="background:#FFFCF6;border:1px solid #E6DCC9;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:8px;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:16px;">En vrtljaj na gosta</div>
+            <div style="font-size:14px;line-height:1.5;color:#5C4C3E;">Kolo je »srečno« — vedno pristane na nagradi. Prijava prepreči večkratno izkoriščanje.</div>
+          </div>
+          <div style="background:#FFFCF6;border:1px solid #E6DCC9;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:8px;">
+            <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:16px;">Nagrada = registracija</div>
+            <div style="font-size:14px;line-height:1.5;color:#5C4C3E;">Kupon se odklene šele po prijavi. Lokal dobi novega gosta v bazo, gost dobi kavo.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ B · DESKTOP FULL PAGE ============ -->
+    <div data-screen-label="B — Začetna stran (desktop)" style="display:flex;flex-direction:column;gap:18px;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:12.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">B · Začetna stran — namizno</div>
+        <div style="font-size:15px;color:#5C4C3E;max-width:560px;">Ista izkušnja, razširjena na širši zaslon: brendiran levi panel + kolo desno.</div>
+      </div>
+      <!-- browser frame -->
+      <div style="border-radius:18px;overflow:hidden;border:1px solid #D7CBB6;box-shadow:0 26px 60px rgba(43,29,23,0.18);background:#fff;">
+        <div style="height:46px;background:#EAE1D1;border-bottom:1px solid #D7CBB6;display:flex;align-items:center;gap:8px;padding:0 16px;">
+          <div style="display:flex;gap:7px;"><span style="width:12px;height:12px;border-radius:50%;background:#E0705B;"></span><span style="width:12px;height:12px;border-radius:50%;background:#E8B84B;"></span><span style="width:12px;height:12px;border-radius:50%;background:#74A45C;"></span></div>
+          <div style="margin:0 auto;height:28px;min-width:320px;padding:0 16px;border-radius:999px;background:#FFFCF6;border:1px solid #DDD2C0;display:flex;align-items:center;gap:8px;font-size:13px;color:#5C4C3E;"><svg width="13" height="13" viewBox="0 0 24 24" style="fill:none;stroke:#8A7A66;stroke-width:2;"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>zig.app/p/moka/spin</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;min-height:660px;">
+          <!-- brand panel -->
+          <div style="flex:1.1;min-width:320px;background:radial-gradient(120% 100% at 0% 0%, #3A2A20 0%, #2B1D17 60%, #1F140E 100%);padding:56px 48px;display:flex;flex-direction:column;justify-content:center;gap:24px;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-50px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(232,162,61,0.16);"></div>
+            <div style="position:absolute;bottom:-60px;left:-30px;width:170px;height:170px;border-radius:50%;background:rgba(200,81,43,0.16);"></div>
+            <div style="position:relative;display:flex;flex-direction:column;gap:24px;">
+              <div style="display:flex;align-items:center;gap:12px;"><div style="width:54px;height:54px;border-radius:16px;background:#F5EFE6;color:#2B1D17;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:26px;">M</div><span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px;color:#F8F1E7;">Kavarna Moka</span></div>
+              <h2 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:clamp(30px,3vw,44px);line-height:1.04;color:#F8F1E7;">Tvoja prva kava<br>je lahko na nas</h2>
+              <p style="margin:0;font-size:16.5px;line-height:1.6;color:rgba(245,239,230,0.8);max-width:380px;">Zavrti kolo, osvoji nagrado in jo prevzame v lokalu. En vrtljaj za vsakega novega gosta.</p>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;align-items:center;gap:11px;color:rgba(245,239,230,0.9);font-size:15px;"><span style="width:26px;height:26px;border-radius:8px;background:rgba(245,239,230,0.12);display:flex;align-items:center;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" style="fill:none;stroke:#E8A23D;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;"><path d="M5 12.5l4.2 4.2L19 7"></path></svg></span>Zajamčena nagrada ob vrtljaju</div>
+                <div style="display:flex;align-items:center;gap:11px;color:rgba(245,239,230,0.9);font-size:15px;"><span style="width:26px;height:26px;border-radius:8px;background:rgba(245,239,230,0.12);display:flex;align-items:center;justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" style="fill:none;stroke:#E8A23D;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;"><path d="M5 12.5l4.2 4.2L19 7"></path></svg></span>Brez aplikacije · prijava v 10 sekundah</div>
+              </div>
+            </div>
+          </div>
+          <!-- spin panel -->
+          <div style="flex:1;min-width:340px;background:#F1E9DB;display:flex;align-items:center;justify-content:center;padding:48px 32px;">
+            <dc-import name="SpinFlow" venue-name="Kavarna Moka" venue-initial="M" brand-color="#E8A23D" tagline="Zavrti kolo in osvoji nagrado za prvi obisk" hint-size="100%,640px"></dc-import>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ C · POPUP WIDGET ============ -->
+    <div data-screen-label="C — Popup widget" style="display:flex;flex-direction:column;gap:18px;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:12.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">C · Popup widget za integracijo</div>
+        <div style="font-size:15px;color:#5C4C3E;max-width:620px;">Isti koncept kot vgradni gumb na obstoječi spletni strani lokala. En zalepljen delček kode → plavajoči gumb, ki odpre kolo v pojavnem oknu.</div>
+      </div>
+      <!-- browser frame with faux site -->
+      <div style="border-radius:18px;overflow:hidden;border:1px solid #D7CBB6;box-shadow:0 26px 60px rgba(43,29,23,0.18);background:#fff;position:relative;">
+        <div style="height:46px;background:#EAE1D1;border-bottom:1px solid #D7CBB6;display:flex;align-items:center;gap:8px;padding:0 16px;">
+          <div style="display:flex;gap:7px;"><span style="width:12px;height:12px;border-radius:50%;background:#E0705B;"></span><span style="width:12px;height:12px;border-radius:50%;background:#E8B84B;"></span><span style="width:12px;height:12px;border-radius:50%;background:#74A45C;"></span></div>
+          <div style="margin:0 auto;height:28px;min-width:300px;padding:0 16px;border-radius:999px;background:#FFFCF6;border:1px solid #DDD2C0;display:flex;align-items:center;gap:8px;font-size:13px;color:#5C4C3E;"><svg width="13" height="13" viewBox="0 0 24 24" style="fill:none;stroke:#8A7A66;stroke-width:2;"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>kavarnamoka.si</div>
+        </div>
+        <!-- faux merchant site (dimmed behind popup) -->
+        <div style="position:relative;height:760px;overflow:hidden;background:#FFFCF6;">
+          <div style="padding:22px 40px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #F1E7D2;">
+            <div style="width:38px;height:38px;border-radius:11px;background:#2B1D17;color:#F5EFE6;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:18px;">M</div>
+            <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:18px;">Kavarna Moka</span>
+            <div style="margin-left:auto;display:flex;gap:24px;color:#8A7A66;font-size:14px;font-weight:500;"><span>Meni</span><span>O nas</span><span>Kontakt</span></div>
+          </div>
+          <div style="padding:60px 40px;display:flex;flex-wrap:wrap;gap:40px;align-items:center;">
+            <div style="flex:1;min-width:300px;display:flex;flex-direction:column;gap:18px;">
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:46px;line-height:1.05;color:#2B1D17;">Sveže pražena kava<br>v srcu Ljubljane</div>
+              <div style="font-size:17px;line-height:1.6;color:#8A7A66;max-width:420px;">Specialty espresso, domače sladice in mir sredi mesta. Odpremo vsak dan ob 7h.</div>
+              <div style="display:flex;gap:12px;"><div style="height:48px;padding:0 22px;border-radius:999px;background:#2B1D17;color:#F5EFE6;font-size:15px;font-weight:600;display:flex;align-items:center;">Naš meni</div><div style="height:48px;padding:0 22px;border-radius:999px;border:1.5px solid #D9CDBA;color:#2B1D17;font-size:15px;font-weight:600;display:flex;align-items:center;">Rezerviraj mizo</div></div>
+            </div>
+            <div style="flex:1;min-width:280px;height:300px;border-radius:24px;background:repeating-linear-gradient(45deg,#EFE6D8,#EFE6D8 14px,#E7DCCB 14px,#E7DCCB 28px);display:flex;align-items:center;justify-content:center;color:#B49A7C;font-size:14px;font-weight:600;">slika lokala</div>
+          </div>
+          <!-- scrim -->
+          <div style="position:absolute;inset:0;background:rgba(26,18,13,0.42);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);"></div>
+          <!-- popup widget -->
+          <div style="position:absolute;bottom:28px;right:28px;width:404px;max-width:calc(100% - 40px);display:flex;flex-direction:column;align-items:flex-end;gap:14px;z-index:5;">
+            <div style="position:relative;width:100%;">
+              <button aria-label="Zapri" style="position:absolute;top:-12px;right:-8px;z-index:8;width:34px;height:34px;border-radius:50%;border:none;background:#2B1D17;color:#F5EFE6;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 16px rgba(43,29,23,0.3);"><svg width="15" height="15" viewBox="0 0 24 24" style="fill:none;stroke:#F5EFE6;stroke-width:2.2;stroke-linecap:round;"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"></path></svg></button>
+              <dc-import name="SpinFlow" venue-name="Kavarna Moka" venue-initial="M" brand-color="#E8A23D" tagline="Pozdrav! Zavrti kolo za nagrado dobrodošlice" hint-size="100%,640px"></dc-import>
+            </div>
+            <!-- launcher bubble -->
+            <div style="display:flex;align-items:center;gap:10px;background:#2B1D17;border-radius:999px;padding:8px 8px 8px 16px;box-shadow:0 12px 28px rgba(43,29,23,0.35);animation:flo 4s ease-in-out infinite;">
+              <span style="font-size:14px;font-weight:600;color:#F5EFE6;">Osvoji nagrado</span>
+              <div style="width:42px;height:42px;border-radius:50%;background:#E8A23D;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" style="fill:none;stroke:#2B1D17;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18M3 12h18M6 6l12 12M18 6 6 18"></path></svg></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;">
+        <div style="flex:1;min-width:260px;background:#2B1D17;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#B7A488;">Integracija v 1 vrstici</div>
+          <code style="font-family:ui-monospace,Menlo,monospace;font-size:13px;color:#E8C99A;background:rgba(245,239,230,0.06);border:1px solid rgba(245,239,230,0.12);border-radius:10px;padding:12px 14px;line-height:1.5;white-space:pre-wrap;word-break:break-all;">&lt;script src="https://zig.app/w.js" data-venue="moka"&gt;&lt;/script&gt;</code>
+        </div>
+        <div style="flex:1;min-width:260px;background:#FFFCF6;border:1px solid #E6DCC9;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:16px;">Plavajoči gumb + pojavno okno</div>
+          <div style="font-size:14px;line-height:1.5;color:#5C4C3E;">Gumb »Osvoji nagrado« sedi v kotu strani lokala. Klik odpre isto kolo v pojavnem oknu — brez zapuščanja strani.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ D · CUSTOMIZATION ============ -->
+    <div data-screen-label="D — Prilagoditev znamke" style="display:flex;flex-direction:column;gap:18px;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:12.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">D · Vse prilagodi lokal sam</div>
+        <div style="font-size:15px;color:#5C4C3E;max-width:560px;">Logo, ime, barva znamke in nagrade na kolesu — brez razvijalca. Iste komponente prevzamejo barvo.</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;">
+        <div style="background:#FFFCF6;border:1px solid #E6DCC9;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:18px;min-width:300px;flex:1;">
+          <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:18px;">Nastavitve znamke</div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><div style="font-size:13px;font-weight:600;color:#5C4C3E;">Ime lokala</div><div style="height:46px;border:1.5px solid #DDD2C0;border-radius:12px;background:#fff;display:flex;align-items:center;padding:0 14px;font-size:15px;font-weight:600;">Kavarna Moka</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><div style="font-size:13px;font-weight:600;color:#5C4C3E;">Barva znamke</div><div style="display:flex;gap:10px;"><div style="width:36px;height:36px;border-radius:50%;background:#E8A23D;box-shadow:0 0 0 2.5px #FFFCF6,0 0 0 5px #2B1D17;"></div><div style="width:36px;height:36px;border-radius:50%;background:#C8512B;"></div><div style="width:36px;height:36px;border-radius:50%;background:#5E7F52;"></div><div style="width:36px;height:36px;border-radius:50%;background:#3D5A80;"></div><div style="width:36px;height:36px;border-radius:50%;background:#9B4DA0;"></div></div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;"><div style="font-size:13px;font-weight:600;color:#5C4C3E;">Nagrade na kolesu</div><div style="display:flex;flex-wrap:wrap;gap:8px;"><span style="height:32px;padding:0 12px;border-radius:999px;background:#F1E7D2;font-size:13px;font-weight:600;display:flex;align-items:center;">Brezplačna kava</span><span style="height:32px;padding:0 12px;border-radius:999px;background:#F1E7D2;font-size:13px;font-weight:600;display:flex;align-items:center;">−10 %</span><span style="height:32px;padding:0 12px;border-radius:999px;background:#F1E7D2;font-size:13px;font-weight:600;display:flex;align-items:center;">+30 točk</span><span style="height:32px;padding:0 12px;border-radius:999px;background:#F1E7D2;font-size:13px;font-weight:600;display:flex;align-items:center;">Piškot</span></div></div>
+          <div style="font-size:12.5px;color:#8A7A66;background:#FBF4E8;border-radius:10px;padding:10px 12px;">Spremembe se v živo poznajo v kolesu desno →</div>
+        </div>
+        <!-- alternate-brand preview -->
+        <div style="flex:1;min-width:320px;display:flex;flex-direction:column;gap:10px;align-items:center;">
+          <div style="font-size:12.5px;font-weight:600;color:#8A7A66;">Primer: druga znamka, druga barva</div>
+          <dc-import name="SpinFlow" venue-name="Slaščičarna Lolita" venue-initial="L" brand-color="#9B4DA0" tagline="Zavrti in osvoji sladko presenečenje" hint-size="100%,640px"></dc-import>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ NEXT STEPS ============ -->
+    <div data-screen-label="Naslednji koraki" style="max-width:860px;background:#FFFCF6;border:1px solid #E6DCC9;border-radius:18px;padding:20px 24px;display:flex;flex-direction:column;gap:8px;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8A7A66;">Naslednji koraki</div>
+      <div style="font-size:15px;line-height:1.6;color:#41332A;">Potrdi nabor nagrad in verjetnosti · besedilo pravne privolitve (GDPR) za zbiranje telefonskih · pravi Google OAuth in SMS ponudnik · povezava z nadzorno ploščo (vsak nov spin = nova stranka v Marketing zavihku) · A/B test gumba widgeta.</div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

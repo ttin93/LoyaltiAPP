@@ -30,8 +30,7 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 - Design: Bricolage Grotesque + Instrument Sans; paleta espresso/krema/jantar/opeka/žajbelj.
 
 ## NI še / naslednji koraki
-- Priklop **Supabase** (shema: `supabase/schema.sql`; `.env.local` prazen; navodila: `SETUP.md`;
-  izklopi email-confirm v Auth nastavitvah).
+- ✅ **Supabase POVEZAN** (seja 3) — register/scan/dedup/točke delajo v živo; owner prijava (/partner) odklenjena.
 - Pravi **znesek** za per_euro: QR NIMA cene → začasno OCR / kasneje **eBlagajna POS API**.
 - **Stripe** plačila (cenik je zaenkrat samo prikaz).
 - Pravi **SMS** provider (zdaj demo gumb).
@@ -49,6 +48,20 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
   `time_closed`, `additional.zoi`+`eor` → kasnejša integracija za zanesljiv znesek.
 
 ## Dnevnik (najnovejše na vrhu)
+
+### 2026-06-14 — seja 3
+**Supabase POVEZAN v živo** (projekt ref `xlcmeaeiyapwblivqolo`, ime LoyaltyAPP). Prek Management API
+(Personal Access Token shranjen v `.env.local`): pobrani API ključi → zapisani v `.env.local`,
+pognana `supabase/schema.sql` (tabele/funkcije/RLS/seed), izklopljen email-confirm (autoconfirm),
+demo lokal reseediran na topli design (Kavarna Moka, 15 točk, kava/rogljiček/torta). **Cel flow
+PREVERJEN prek HTTP s pravim Meso Meso računom:** register → scan (+15, izdajatelj OK) → dedup
+("že unovčen") → točke v Postgresu. Dodani skripti `scripts/sb-sql.mjs` (poženi poljuben SQL/migracijo
+prek API; bere token iz .env.local) in `scripts/sb-autoconfirm.mjs`. Testni podatki počiščeni.
+
+> **Priklop na drugem PC-ju:** `.env.local` je gitignored (NE gre na GitHub). Na PC #2 ustvari
+> `.env.local` z `SUPABASE_ACCESS_TOKEN=sbp_...` (+ `NEXT_PUBLIC_SUPABASE_URL=https://xlcmeaeiyapwblivqolo.supabase.co`),
+> nato Claude pobere ostale ključe sam (`node scripts/sb-sql.mjs` uporablja isti token). Migracije
+> odslej: dopiši v `supabase/schema.sql` ali ločen .sql in poženi `node scripts/sb-sql.mjs pot.sql`.
 
 ### 2026-06-14 — seja 2
 Implementiran NOV namenski **landing** (Landing.dc.html): desktop marketing stran — sticky nav z

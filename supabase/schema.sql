@@ -158,17 +158,17 @@ create policy "rewards public read" on rewards for select using (true);
 -- ---------- Seed: demo lokal, ujema se s pravim računom Meso Meso ----------
 -- davčna 97384933 = Ivanetič d.o.o.; veliko časovno okno za testiranje s starim računom.
 insert into venues (name, public_code, davcna_stevilka, brand_color, points_model, points_per_visit, scan_window_hours)
-values ('Meso Meso (demo)', 'demo', '97384933', '#16a34a', 'per_visit', 10, 9000)
+values ('Kavarna Moka', 'demo', '97384933', '#2B1D17', 'per_visit', 15, 9000)
 on conflict (public_code) do nothing;
 
 insert into rewards (venue_id, name, points_required, sort_order)
-select id, 'Brezplačna kava', 50, 1 from venues where public_code = 'demo'
+select id, 'Kava po izbiri', 150, 1 from venues where public_code = 'demo'
 on conflict (venue_id, name) do nothing;
 
 insert into rewards (venue_id, name, points_required, sort_order)
-select id, 'Brezplačna pijača', 80, 2 from venues where public_code = 'demo'
+select id, 'Domač rogljiček', 220, 2 from venues where public_code = 'demo'
 on conflict (venue_id, name) do nothing;
 
 insert into rewards (venue_id, name, points_required, sort_order)
-select id, 'Brezplačen burger', 200, 3 from venues where public_code = 'demo'
+select id, 'Kos torte dneva', 320, 3 from venues where public_code = 'demo'
 on conflict (venue_id, name) do nothing;

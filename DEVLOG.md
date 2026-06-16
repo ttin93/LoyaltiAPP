@@ -49,6 +49,29 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-15 — seja 7
+**POS verifikacija — ogrodje + raziskava (pot do "ponaredek nemogoč").** Strateška odločitev: pravi
+moat = preverjanje računov PRI VIRU (blagajna lokala), ne heuristike. Strict-mode (seja-6 ideja)
+**opuščen na željo uporabnika** (parkiran, ne commitan).
+- **Raziskava eBlagajna API** (api.eblagajna.com): OAuth2 `client_credentials` → Bearer (poteče 1h),
+  dostop per `bu_uid`. `GET /invoice/{connection_id}` vrne ZOI+EOR+znesek+čas. Loyalty/popust
+  endpointi (`loyalty_groups`, `rules`, card balance, popust scope `invoice`). **⚠️ KLJUČNO za varnost:
+  javno NI granularnih (read-only) scope-ov** — en ključ odpre VSE endpointe BU (vključno
+  `POST /invoice` fiskalizacija, `DELETE /orders`, `/users`). Zato varnostni poudarek + vprašanja.
+- **Zgrajeno (provider-agnostično):** `lib/pos/` — `crypto.ts` (AES-256-GCM, ključ `POS_ENC_KEY`
+  izven baze), `types.ts` (PosAdapter), `eblagajna.ts` (adapter: `getToken` dela, `verifyReceipt`
+  STUB), `index.ts` (factory). Tabela **`pos_connections`** (`secret_enc` šifriran; RLS brez politik =
+  samo service-role; migracija `0003_pos_connections.sql`, pognana v živo). API **`/api/pos`**
+  (POST poveži / GET stanje / DELETE prekliči) z **owner-auth** (samo lastnik lokala; NIKOLI ne vrne
+  secreta). Preverjeno: brez prijave 401, crypto round-trip OK (plaintext ni v zapisu).
+- **ODPRTO (čaka eBlagajno):** `verifyReceipt` je stub — `GET` je po `connection_id`, ne vemo še, kako
+  poiskati račun po skeniranem **ZOI**. Vprašanja: `docs/eblagajna-questions.md` (scope/read-only,
+  OAuth-connect, iskanje po ZOI, kupon-v-transakciji, cena, sandbox).
+- **Pilot:** TikTak Cafe **Črnomelj (SLO, NE Hrvaška)** → SLO ZOI velja. Osnutek emaila
+  `docs/pilot-email-tiktak.md`; najprej preverit, ali uporabljajo eBlagajno.
+- **Handoff:** `.env.local` zdaj rabi tudi `POS_ENC_KEY` (32-byte hex). Mora biti **konsistenten**, ko
+  bodo realne POS povezave (sicer dešifriranje odpove); zaenkrat povezav še ni.
+
 ### 2026-06-15 — seja 6
 **Prijava brez stroška na registracijo** (odločitev: SMS OTP @ ~7c/registracijo je predrag, ko je cilj
 čim več prijav). Novo: **Google (pravi OAuth) + telefon BREZ kode**.

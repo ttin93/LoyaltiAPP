@@ -76,6 +76,21 @@ create table if not exists subscriptions (
   status                 text
 );
 
+-- Povezava z blagajno (POS) lokala — verifikacija računov pri viru.
+-- client_secret je ŠIFRIRAN (AES-256-GCM, ključ izven baze). Glej supabase/0003_pos_connections.sql.
+create table if not exists pos_connections (
+  venue_id      uuid primary key references venues(id) on delete cascade,
+  provider      text not null default 'eblagajna',
+  bu_uid        text not null,
+  client_id     text not null,
+  secret_enc    text not null,
+  status        text not null default 'connected',
+  last_check_at timestamptz,
+  last_error    text,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
 -- ---------- Atomarne operacije ----------
 
 -- Dodeli skeniranje: vstavi scan (unique zoi = dedup) + prišteje točke.
@@ -149,6 +164,7 @@ alter table customers    enable row level security;
 alter table scans        enable row level security;
 alter table redemptions  enable row level security;
 alter table subscriptions enable row level security;
+alter table pos_connections enable row level security;  -- brez politik => samo service-role
 
 drop policy if exists "venues public read" on venues;
 create policy "venues public read" on venues for select using (true);

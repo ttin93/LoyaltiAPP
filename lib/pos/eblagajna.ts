@@ -38,10 +38,11 @@ export const eblagajnaAdapter: PosAdapter = {
     // Dokaže, da poverilnice delujejo:
     const token = await getToken(creds);
     void token;
-    // ODPRTO VPRAŠANJE za eBlagajno (glej docs/eblagajna-questions.md):
-    //   GET /invoice/{connection_id} vrne ZOI+EOR+znesek+čas, A KAKO najdemo račun
-    //   iz skeniranega ZOI? (lookup po ZOI/EOR ali seznam v časovnem oknu + match)
-    // Dokler ni potrjeno, ne trdimo, da je preverjeno:
-    return { found: false, error: "verifyReceipt: čaka potrditev iskanja po ZOI pri eBlagajni" };
+    // UGOTOVITEV iz OpenAPI spec-a: NI iskanja po ZOI. GET /invoice je po `connection_id`,
+    // ZOI je le v odgovoru (additional.zoi). Ni endpointa za seznam računov / iskanje po ZOI.
+    // => verifikacija po skeniranem ZOI ni direktno mogoča. Možna pot (čaka potrditev eBlagajne,
+    //    glej docs/eblagajna-questions.md): enumerirati nedavne račune prek GET /orders +
+    //    GET /invoice in ujeti additional.zoi. Dokler ni potrjeno, ne trdimo, da je preverjeno:
+    return { found: false, error: "verifyReceipt: eBlagajna nima iskanja po ZOI — glej docs/eblagajna-questions.md" };
   },
 };

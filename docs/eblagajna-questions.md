@@ -1,36 +1,39 @@
-# Tehnična vprašanja za eBlagajno (integracija Žig)
+# eBlagajna integracija — kaj vemo (iz OpenAPI spec) + odprta vprašanja
 
-Kontekst: gradimo loyalty platformo "Žig" za gostinske lokale. Lokal poveže svojo eBlagajno,
-mi pa **preverjamo pristnost računov pri viru** (proti ponaredbam) in želimo **kupone unovčevati
-neposredno v transakciji**. Spodaj so vprašanja, da postavimo varno in pravilno integracijo.
+Posodobljeno po pregledu polnega OpenAPI spec-a (api.eblagajna.com). Kontakt: info@eblagajna.com.
 
-## 1. Dostop / poverilnice
-1. Kako lokal (oz. mi v njegovem imenu) pridobi `client_id`, `client_secret` in `bu_uid`?
-   Kakšen je postopek za **partnerja, ki integrira več lokalov**?
-2. **Ali obstajajo omejeni (scoped) dostopi / vloge?** Npr. ključ samo za **branje računov** in
-   **loyalty/kupone**, brez možnosti fiskalizacije (`POST /invoice`), brisanja naročil (`DELETE
-   /orders`) ali upravljanja uporabnikov? To je za nas varnostno ključno.
-3. Ali obstaja **OAuth "connect"/authorization-code** tok, kjer lokal *avtorizira* našo aplikacijo
-   in mi dobimo **preklicljiv žeton** (namesto da hranimo njegov `client_secret`)?
-   Lahko lokal dostop **kadarkoli prekliče**?
-4. Rate limiti? IP allowlist? Možnost vezave ključa na našo strežniško domeno?
+## ✅ Kar je spec POTRDIL
+- **Auth:** `POST /oauth2/token` (grant_type=client_credentials, client_id, client_secret) → Bearer
+  token, velja **1h**. Vse poti pod `/v1/bu/{bu_uid}/…`.
+- **Pravice per credential:** *"Access rights to specific endpoints are tied to this UID and your
+  credentials."* → eBlagajna **lahko izda omejen ključ** (varnostno ključno za nas).
+- **Brisanje je soft-delete** (samo onemogoči, nikoli trajno) → manjši blast-radius ob vdoru.
+- **Račun:** `GET /invoice/{connection_id}` → `invoice.price`, `time_closed`, `additional.zoi` +
+  `additional.eor`, postavke, izdajatelj (`cmp_data.taxnum`). Vse kar rabimo za verifikacijo — **ČE**
+  poznamo `connection_id`.
+- **Kupon/popust:** `POST /orders/{id}/articles` ima polje `discount`; loyalty `rule_data`
+  (`percent`, `apply_to: invoice`, `min_value`, dnevi/ure). Card balance: `/customers_loyalty_status`.
+  → popust v pravi transakciji je izvedljiv.
 
-## 2. Verifikacija računa (jedro)
-5. `GET /invoice/{connection_id}` vrne `ZOI`, `EOR`, znesek, čas. **Kako pa najdemo račun iz
-   skeniranega ZOI** (iz QR na računu)? Je možno:
-   - (a) iskanje po **ZOI** ali **EOR**, ali
-   - (b) seznam računov v **časovnem oknu** za `bu_uid` + ujemanje po ZOI?
-6. Je podatek dostopen **takoj** po izdaji računa (real-time), ali z zamikom?
-7. Kaj točno je `connection_id` in kako ga povežemo z gostovim računom?
+## 🔴 KRITIČNO odprto vprašanje (od tega je odvisen cel "skeniraj račun" model)
+1. **Kako iz ZOI (s skeniranega QR) pridemo do računa?** `GET /invoice` je **po `connection_id`**,
+   ZOI je le v ODGOVORU. V spec-u **ni** iskanja po ZOI/EOR ne seznama računov.
+   - Ali `GET /orders` vrne tudi **nedavne zaprte/fiskalizirane** račune, **sortirane po času** (da
+     potegnemo zadnjih N in ujamemo ZOI)? Ali ima časovni filter?
+   - Obstaja **iskanje računa po ZOI / EOR** ali po časovnem oknu?
+   - Kaj točno je `connection_id` in kako ga dobimo iz gostovega računa?
 
-## 3. Kuponi / unovčenje v transakciji (proti ponaredbi unovčenja)
-8. Lahko prek API-ja **apliciramo popust/kupon na konkreten odprt račun/naročilo** (`scope: invoice`),
-   da se kupon **porabi v sami transakciji na blagajni**? Kateri endpoint + tok?
-9. So `loyalty_groups` / `rules` / `card balance` primerni, da **mi vodimo točke**, eBlagajna pa samo
-   uveljavi popust ob plačilu? Ali priporočate, da točke vodi eBlagajna?
-10. Je unovčenje **idempotentno / enkratno** (da istega kupona ni mogoče porabiti dvakrat)?
+## 🛡️ Varnost
+2. Prosimo za **omejen (read-only) credential** — samo branje (`/invoice`, `/loyalty*`,
+   `/customers_loyalty_status`), **brez** `POST/PATCH/DELETE` in **brez** `/users`. Lahko to
+   provisionirate vezano na naš `bu_uid`/credential?
+3. Obstaja **OAuth-connect / preklicljiv žeton** (da ne hranimo `client_secret`), ali lahko lokal
+   dostop **kadarkoli prekliče**?
 
-## 4. Komercialno
-11. Cena API dostopa za partnerja? Je vključen v lokalove pakete (19–55 €/mes) ali ločeno?
-12. Testno/sandbox okolje za razvoj?
-13. Pogodba o obdelavi podatkov (GDPR) — kdo je obdelovalec?
+## 🎟️ Kupon v transakciji (proti ponaredbi unovčenja)
+4. Najboljši način, da **enkraten kupon** apliciramo kot popust na **konkretno odprto naročilo pred
+   plačilom**? (`POST /orders/{id}/articles` z `discount`, loyalty rule, ali card balance?)
+   Je idempotentno/enkratno?
+
+## 💶 Komercialno
+5. Cena API dostopa za partnerja (vključen v lokalove pakete?), **sandbox** okolje, GDPR obdelovalec.

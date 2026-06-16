@@ -49,6 +49,21 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-15 — seja 8
+Pregledan **cel eBlagajna OpenAPI spec** (uporabnik prilepil). Ključne ugotovitve:
+- **🔴 NI iskanja po ZOI.** `GET /invoice/{connection_id}` vrne `additional.zoi`+`eor`+`price`+
+  `time_closed`+`cmp_data.taxnum`, a **samo po `connection_id`** — ni iskanja po ZOI/EOR ne seznama
+  računov. `GET /orders` je paginated (samo `page`, ni datumskega filtra). → **"skeniraj račun →
+  preveri po ZOI" ne mapira direktno na eBlagajno.** Odprto: ali GET /orders vključuje nedavne ZAPRTE
+  račune sortirane po času (enumerate + match ZOI).
+- **Varnost bolje kot mišljeno:** pravice so **per-credential** ("tied to this UID and your
+  credentials") → eBlagajna **lahko izda omejen read-only ključ**. DELETE = **soft-delete**.
+- **Kupon-v-transakciji izvedljiv:** `POST /orders/{id}/articles` ima `discount`; loyalty rule
+  `rule_data{percent, apply_to:invoice}`; card balance `/customers_loyalty_status`.
+- Posodobljen `docs/eblagajna-questions.md` (kaj vemo + 5 ostalih vprašanj; ZOI-resolucija = #1).
+  `verifyReceipt` ostaja stub. **Strateški fork** (če ZOI-lookup ni mogoč): A) eBlagajna-native
+  loyalty (gost prepoznan na blagajni — airtight, spremeni UX) vs B) scan + heuristike.
+
 ### 2026-06-15 — seja 7
 **POS verifikacija — ogrodje + raziskava (pot do "ponaredek nemogoč").** Strateška odločitev: pravi
 moat = preverjanje računov PRI VIRU (blagajna lokala), ne heuristike. Strict-mode (seja-6 ideja)

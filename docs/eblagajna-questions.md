@@ -15,13 +15,20 @@ Posodobljeno po pregledu polnega OpenAPI spec-a (api.eblagajna.com). Kontakt: in
   (`percent`, `apply_to: invoice`, `min_value`, dnevi/ure). Card balance: `/customers_loyalty_status`.
   → popust v pravi transakciji je izvedljiv.
 
-## 🔴 KRITIČNO odprto vprašanje (od tega je odvisen cel "skeniraj račun" model)
-1. **Kako iz ZOI (s skeniranega QR) pridemo do računa?** `GET /invoice` je **po `connection_id`**,
-   ZOI je le v ODGOVORU. V spec-u **ni** iskanja po ZOI/EOR ne seznama računov.
-   - Ali `GET /orders` vrne tudi **nedavne zaprte/fiskalizirane** račune, **sortirane po času** (da
-     potegnemo zadnjih N in ujamemo ZOI)? Ali ima časovni filter?
-   - Obstaja **iskanje računa po ZOI / EOR** ali po časovnem oknu?
-   - Kaj točno je `connection_id` in kako ga dobimo iz gostovega računa?
+## 🔴 KRITIČNO — kako iz skeniranega ZOI pridemo do računa
+Gostov QR da **samo ZOI** (globalno unikaten), NE `connection_id`. `GET /invoice` je pa PO
+`connection_id`. Rešitev ni nujno iskanje po ZOI na njihovi strani — lahko **ZRCALIMO** račune lokala
+v našo bazo in gradimo **lasten ZOI-index** (skeniranje = takojšen točen ZOI-match pri nas, brez
+časovne dvoumnosti, tudi pri več računih v isti sekundi). Za to rabimo le, da račune **naštejemo**.
+Konkretna vprašanja (po prioriteti):
+1. **Lahko inkrementalno povlečemo IZDANE (zaprte/fiskalizirane) račune za `bu_uid`?** (npr.
+   `GET /orders` vključuje zaprte + paginacija, ali "since"/časovni filter) — da gradimo lasten
+   ZOI-index. **To je glavno vprašanje.**
+2. Lahko `GET /invoice/{connection_id}` sprejme **ZOI ali EOR** namesto `connection_id`?
+3. Obstaja (morda nedokumentirano) **iskanje po ZOI / EOR**?
+4. Kaj točno je `connection_id` in kako se navezuje na izdan račun?
+
+> Bonus: zrcaljenje da tudi **znesek** (`invoice.price`) → zanesljive **per-euro** (po porabi) nagrade.
 
 ## 🛡️ Varnost
 2. Prosimo za **omejen (read-only) credential** — samo branje (`/invoice`, `/loyalty*`,

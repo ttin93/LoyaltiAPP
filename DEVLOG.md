@@ -49,6 +49,19 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-15 — seja 9
+**"Poveži blagajno" UI + kupon-popust adapter (oboje neodvisno od ZOI-vprašanja).**
+- `app/dashboard/PosConnectCard.tsx` — kartica v avtenticiranem Dashboardu (zavihek **Nastavitve**):
+  3 polja (`bu_uid`, `client_id`, `client_secret`), GET stanje / POST poveži (kliče `testConnection`
+  PRED shrambo) / DELETE prekliči. Varnostno sporočilo (ključ šifriran, samo strežnik, preklic
+  kadarkoli, zahtevaj read-only). Vezano na varen `/api/pos` (owner-auth).
+- Kupon-v-transakciji: dodan adapter stub `applyCouponDiscount` (predvideno `POST
+  /orders/{id}/articles` z `discount`) — **ČAKA eBlagajna Q4**. Opomba: screen-record je **že
+  preprečen** z obstoječim flowom (osebje potrdi + single-use + 5-min server iztek prek
+  `confirm_redemption`); eBlagajna popust v transakciji je le nadgradnja.
+- Preverjeno: `tsc --noEmit` čist; `/dashboard` → 307 na `/partner`; `/api/pos` 401 brez prijave.
+  Živ connect rabi pravega ownerja (prijava na /partner) + prave eBlagajna creds.
+
 ### 2026-06-15 — seja 8
 Pregledan **cel eBlagajna OpenAPI spec** (uporabnik prilepil). Ključne ugotovitve:
 - **🔴 NI iskanja po ZOI.** `GET /invoice/{connection_id}` vrne `additional.zoi`+`eor`+`price`+

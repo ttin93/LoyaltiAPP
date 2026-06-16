@@ -13,6 +13,7 @@ import {
 } from "@/app/actions";
 import Scanner from "@/app/components/Scanner";
 import QrCode from "./QrCode";
+import PosConnectCard from "./PosConnectCard";
 
 const TABS = ["Sistem", "Analitika", "Zgodovina", "Marketing", "Nastavitve"] as const;
 type Tab = (typeof TABS)[number];
@@ -332,6 +333,8 @@ export default function Dashboard({
                 Shrani
               </button>
             </form>
+
+            <PosConnectCard venueCode={venue.public_code} accent={accent} />
 
             <div className="rounded-2xl border border-neutral-200 bg-white p-6">
               <h2 className="mb-1 font-semibold">Profil</h2>

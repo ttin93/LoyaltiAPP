@@ -45,4 +45,10 @@ export const eblagajnaAdapter: PosAdapter = {
     //    GET /invoice in ujeti additional.zoi. Dokler ni potrjeno, ne trdimo, da je preverjeno:
     return { found: false, error: "verifyReceipt: eBlagajna nima iskanja po ZOI — glej docs/eblagajna-questions.md" };
   },
+
+  async applyCouponDiscount() {
+    // Predvideno: POST /orders/{orderId}/articles z `discount` (popust na odprto naročilo) ali loyalty rule.
+    // ČAKA potrditev eBlagajne (Q4) + povezavo na konkretno odprto naročilo na blagajni.
+    return { ok: false, error: "applyCouponDiscount: čaka potrditev eBlagajne (docs/eblagajna-questions.md Q4)" };
+  },
 };

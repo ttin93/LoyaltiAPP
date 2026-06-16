@@ -28,4 +28,13 @@ export interface PosAdapter {
     creds: PosCredentials,
     q: { zoiHex: string; davcna: string; issuedAt: Date },
   ): Promise<ReceiptVerification>;
+  /**
+   * Unovči kupon kot popust v ODPRTI transakciji (pred plačilom) → porabi se v računu,
+   * neodvisno od telefona gosta (prepreči screen-record ponaredbo unovčenja).
+   * ČAKA potrditev eBlagajne (kako aplicirati na konkretno naročilo — docs/eblagajna-questions.md Q4).
+   */
+  applyCouponDiscount?(
+    creds: PosCredentials,
+    q: { orderId: string; couponCode: string; percent?: number; amountEur?: number },
+  ): Promise<{ ok: boolean; error?: string }>;
 }

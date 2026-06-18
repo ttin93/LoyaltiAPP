@@ -94,6 +94,9 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
   const [coupValidity, setCoupValidity] = useState("Velja 14 dni · ob prvem obisku");
   const [coupFoot, setCoupFoot] = useState("Pokaži kodo osebju ob naročilu.");
   const [coupBtn, setCoupBtn] = useState("Na mojo stran zvestobe");
+  const [cardSubtitle, setCardSubtitle] = useState("Zbiraj žige, prejmi nagrade");
+  const [scanBtn, setScanBtn] = useState("Skeniraj račun");
+  const [couponsHdr, setCouponsHdr] = useState("Tvoji kuponi 🎟️");
 
   const accent = "#2B1D17";
   const flash = (t: string) => { setToast(t); setTimeout(() => setToast(null), 2500); };
@@ -619,6 +622,15 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
               <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Veljavnost (na kuponu)</span><input value={coupValidity} onChange={(e) => setCoupValidity(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
               <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Navodilo pod kuponom</span><input value={coupFoot} onChange={(e) => setCoupFoot(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
               <label className="mb-1 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Besedilo gumba</span><input value={coupBtn} onChange={(e) => setCoupBtn(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <button onClick={() => flash("Zaslon shranjen (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
+            </div>
+
+            {/* Zaslon "Kartonček" — editor */}
+            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
+              <div className="mb-2 flex items-center gap-1.5 text-[14px] font-bold">Zaslon &quot;Kartonček&quot; <HelpDot text="Gostova domača stran po prijavi. Ime/logo (Gostova stran), žigi/točke (Model nagrajevanja) in nagrade (Nagrade) se urejajo v svojih sekcijah — tu le besedila." /></div>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Podnapis</span><input value={cardSubtitle} onChange={(e) => setCardSubtitle(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Besedilo gumba za skeniranje</span><input value={scanBtn} onChange={(e) => setScanBtn(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-1 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naslov kuponov</span><input value={couponsHdr} onChange={(e) => setCouponsHdr(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
               <button onClick={() => flash("Zaslon shranjen (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
             </div>
 

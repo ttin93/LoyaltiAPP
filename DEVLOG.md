@@ -49,6 +49,11 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-18 — seja 20 (editor zaslona "Zadetek")
+Pregled gostove izkušnje 2. zaslon: dodan **editor zaslona "Zadetek"** v Nastavitvah (za "Srečno kolo"):
+naslov / opis / naziv nagrade / vrednost-veljavnost / besedilo gumba + **živ predogled**. Vzorec: vsak
+gostov zaslon dobi svoj editor besedil. tsc čist; preverjeno v /demo/dashboard.
+
 ### 2026-06-18 — seja 19 (editor prvega zaslona / srečnega kolesa)
 Razširjen "Srečno kolo" → **editor prvega zaslona** (Nastavitve): besedila (naslov / podnapis / značka),
 6 polj z izbiro **ZMAGOVALNEGA polja** (★ = na kaj kolo vedno pristane → "Vedno pristane na: X"), opomba

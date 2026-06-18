@@ -79,6 +79,11 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
   const [spinTagline, setSpinTagline] = useState("Zavrti kolo in osvoji nagrado za prvi obisk");
   const [spinBadge, setSpinBadge] = useState("1 VRTLJAJ");
   const [winSlot, setWinSlot] = useState(0);
+  const [wonTitle, setWonTitle] = useState("Zadetek! 🎉");
+  const [wonDesc, setWonDesc] = useState("Osvojil si brezplačno kavo za svoj prvi obisk.");
+  const [wonReward, setWonReward] = useState("Brezplačna kava");
+  const [wonMeta, setWonMeta] = useState("vrednost 2,20 € · velja 14 dni");
+  const [wonBtn, setWonBtn] = useState("Prevzemi nagrado");
 
   const accent = "#2B1D17";
   const flash = (t: string) => { setToast(t); setTimeout(() => setToast(null), 2500); };
@@ -564,6 +569,25 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
               <div className="mt-3 rounded-xl bg-[#F5EFE6] px-3.5 py-2.5 text-[12.5px] leading-snug text-[#5C4C3E]">Barva, ime in logo se vzamejo iz <strong>Gostova stran</strong> (zgoraj) — en sam vir za celotno gostovo izkušnjo.</div>
 
               <button onClick={() => flash("Kolo shranjeno (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani kolo</button>
+            </div>
+
+            {/* Zaslon "Zadetek" — editor */}
+            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
+              <div className="mb-2 flex items-center gap-1.5 text-[14px] font-bold">Zaslon &quot;Zadetek&quot; <HelpDot text="Zaslon, ki ga gost vidi takoj ko zadene nagrado (po vrtenju). Uredi vsa besedila in gumb." /></div>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naslov</span><input value={wonTitle} onChange={(e) => setWonTitle(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Opis</span><input value={wonDesc} onChange={(e) => setWonDesc(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naziv nagrade</span><input value={wonReward} onChange={(e) => setWonReward(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Vrednost / veljavnost</span><input value={wonMeta} onChange={(e) => setWonMeta(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-1 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Besedilo gumba</span><input value={wonBtn} onChange={(e) => setWonBtn(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+
+              <div className="mt-3 rounded-xl border border-[#EFE6D4] bg-[#F5EFE6] p-3 text-center">
+                <div className="mb-0.5 text-[11px] font-bold uppercase tracking-wide text-[#A6967F]">Predogled</div>
+                <div className="font-display text-[18px] font-extrabold text-[#2B1D17]">{wonTitle}</div>
+                <div className="text-[12.5px] text-[#5C4C3E]">{wonDesc}</div>
+                <div className="mx-auto mt-2 w-fit rounded-lg bg-[#2B1D17] px-4 py-1.5 text-[12.5px] font-semibold text-[#F5EFE6]">{wonBtn} →</div>
+              </div>
+
+              <button onClick={() => flash("Zaslon shranjen (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
             </div>
 
             {/* Model točk */}

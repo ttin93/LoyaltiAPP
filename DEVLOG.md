@@ -49,6 +49,18 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-17 — seja 10 (STRATEŠKI PREMIK)
+Po ločeni Claude seji + premisleku uporabnika: **VARNOST NI wedge.** Konkurenca tudi dedupa;
+pristnosti ZOI (resničen vs izmišljen) brez FURS/POS ne preveri nihče → v receipt-scan modelu
+varnostne prednosti ni za nikogar. Črtamo pitch "mi preverjamo, oni ne".
+- **Wedge = produkt + lokalna osebna prodaja.** Asset = ujeti redni gostje + kontakti + obiski.
+- **Roadmap dodatki** (Google-ocene autopilot #1, win-back, rojstni dan, analitika) reuse-ajo isto
+  bazo — **PITCH/roadmap, NE v1.** Gradi šele po prvem plačujočem "ja".
+- **v1 = receipt-scan + dedup + davčna + čas + cap** (pariteta + kanček), ship + dobi prvi lokal.
+- **POS/eBlagajna = post-yes opcija** (scaffold zgrajen, ostane parkiran; NI v1, NI prodajni argument).
+- Pilotni pitch `docs/pilot-email-tiktak.md` **prepisan** z varnosti na IZID + zero-truda.
+- **NASLEDNJI KORAK ni koda — je sporočilo sinu (TikTak, Črnomelj).** Prvi "ja" je edino, kar šteje.
+
 ### 2026-06-15 — seja 9
 **"Poveži blagajno" UI + kupon-popust adapter (oboje neodvisno od ZOI-vprašanja).**
 - `app/dashboard/PosConnectCard.tsx` — kartica v avtenticiranem Dashboardu (zavihek **Nastavitve**):

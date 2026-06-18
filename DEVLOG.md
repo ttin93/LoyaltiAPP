@@ -49,6 +49,15 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-18 — seja 17 (Marketing v3 — kuponi/kanali/analitika)
+- **Kampanje: priloži kupon** (izbira nagrade + veljavnost dni) v composerju; shranjene kampanje
+  hranijo tudi kupon+veljavnost (naloži/posodobi).
+- **Avtomatizacije: kanal SMS/Email** per avtomatizacija (poleg dni/kupona/veljavnosti/opomnika/sporočila).
+- **Google review link** nastavitev v "Gostova stran" + razlaga (gumb "Oceni na Googlu" odpre javno
+  Google oceno lokala; link iz Google Business Profile → naravnost v okence za oceno).
+- **Analitika: "Uspešnost kampanj"** kartica (stopnja vrnitve po kampanji, vrnitve/poslano).
+- tsc čist; vse preverjeno v `/demo/dashboard`.
+
 ### 2026-06-18 — seja 16 (Marketing v2 + Google-ocene gate)
 - **Google-ocene popup** nadgrajen na **5-zvezdični gate**: 4–5★ → Google ocena (pravi Google gumb),
   1–3★ → zasebno mnenje (review-gating, slabe prestrežemo). V GuestApp success ekranu. Uporabniku

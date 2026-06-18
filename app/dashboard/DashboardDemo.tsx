@@ -75,6 +75,10 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
   const [showWheel, setShowWheel] = useState(true);
   const [profileCust, setProfileCust] = useState<string | null>(null);
   const [slots, setSlots] = useState(["Brezplačna kava", "−10 %", "+30 točk", "Piškot gratis", "−15 %", "Sirup gratis"]);
+  const [spinTitle, setSpinTitle] = useState("Zavrti in osvoji");
+  const [spinTagline, setSpinTagline] = useState("Zavrti kolo in osvoji nagrado za prvi obisk");
+  const [spinBadge, setSpinBadge] = useState("1 VRTLJAJ");
+  const [winSlot, setWinSlot] = useState(0);
 
   const accent = "#2B1D17";
   const flash = (t: string) => { setToast(t); setTimeout(() => setToast(null), 2500); };
@@ -537,18 +541,28 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
               <button onClick={() => flash("Gostova stran shranjena (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
             </div>
 
-            {/* Srečno kolo (wheel editor) */}
+            {/* Srečno kolo — prvi zaslon (editor) */}
             <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-1 flex items-center gap-1.5 text-[14px] font-bold">Srečno kolo <HelpDot text="Polja kolesa, ki ga zavrtijo novi gostje (na spletni strani / ob prvem obisku)." /></div>
-              <div className="mb-3 text-[12.5px] text-[#A6967F]">6 polj — uredi nagrade.</div>
+              <div className="mb-1 flex items-center gap-1.5 text-[14px] font-bold">Srečno kolo — prvi zaslon <HelpDot text="Prvi zaslon novih gostov (spletna stran / QR plakat). Tu urejaš besedila, polja in zmagovalno polje. Barva, ime in logo se vzamejo iz 'Gostova stran'." /></div>
+
+              <div className="mb-1 mt-2 text-[11px] font-bold uppercase tracking-wide text-[#A6967F]">Besedila</div>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naslov</span><input value={spinTitle} onChange={(e) => setSpinTitle(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Podnapis</span><input value={spinTagline} onChange={(e) => setSpinTagline(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-3 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Značka (zgoraj desno)</span><input value={spinBadge} onChange={(e) => setSpinBadge(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+
+              <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[#A6967F]">Polja kolesa <HelpDot text="Označi ★ na polje, na katero kolo VEDNO pristane (zmagovalno). Tako vsak nov gost dobi izbrano nagrado." /></div>
               <div className="space-y-2">
                 {slots.map((s, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#F1E7D2] text-[12px] font-bold text-[#8A5B14]">{i + 1}</span>
+                    <button onClick={() => setWinSlot(i)} aria-label="Zmagovalno polje" className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[13px]" style={{ background: winSlot === i ? "#E8A23D" : "#F1E7D2", color: winSlot === i ? "#2B1D17" : "#C9BCA5" }}>★</button>
                     <input value={s} onChange={(e) => setSlots((p) => p.map((x, j) => (j === i ? e.target.value : x)))} className="flex-1 rounded-lg border border-[#D9CDBA] px-3 py-1.5 text-[13.5px]" />
                   </div>
                 ))}
               </div>
+              <div className="mt-2 text-[12px] text-[#8A7A66]">Vedno pristane na: <strong className="text-[#2B1D17]">{slots[winSlot]}</strong></div>
+
+              <div className="mt-3 rounded-xl bg-[#F5EFE6] px-3.5 py-2.5 text-[12.5px] leading-snug text-[#5C4C3E]">Barva, ime in logo se vzamejo iz <strong>Gostova stran</strong> (zgoraj) — en sam vir za celotno gostovo izkušnjo.</div>
+
               <button onClick={() => flash("Kolo shranjeno (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani kolo</button>
             </div>
 

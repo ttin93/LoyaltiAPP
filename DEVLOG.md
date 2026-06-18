@@ -49,6 +49,15 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-18 — seja 19 (editor prvega zaslona / srečnega kolesa)
+Razširjen "Srečno kolo" → **editor prvega zaslona** (Nastavitve): besedila (naslov / podnapis / značka),
+6 polj z izbiro **ZMAGOVALNEGA polja** (★ = na kaj kolo vedno pristane → "Vedno pristane na: X"), opomba
+da se **barva/ime/logo vzamejo iz 'Gostova stran'** (en sam vir za celo gostovo izkušnjo). Začeli pregled
+gostove izkušnje korak za korakom (prvi zaslon = SpinFlow); odprto vprašanje **poenotenja dveh koles**
+(SpinFlow /spin vs starejše kolo v GuestApp /p/[code]). tsc čist; editor preverjen v /demo/dashboard.
+Opomba: editor je zaenkrat demo-stanje — vezava na živi SpinFlow (venue shrani konfig kolesa, SpinFlow
+bere) = naslednji korak pri pravem priklopu.
+
 ### 2026-06-18 — seja 18 (logo, kustomizacija, detajlna analitika, profil gosta)
 - **Gostova stran:** logo upload (+ živ predogled kartice), pozdravno sporočilo, toggle "prikaži kolo" —
   več kustomizacije strani, ki jo gost vidi.

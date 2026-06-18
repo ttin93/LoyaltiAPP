@@ -84,6 +84,16 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
   const [wonReward, setWonReward] = useState("Brezplačna kava");
   const [wonMeta, setWonMeta] = useState("vrednost 2,20 € · velja 14 dni");
   const [wonBtn, setWonBtn] = useState("Prevzemi nagrado");
+  const [regTitle, setRegTitle] = useState("Skoraj tvoje ☕");
+  const [regDesc, setRegDesc] = useState("Prijavi se, da shranimo tvoj kupon in ti pošljemo nagrado.");
+  const [regGoogle, setRegGoogle] = useState("Nadaljuj z Googlom");
+  const [regPhoneBtn, setRegPhoneBtn] = useState("Prevzemi nagrado");
+  const [regFine, setRegFine] = useState("S prijavo se strinjaš s pogoji. Brez gesla, brez spama.");
+  const [coupTitle, setCoupTitle] = useState("Kupon je tvoj!");
+  const [coupDesc, setCoupDesc] = useState("Shranili smo ga na tvojo stran zvestobe.");
+  const [coupValidity, setCoupValidity] = useState("Velja 14 dni · ob prvem obisku");
+  const [coupFoot, setCoupFoot] = useState("Pokaži kodo osebju ob naročilu.");
+  const [coupBtn, setCoupBtn] = useState("Na mojo stran zvestobe");
 
   const accent = "#2B1D17";
   const flash = (t: string) => { setToast(t); setTimeout(() => setToast(null), 2500); };
@@ -587,6 +597,28 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
                 <div className="mx-auto mt-2 w-fit rounded-lg bg-[#2B1D17] px-4 py-1.5 text-[12.5px] font-semibold text-[#F5EFE6]">{wonBtn} →</div>
               </div>
 
+              <button onClick={() => flash("Zaslon shranjen (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
+            </div>
+
+            {/* Zaslon "Prijava" — editor */}
+            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
+              <div className="mb-2 flex items-center gap-1.5 text-[14px] font-bold">Zaslon &quot;Prijava&quot; <HelpDot text="Zaslon, kjer se gost prijavi (Google ali telefon), da prevzame nagrado in shrani kupon." /></div>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naslov</span><input value={regTitle} onChange={(e) => setRegTitle(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Opis</span><input value={regDesc} onChange={(e) => setRegDesc(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Gumb Google</span><input value={regGoogle} onChange={(e) => setRegGoogle(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Gumb telefon</span><input value={regPhoneBtn} onChange={(e) => setRegPhoneBtn(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-1 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Drobni tisk</span><input value={regFine} onChange={(e) => setRegFine(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <button onClick={() => flash("Zaslon shranjen (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
+            </div>
+
+            {/* Zaslon "Kupon" — editor */}
+            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
+              <div className="mb-2 flex items-center gap-1.5 text-[14px] font-bold">Zaslon &quot;Kupon&quot; <HelpDot text="Zadnji zaslon — kupon, ki ga gost pokaže osebju. Naziv nagrade se vzame iz zaslona 'Zadetek'." /></div>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naslov</span><input value={coupTitle} onChange={(e) => setCoupTitle(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Opis (telefon)</span><input value={coupDesc} onChange={(e) => setCoupDesc(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Veljavnost (na kuponu)</span><input value={coupValidity} onChange={(e) => setCoupValidity(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Navodilo pod kuponom</span><input value={coupFoot} onChange={(e) => setCoupFoot(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
+              <label className="mb-1 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Besedilo gumba</span><input value={coupBtn} onChange={(e) => setCoupBtn(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
               <button onClick={() => flash("Zaslon shranjen (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
             </div>
 

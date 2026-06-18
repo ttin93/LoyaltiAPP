@@ -49,6 +49,13 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-18 — seja 21 (editorja "Prijava" + "Kupon" — cel acquisition flow urejljiv)
+Dodana editorja zaslonov **"Prijava"** (naslov/opis/Google gumb/telefon gumb/drobni tisk) in **"Kupon"**
+(naslov/opis/veljavnost/navodilo/gumb). S tem ima **vseh 4 zaslonov acquisition flowa svoj editor**
+(Srečno kolo → Zadetek → Prijava → Kupon) v Nastavitvah. Pregledani vsi 4 zasloni prek faithful
+widgetov. tsc čist; 4 editorji preverjeni v /demo/dashboard. Naslednje: druga polovica gostove
+izkušnje — kartonček zvestobe + skeniranje + unovčenje (po "Na mojo stran zvestobe").
+
 ### 2026-06-18 — seja 20 (editor zaslona "Zadetek")
 Pregled gostove izkušnje 2. zaslon: dodan **editor zaslona "Zadetek"** v Nastavitvah (za "Srečno kolo"):
 naslov / opis / naziv nagrade / vrednost-veljavnost / besedilo gumba + **živ predogled**. Vzorec: vsak

@@ -49,6 +49,17 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-17 — seja 12 (roadmap dodatki — demo-first)
+Dodani 4 dodatki, **demo-first** (vidni v walkthroughu; pravo SMS/email pošiljanje ostane post-yes stikalo):
+- **Google ocene autopilot — PRAVA:** na gostovem success ekranu "Kako ti je bilo?" → 😊 odpre Google
+  oceno (`venue.google_review_url` ali fallback iskanje po imenu), 🙁 prestreže zasebno (review-gating).
+  Dashboard Marketing: autopilot kartica (zaprošene / nove ocene / ocena ★).
+- **Rojstni dnevi** — dashboard kartica (prihajajoči + avtomatska ponudba). Demo.
+- **Win-back** — Marketing preset gumb (segment Neaktivni + template). Demo.
+- **Analitika "Kdo pada stran"** (churn) kartica iz podatkov o obiskih. Demo.
+- `Venue` tip dobil opcijski `google_review_url`. Demo podatki v `lib/demo.ts` (DEMO_REVIEW/BIRTHDAYS/CHURN).
+- Preverjeno: `tsc` čist; vse 4 kartice renderirajo v `/demo/dashboard` (Analitika + Marketing).
+
 ### 2026-06-17 — seja 11 (demo walkthrough za prodajo)
 Cel prodajni walkthrough, **dosegljiv BREZ prijave** (da ga lastniku odklikaš na telefonu):
 - **`/demo`** — hub: uokvirja "kaj dobiš" (4 owner wins) + gumba **Pogled gosta** (`/p/demo/spin`) in

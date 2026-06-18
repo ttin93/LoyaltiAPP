@@ -14,6 +14,7 @@ export interface Venue {
   scan_window_hours: number;
   redemption_minutes: number;
   daily_scan_cap: number | null;
+  google_review_url?: string | null; // za Google-ocene autopilot (opcijsko)
   created_at: string;
 }
 

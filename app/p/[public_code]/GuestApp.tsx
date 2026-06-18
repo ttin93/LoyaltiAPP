@@ -72,7 +72,11 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const [errText, setErrText] = useState<{ t: string; h: string }>({ t: "", h: "" });
   const [busy, setBusy] = useState(false);
   const [phone, setPhone] = useState("");
+  const [rated, setRated] = useState<"up" | "down" | null>(null);
   const demoZois = useRef<Set<string>>(new Set());
+
+  const googleReviewUrl =
+    venue.google_review_url || `https://www.google.com/search?q=${encodeURIComponent(venue.name)}`;
 
   const couponsKey = `loyalty:${venue.public_code}:coupons`;
   const [coupons, setCoupons] = useState<{ id: string; name: string }[]>([]);
@@ -440,7 +444,27 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           <div className="font-display text-[28px] font-extrabold">{stamps >= 10 ? "Kartonček je poln!" : `Žig št. ${stamps} je tvoj`}</div>
           <div className="max-w-[280px] text-[15.5px] leading-relaxed text-[#5C4C3E]">{rewardReady ? `Brezplačna ${sorted[0].name.toLowerCase()} te čaka pri osebju.` : `Še ${left} točk do nagrade.`}</div>
         </div>
-        <button onClick={() => setView("home")} className="h-14 w-full rounded-full bg-[#2B1D17] text-[16.5px] font-semibold text-[#F5EFE6]">Super, nazaj na kartonček</button>
+
+        {/* Google-ocene autopilot: zadovoljne usmerimo na Google, slabe prestrežemo zasebno */}
+        {rated === null ? (
+          <div className="w-full rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-4 text-center">
+            <div className="text-[14.5px] font-semibold">Kako ti je bilo danes?</div>
+            <div className="mt-3 flex gap-2.5">
+              <button onClick={() => { setRated("up"); window.open(googleReviewUrl, "_blank"); }} className="flex-1 rounded-full bg-[#5E7F52] py-3 text-[14px] font-bold text-[#F5EFE6]">😊 Super</button>
+              <button onClick={() => setRated("down")} className="flex-1 rounded-full border-[1.5px] border-[#D9CDBA] py-3 text-[14px] font-semibold text-[#5C4C3E]">🙁 Slabše</button>
+            </div>
+          </div>
+        ) : rated === "up" ? (
+          <div className="w-full rounded-2xl border border-[#5E7F52] bg-[rgba(94,127,82,0.08)] p-4 text-center text-[14px] text-[#3E5536]">
+            Hvala! 🙏 Odpre se Google ocena. <a href={googleReviewUrl} target="_blank" rel="noreferrer" className="font-bold underline">Klikni, če se ni odprlo.</a>
+          </div>
+        ) : (
+          <div className="w-full rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-4 text-center text-[14px] text-[#5C4C3E]">
+            Hvala za iskrenost — sporočili bomo lokalu, da popravi. 🙏
+          </div>
+        )}
+
+        <button onClick={() => { setView("home"); setRated(null); }} className="h-14 w-full rounded-full bg-[#2B1D17] text-[16.5px] font-semibold text-[#F5EFE6]">Super, nazaj na kartonček</button>
       </main>
     );
   }

@@ -76,6 +76,22 @@ export const DEMO_MARKETING = [
   { n: "+386 30 ··· 557", v: "4", p: "60", a: "pred 21 dnevi", ac: "#A33E1D" },
 ];
 
+// ---- Dodatki (roadmap), prikazani v demo dashboardu ----
+export const DEMO_REVIEW = { requested: 312, left: 86, rating: "4,8", before: "3,9" };
+
+export const DEMO_BIRTHDAYS = [
+  { n: "+386 31 ··· 412", d: "danes 🎂", soon: true },
+  { n: "ana.k@···.com", d: "čez 2 dni", soon: true },
+  { n: "+386 40 ··· 198", d: "čez 5 dni", soon: false },
+];
+
+// gostje, ki padajo stran (dolgo niso bili) — iz podatkov o obiskih
+export const DEMO_CHURN = [
+  { n: "+386 30 ··· 557", v: "4 obiski", last: "21 dni" },
+  { n: "+386 68 ··· 904", v: "9 obiskov", last: "16 dni" },
+  { n: "marko···@···.com", v: "6 obiskov", last: "14 dni" },
+];
+
 export type Plan = {
   key: string;
   name: string;

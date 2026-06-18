@@ -11,6 +11,9 @@ import {
   DEMO_CUSTOMERS,
   DEMO_HISTORY,
   DEMO_MARKETING,
+  DEMO_REVIEW,
+  DEMO_BIRTHDAYS,
+  DEMO_CHURN,
 } from "@/lib/demo";
 
 const TABS = [
@@ -137,6 +140,17 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
                 </div>
               ))}
             </div>
+            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
+              <div className="mb-1 flex items-center gap-2 text-[13px] font-bold">Kdo pada stran <span className="rounded-full bg-[rgba(200,81,43,0.12)] px-2 py-0.5 text-[11px] font-bold text-[#A33E1D]">{DEMO_CHURN.length}</span></div>
+              <div className="mb-2.5 text-[12px] text-[#A6967F]">Redni, ki dolgo niso bili — pošlji jim win-back.</div>
+              {DEMO_CHURN.map((c, i) => (
+                <div key={i} className="flex items-center gap-3 border-t border-[#F1E7D2] py-2.5 first:border-0">
+                  <div className="flex-1 text-[14px] font-semibold">{c.n}</div>
+                  <div className="text-[13px] text-[#8A7A66]">{c.v}</div>
+                  <div className="text-[13px] font-bold text-[#A33E1D]">−{c.last}</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -167,10 +181,47 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
         {/* === MARKETING === */}
         {tab === "Marketing" && (
           <div className="space-y-4">
-            <div className="rounded-3xl border-2 border-[#E8A23D] bg-[#FFFCF6] p-5">
+            {/* Google ocene autopilot */}
+            <div className="rounded-3xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">⭐</span>
+                  <div className="font-display text-[18px] font-extrabold">Google ocene — autopilot</div>
+                </div>
+                <span className="flex h-6 items-center rounded-full bg-[rgba(94,127,82,0.14)] px-2.5 text-[11px] font-bold text-[#3E5536]">Vklopljeno</span>
+              </div>
+              <p className="mt-1.5 text-[13.5px] leading-relaxed text-[#5C4C3E]">Ko gost dobi žig (zadovoljen!), ga prosimo za Google oceno. Slabe izkušnje prestrežemo zasebno.</p>
+              <div className="mt-3 grid grid-cols-3 gap-2.5 text-center">
+                <div className="rounded-xl bg-[#F5EFE6] p-2.5"><div className="font-display text-[20px] font-extrabold">{DEMO_REVIEW.requested}</div><div className="text-[11px] text-[#8A7A66]">zaprošenih</div></div>
+                <div className="rounded-xl bg-[#F5EFE6] p-2.5"><div className="font-display text-[20px] font-extrabold text-[#5E7F52]">+{DEMO_REVIEW.left}</div><div className="text-[11px] text-[#8A7A66]">novih ocen</div></div>
+                <div className="rounded-xl bg-[#F5EFE6] p-2.5"><div className="font-display text-[20px] font-extrabold text-[#B97F1F]">{DEMO_REVIEW.rating}★</div><div className="text-[11px] text-[#8A7A66]">prej {DEMO_REVIEW.before}</div></div>
+              </div>
+            </div>
+
+            {/* Rojstni dnevi */}
+            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
               <div className="flex items-center gap-2">
-                <Icon name="mega" color="#B97F1F" size={20} />
-                <div className="font-display text-[18px] font-extrabold">SMS kampanja</div>
+                <span className="text-xl">🎂</span>
+                <div className="font-display text-[16px] font-extrabold">Rojstni dnevi</div>
+                <span className="ml-auto text-[12px] text-[#8A7A66]">avtomatska ponudba</span>
+              </div>
+              <div className="mt-2.5">
+                {DEMO_BIRTHDAYS.map((b, i) => (
+                  <div key={i} className="flex items-center gap-3 border-t border-[#F1E7D2] py-2.5 first:border-0">
+                    <div className="flex-1 text-[14px] font-semibold">{b.n}</div>
+                    <div className="text-[13px] font-semibold" style={{ color: b.soon ? "#B97F1F" : "#8A7A66" }}>{b.d}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border-2 border-[#E8A23D] bg-[#FFFCF6] p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Icon name="mega" color="#B97F1F" size={20} />
+                  <div className="font-display text-[18px] font-extrabold">SMS kampanja</div>
+                </div>
+                <button onClick={() => { setSeg(1); setSms("Dolgo te ni bilo! Ta teden te pri Moki čaka brezplačna kava ☕"); }} className="rounded-full bg-[#F1E7D2] px-3 py-1.5 text-[12px] font-bold text-[#5C4C3E]">⚡ Win-back</button>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {SEGMENTS.map((s, i) => (

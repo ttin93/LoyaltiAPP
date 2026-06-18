@@ -49,6 +49,18 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-18 — seja 13 (QA: model nagrad razdeljen — task #1/7)
+Po obsežnem QA uporabnika (cel seznam → task lista #1–#7). Najprej **#1: gostova stran ne meša več
+modelov** — pokaže SAMO `venue.points_model`:
+- **per_visit (žigi):** kartonček + žigi, BREZ menija točk; ob 10/10 → 🎉 animacija + kupon za nagrado
+  v denarnico (stackable) + reset z ostankom točk.
+- **per_euro (točke):** točke + meni nagrad (odštevanje ob unovčenju), BREZ kartončka.
+- Preverjeno: `tsc` čist; `/p/demo` (per_visit) renderira kartonček "0/10 žigov" + "Še 10 obiskov do
+  brezplačne kave", brez menija točk. ⚠️ **Real žigi-cikel (reset + auto-kupon ob 10/10) zaenkrat dela
+  le v DEMO** — pravi `/api/scan` še akumulira točke brez reseta → rabi backend (RPC). Dodano kot task.
+- Preostali QA tasks (pending): Marketing v nulo (SMS+email, cost estimator, avtomatizacije),
+  pomoč-(?) povsod, Zgodovina "Unovčene" toggle, Analitika izbirnik obdobja, wheel editor, profil.
+
 ### 2026-06-17 — seja 12 (roadmap dodatki — demo-first)
 Dodani 4 dodatki, **demo-first** (vidni v walkthroughu; pravo SMS/email pošiljanje ostane post-yes stikalo):
 - **Google ocene autopilot — PRAVA:** na gostovem success ekranu "Kako ti je bilo?" → 😊 odpre Google

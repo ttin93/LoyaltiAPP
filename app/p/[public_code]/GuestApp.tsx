@@ -73,6 +73,8 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const [busy, setBusy] = useState(false);
   const [phone, setPhone] = useState("");
   const [rated, setRated] = useState<"up" | "down" | null>(null);
+  const [cardCompleted, setCardCompleted] = useState(false);
+  const [completedReward, setCompletedReward] = useState("");
   const demoZois = useRef<Set<string>>(new Set());
 
   const googleReviewUrl =
@@ -97,6 +99,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const left = Math.max(0, goal - points);
   const visitsLeft = Math.max(0, 10 - stamps);
   const visitWord = visitsLeft === 1 ? "obisk" : visitsLeft === 2 ? "obiska" : visitsLeft <= 4 ? "obiske" : "obiskov";
+  const isStampMode = venue.points_model === "per_visit";
 
   const refresh = useCallback(
     async (id: string) => {
@@ -234,8 +237,21 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         if (parsed.davcna !== venue.davcna_stevilka) return fail("Ta račun ni iz tega lokala.", "Točke dobiš za račune, izdane v tem lokalu.");
         if (demoZois.current.has(parsed.zoiHex)) return fail("Ta račun je bil že unovčen.", "Vsak račun prinese točke samo enkrat.");
         demoZois.current.add(parsed.zoiHex);
-        setPoints((p) => p + venue.points_per_visit);
+        const after = points + venue.points_per_visit;
         setAwarded(venue.points_per_visit);
+        if (isStampMode && Math.floor(after / stampValue) >= 10) {
+          // kartonček poln → kupon v denarnico (stackable) + reset z ostankom
+          const rewardName = sorted[0]?.name || "Brezplačna kava";
+          const next = [...coupons, { id: "c" + Date.now(), name: rewardName }];
+          setCoupons(next);
+          localStorage.setItem(couponsKey, JSON.stringify(next));
+          setCompletedReward(rewardName);
+          setCardCompleted(true);
+          setPoints(after - goal);
+        } else {
+          setCardCompleted(false);
+          setPoints(after);
+        }
         setView("success");
       } catch (e) {
         fail(e instanceof FiscalQRError ? e.message : "Neveljaven QR.", "Poskusi znova.");
@@ -434,15 +450,30 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
 
   // SUCCESS (po skeniranju)
   if (view === "success") {
+    const displayStamps = cardCompleted ? 10 : stamps;
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-6 px-6 py-12">
-        <div className="font-display text-[42px] font-extrabold text-[#5E7F52]" style={{ animation: "popIn 0.5s cubic-bezier(0.2,1.4,0.5,1) both" }}>+{awarded} točk</div>
-        <div className="w-full rounded-3xl border border-[#EFE6D4] bg-[#FFFCF6] p-5 shadow-[0_2px_10px_rgba(43,29,23,0.05),0_14px_34px_rgba(43,29,23,0.08)]">
-          <StampGrid stamps={stamps} animateNew goalLabel={goalLabel} />
+        <div className="font-display text-[42px] font-extrabold text-[#5E7F52]" style={{ animation: "popIn 0.5s cubic-bezier(0.2,1.4,0.5,1) both" }}>
+          {cardCompleted ? "🎉" : isStampMode ? "+1 žig" : `+${awarded} točk`}
         </div>
+        {isStampMode && (
+          <div className="w-full rounded-3xl border border-[#EFE6D4] bg-[#FFFCF6] p-5 shadow-[0_2px_10px_rgba(43,29,23,0.05),0_14px_34px_rgba(43,29,23,0.08)]">
+            <StampGrid stamps={displayStamps} animateNew goalLabel={goalLabel} />
+          </div>
+        )}
         <div className="flex flex-col items-center gap-2 text-center">
-          <div className="font-display text-[28px] font-extrabold">{stamps >= 10 ? "Kartonček je poln!" : `Žig št. ${stamps} je tvoj`}</div>
-          <div className="max-w-[280px] text-[15.5px] leading-relaxed text-[#5C4C3E]">{rewardReady ? `Brezplačna ${sorted[0].name.toLowerCase()} te čaka pri osebju.` : `Še ${left} točk do nagrade.`}</div>
+          <div className="font-display text-[28px] font-extrabold">
+            {cardCompleted ? "Kartonček je poln!" : isStampMode ? `Žig št. ${displayStamps} je tvoj` : `+${awarded} točk`}
+          </div>
+          <div className="max-w-[280px] text-[15.5px] leading-relaxed text-[#5C4C3E]">
+            {cardCompleted
+              ? `Kupon za ${completedReward.toLowerCase()} je v tvoji denarnici 🎟️`
+              : isStampMode
+                ? `Še ${visitsLeft} ${visitWord} do brezplačne ${(sorted[0]?.name || "kave").toLowerCase()}.`
+                : rewardReady
+                  ? "Lahko unovčiš nagrado pri osebju."
+                  : `Še ${left} točk do nagrade.`}
+          </div>
         </div>
 
         {/* Google-ocene autopilot: zadovoljne usmerimo na Google, slabe prestrežemo zasebno */}
@@ -464,7 +495,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           </div>
         )}
 
-        <button onClick={() => { setView("home"); setRated(null); }} className="h-14 w-full rounded-full bg-[#2B1D17] text-[16.5px] font-semibold text-[#F5EFE6]">Super, nazaj na kartonček</button>
+        <button onClick={() => { setView("home"); setRated(null); setCardCompleted(false); }} className="h-14 w-full rounded-full bg-[#2B1D17] text-[16.5px] font-semibold text-[#F5EFE6]">Super, nazaj na kartonček</button>
       </main>
     );
   }
@@ -500,20 +531,25 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
 
       <div className="rounded-3xl border border-[#EFE6D4] bg-[#FFFCF6] p-5 shadow-[0_2px_10px_rgba(43,29,23,0.05),0_14px_34px_rgba(43,29,23,0.08)]">
         <div className="mb-1 flex items-baseline justify-between">
-          <div className="text-[12px] font-bold uppercase tracking-[0.09em] text-[#8A7A66]">Tvoj kartonček</div>
-          <div className="text-[13px] text-[#8A7A66]">{stamps} / 10 žigov</div>
+          <div className="text-[12px] font-bold uppercase tracking-[0.09em] text-[#8A7A66]">{isStampMode ? "Tvoj kartonček" : "Tvoje točke"}</div>
         </div>
         <div className="mb-[18px] flex items-baseline gap-2">
-          <span className="font-display text-[54px] font-extrabold leading-none">{points}</span>
-          <span className="text-[16px] font-medium text-[#8A7A66]">točk</span>
+          <span className="font-display text-[54px] font-extrabold leading-none">{isStampMode ? `${stamps}/10` : points}</span>
+          <span className="text-[16px] font-medium text-[#8A7A66]">{isStampMode ? "žigov" : "točk"}</span>
         </div>
-        <StampGrid stamps={stamps} goalLabel={goalLabel} />
+        {isStampMode && <StampGrid stamps={stamps} goalLabel={goalLabel} />}
         <div className="mt-4 border-t border-dashed border-[#E2D7C2] pt-3.5 text-[14px] leading-snug text-[#5C4C3E]">
-          {rewardReady ? "Kartonček je poln — unovči nagrado pri osebju." : `Še ${left} točk (${visitsLeft} ${visitWord}) do nagrade.`}
+          {isStampMode
+            ? stamps >= 10
+              ? "Kartonček je poln — aktiviraj kupon spodaj."
+              : `Še ${visitsLeft} ${visitWord} do brezplačne ${(sorted[0]?.name || "kave").toLowerCase()}.`
+            : rewardReady
+              ? "Imaš dovolj točk — unovči nagrado spodaj."
+              : `Še ${left} točk do nagrade.`}
         </div>
       </div>
 
-      {rewardReady && (
+      {!isStampMode && rewardReady && (
         <div className="mt-4 flex items-center gap-3.5 rounded-[20px] bg-[#5E7F52] px-[18px] py-4 text-[#F5EFE6]">
           <div className="flex flex-1 flex-col gap-0.5">
             <div className="font-display text-[17px] font-bold">{sorted[0].name} te čaka</div>
@@ -545,9 +581,11 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         </>
       )}
 
+      {!isStampMode && (
+      <>
       <div className="mt-7 flex items-baseline justify-between">
         <div className="font-display text-[20px] font-bold">Nagrade</div>
-        <div className="text-[13px] text-[#8A7A66]">1 obisk = {venue.points_per_visit} točk</div>
+        <div className="text-[13px] text-[#8A7A66]">1 € = {venue.points_per_euro} točk</div>
       </div>
       <div className="mt-3 flex flex-col gap-2.5">
         {sorted.map((r, idx) => {
@@ -575,6 +613,8 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           );
         })}
       </div>
+      </>
+      )}
 
       {scanning && <Scanner onResult={handleScan} onClose={() => setScanning(false)} />}
       {redeemReward && (

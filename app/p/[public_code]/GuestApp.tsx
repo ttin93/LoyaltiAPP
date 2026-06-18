@@ -269,6 +269,16 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
       if (j.ok) {
         setPoints(j.totalPoints);
         setAwarded(j.pointsAwarded);
+        if (j.cardCompleted) {
+          const rewardName = j.cardReward || sorted[0]?.name || "Brezplačna kava";
+          const next = [...coupons, { id: "c" + Date.now(), name: rewardName }];
+          setCoupons(next);
+          localStorage.setItem(couponsKey, JSON.stringify(next));
+          setCompletedReward(rewardName);
+          setCardCompleted(true);
+        } else {
+          setCardCompleted(false);
+        }
         setView("success");
       } else fail(j.error, "Vsak račun prinese točke samo enkrat.");
     } catch {

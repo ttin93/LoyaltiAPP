@@ -64,8 +64,14 @@ export async function POST(req: Request) {
     // 4) Točke — per_visit za MVP
     const points = venue.points_per_visit;
 
-    // 5) Dodeli + dedup (unique zoi v award_scan)
-    const { data: total, error } = await db.rpc("award_scan", {
+    // cilj kartončka (samo per_visit) = najmanjša nagrada; per_euro = 0 (brez reseta)
+    const { data: rewards } = await db.from("rewards").select("*").eq("venue_id", venue.id);
+    const sortedRewards = (rewards ?? []).slice().sort((a, b) => a.points_required - b.points_required);
+    const cardGoal =
+      venue.points_model === "per_visit" && sortedRewards.length ? sortedRewards[0].points_required : 0;
+
+    // 5) Dodeli + dedup (unique zoi v award_scan) + žigi-cikel
+    const { data, error } = await db.rpc("award_scan", {
       p_venue_id: venue.id,
       p_customer_id: customerId,
       p_zoi: parsed.zoiHex,
@@ -73,6 +79,7 @@ export async function POST(req: Request) {
       p_issued_at: parsed.issuedAt.toISOString(),
       p_amount: null,
       p_points: points,
+      p_card_goal: cardGoal,
     });
     if (error) {
       if (error.code === "23505") {
@@ -80,13 +87,17 @@ export async function POST(req: Request) {
       }
       throw error;
     }
+    const row = (Array.isArray(data) ? data[0] : data) as { total: number; card_completed: boolean } | null;
+    const total = row?.total ?? 0;
+    const cardCompleted = !!row?.card_completed;
 
     // 6) Napredek do nagrade
-    const { data: rewards } = await db.from("rewards").select("*").eq("venue_id", venue.id);
     return NextResponse.json({
       ok: true,
       pointsAwarded: points,
       totalPoints: total,
+      cardCompleted,
+      cardReward: cardCompleted ? sortedRewards[0]?.name ?? null : null,
       nextReward: nextRewardProgress(Number(total), rewards ?? []),
     });
   } catch (e) {

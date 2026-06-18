@@ -49,6 +49,16 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-18 — seja 15 (#8 backend žigi-cikel — VSI QA taski #1–#8 končani)
+`award_scan` posodobljen: dodan `p_card_goal` + vrača `(total, card_completed)`; ko skeniranje doseže
+cilj kartončka, resetira točke z ostankom (carryover). `/api/scan` izračuna cilj (per_visit = najmanjša
+nagrada; per_euro = 0), pošlje `p_card_goal`, prebere `card_completed`, vrne `cardCompleted` + `cardReward`.
+`GuestApp` (real scan) ob `cardCompleted` podeli kupon v denarnico + completion ekran (kot demo).
+Migracija `0004_card_cycle.sql` (drop+recreate, return type → tabela; pognana v živo). **Preverjeno prek
+RPC:** scan1 = 15/false, scan2 = 0/true (reset z ostankom). tsc čist. → **Žigi zdaj delajo tudi v živo**,
+ne le v demu. (Opomba: kuponi so še v localStorage = per-naprava; server-side coupon tabela = morebitna
+kasnejša nadgradnja za multi-device.)
+
 ### 2026-06-18 — seja 14 (QA tasks #2–#7 — prenova demo dashboarda)
 - **#2 Marketing v nulo:** avtomatizacije (Google ocene / win-back / rojstni dan, on/off), **nova
   kampanja** s kanalom **SMS/Email** + segmenti (število prejemnikov po kanalu) + predloge +

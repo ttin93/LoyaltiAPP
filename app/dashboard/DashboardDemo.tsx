@@ -24,8 +24,8 @@ type Tab = (typeof TABS)[number]["key"];
 
 const SEGMENTS = ["Vsi (137)", "Neaktivni (28)", "Aktivni (71)", "Najaktivnejši (12)"];
 
-export default function DashboardDemo() {
-  const [tab, setTab] = useState<Tab>("Sistem");
+export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: Tab } = {}) {
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [toast, setToast] = useState<string | null>(null);
   const [rewards, setRewards] = useState(DEMO_REWARDS.map((r) => ({ id: r.id, name: r.name, pts: r.points_required })));
   const [model, setModel] = useState<"per_visit" | "per_euro">("per_visit");

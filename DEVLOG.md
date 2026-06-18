@@ -49,6 +49,17 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-17 — seja 11 (demo walkthrough za prodajo)
+Cel prodajni walkthrough, **dosegljiv BREZ prijave** (da ga lastniku odklikaš na telefonu):
+- **`/demo`** — hub: uokvirja "kaj dobiš" (4 owner wins) + gumba **Pogled gosta** (`/p/demo/spin`) in
+  **Pogled lastnika** (`/demo/dashboard`).
+- **`/demo/dashboard`** — `DashboardDemo` brez prijave (prej `/dashboard` → `/partner` login, ker je
+  Supabase vklopljen). Odpre na **Analitiki** (vrednost najprej). Dodan `initialTab` prop v DashboardDemo.
+- Preverjeno: vse rute **200**, vsebina ok (hub naslov + oba gumba; dashboard 482 skeniranj / 137
+  strank / top stranke). Screenshot tool timeout (znano okolje) → preverjeno prek snapshota/HTTP.
+- Opomba: po menjavi rut spet trčil v zastarel `.next` (dinamične 404) → `rm .next` + čist restart rešil.
+- v1 ostaja zaključen; brez novih featurjev — to je prodajno orodje. Naslednji korak = sporočilo sinu.
+
 ### 2026-06-17 — seja 10 (STRATEŠKI PREMIK)
 Po ločeni Claude seji + premisleku uporabnika: **VARNOST NI wedge.** Konkurenca tudi dedupa;
 pristnosti ZOI (resničen vs izmišljen) brez FURS/POS ne preveri nihče → v receipt-scan modelu

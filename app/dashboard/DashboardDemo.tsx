@@ -20,6 +20,7 @@ import {
   DEMO_TEMPLATES,
   DEMO_CAMPAIGNS,
   DEMO_AUTOMATIONS,
+  DEMO_PROFILE,
   SMS_RATE,
 } from "@/lib/demo";
 
@@ -69,6 +70,10 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
   const [vName, setVName] = useState(DEMO_VENUE.name);
   const [vColor, setVColor] = useState("#2B1D17");
   const [vTagline, setVTagline] = useState("Zbiraj žige, prejmi nagrade");
+  const [vLogo, setVLogo] = useState<string | null>(null);
+  const [vWelcome, setVWelcome] = useState("Dobrodošel! Zberi 10 žigov in kava je na nas ☕");
+  const [showWheel, setShowWheel] = useState(true);
+  const [profileCust, setProfileCust] = useState<string | null>(null);
   const [slots, setSlots] = useState(["Brezplačna kava", "−10 %", "+30 točk", "Piškot gratis", "−15 %", "Sirup gratis"]);
 
   const accent = "#2B1D17";
@@ -200,7 +205,12 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
                     <div className="mt-1.5 h-[6px] overflow-hidden rounded-full bg-[#EFE6D4]">
                       <div className="h-full rounded-full bg-[#5E7F52]" style={{ width: `${pct}%` }} />
                     </div>
-                    <div className="mt-1 text-[11.5px] text-[#A6967F]">{c.back} od {c.sent} se vrnilo</div>
+                    <div className="mt-2 grid grid-cols-4 gap-1.5 text-center">
+                      <div><div className="text-[14px] font-bold">{c.sent}</div><div className="text-[10.5px] text-[#A6967F]">poslano</div></div>
+                      <div><div className="text-[14px] font-bold text-[#5E7F52]">{c.back}</div><div className="text-[10.5px] text-[#A6967F]">vrnili</div></div>
+                      <div><div className="text-[14px] font-bold text-[#B97F1F]">{c.used}</div><div className="text-[10.5px] text-[#A6967F]">kupon · {c.avgDays}d</div></div>
+                      <div><div className="text-[14px] font-bold text-[#A33E1D]">{c.expired}</div><div className="text-[10.5px] text-[#A6967F]">poteklo</div></div>
+                    </div>
                   </div>
                 );
               })}
@@ -444,16 +454,17 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
             </div>
 
             <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] px-4 py-1">
-              <div className="flex items-center gap-3 py-3 text-[11.5px] font-bold uppercase tracking-wide text-[#A6967F]">
+              <div className="flex items-center gap-1.5 py-2 text-[11.5px] font-bold uppercase tracking-wide text-[#A6967F]">Stranke <HelpDot text="Klikni stranko za njen profil: vsi obiski, unovčenja, poraba, vzorec — in pošlji ji osebno sporočilo." /></div>
+              <div className="flex items-center gap-3 pb-2 text-[11.5px] font-bold uppercase tracking-wide text-[#A6967F]">
                 <div className="flex-1">Stranka</div><div className="w-12 text-right">Obiski</div><div className="w-14 text-right">Točke</div><div className="w-16 text-right">Zadnji</div>
               </div>
               {DEMO_MARKETING.map((m, i) => (
-                <div key={i} className="flex items-center gap-3 border-t border-[#F1E7D2] py-3 text-[13.5px]">
+                <button key={i} onClick={() => setProfileCust(m.n)} className="flex w-full items-center gap-3 border-t border-[#F1E7D2] py-3 text-left text-[13.5px] hover:bg-[#F9F4EA]">
                   <div className="flex-1 truncate font-semibold">{m.n}</div>
                   <div className="w-12 text-right text-[#5C4C3E]">{m.v}</div>
                   <div className="w-14 text-right font-bold text-[#B97F1F]">{m.p}</div>
                   <div className="w-16 text-right text-[12.5px] font-semibold" style={{ color: m.ac }}>{m.a}</div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -476,6 +487,27 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
             {/* Gostova stran */}
             <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
               <div className="mb-3 flex items-center gap-1.5 text-[14px] font-bold">Gostova stran <HelpDot text="Stran, ki jo gost vidi, ko skenira tvoj QR. Tu urejaš videz." /></div>
+
+              <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-[#A6967F]">Predogled</div>
+              <div className="mb-3 flex items-center gap-3 rounded-xl p-3" style={{ background: vColor }}>
+                {vLogo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={vLogo} alt="logo" className="h-11 w-11 rounded-full object-cover" />
+                ) : (
+                  <div className="font-display flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[18px] font-bold" style={{ color: vColor }}>{vName.charAt(0)}</div>
+                )}
+                <div className="min-w-0">
+                  <div className="font-display truncate text-[15px] font-bold text-white">{vName}</div>
+                  <div className="truncate text-[12px] text-white/80">{vTagline}</div>
+                </div>
+              </div>
+              <label className="mb-2.5 flex items-center justify-between">
+                <span className="text-[14px] text-[#5C4C3E]">Logotip</span>
+                <span className="cursor-pointer rounded-lg border border-[#D9CDBA] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#5C4C3E]">
+                  {vLogo ? "Zamenjaj" : "Naloži"}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { const rd = new FileReader(); rd.onload = () => setVLogo(rd.result as string); rd.readAsDataURL(f); } }} />
+                </span>
+              </label>
               <label className="mb-2.5 block">
                 <span className="mb-1 block text-[12px] text-[#8A7A66]">Ime lokala</span>
                 <input value={vName} onChange={(e) => setVName(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[14px]" />
@@ -492,6 +524,16 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
                 <span className="mb-1 flex items-center gap-1.5 text-[12px] text-[#8A7A66]">Google review link <HelpDot text="Iz Google Business Profile → 'Prejmi več ocen' dobiš kratko povezavo (g.page/r/…). Gumb 'Oceni na Googlu' jo odpre naravnost v okencu za oceno. Brez nje gumb odpre iskanje po imenu lokala." /></span>
                 <input value={gReview} onChange={(e) => setGReview(e.target.value)} placeholder="https://g.page/r/…" className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13px]" />
               </label>
+              <label className="mt-2.5 block">
+                <span className="mb-1 block text-[12px] text-[#8A7A66]">Pozdravno sporočilo</span>
+                <input value={vWelcome} onChange={(e) => setVWelcome(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13px]" />
+              </label>
+              <div className="mt-2.5 flex items-center justify-between">
+                <span className="text-[14px] text-[#5C4C3E]">Prikaži srečno kolo novim gostom</span>
+                <button onClick={() => setShowWheel(!showWheel)} aria-label="Kolo" className="relative h-[28px] w-[46px] flex-shrink-0 rounded-full" style={{ background: showWheel ? "#5E7F52" : "#D9CDBA" }}>
+                  <span className="absolute top-[3px] h-[22px] w-[22px] rounded-full bg-white shadow transition-all" style={{ left: showWheel ? 21 : 3 }} />
+                </button>
+              </div>
               <button onClick={() => flash("Gostova stran shranjena (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
             </div>
 
@@ -582,9 +624,65 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
         </div>
       </nav>
 
+      {profileCust && (
+        <div className="fixed inset-0 z-40 flex flex-col justify-end bg-black/40" onClick={() => setProfileCust(null)}>
+          <div className="mx-auto max-h-[88vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-[#F5EFE6] px-5 pb-8 pt-5" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[#D9CDBA]" />
+            <div className="flex items-center gap-3">
+              <div className="font-display flex h-12 w-12 items-center justify-center rounded-full bg-[#2B1D17] text-[20px] font-bold text-[#F5EFE6]">{/^[A-Za-zČŠŽ]/.test(profileCust) ? profileCust.charAt(0).toUpperCase() : "G"}</div>
+              <div className="min-w-0 flex-1">
+                <div className="font-display truncate text-[18px] font-extrabold">{profileCust}</div>
+                <div className="text-[12.5px] text-[#8A7A66]">Član od {DEMO_PROFILE.joined}</div>
+              </div>
+              <button onClick={() => setProfileCust(null)} aria-label="Zapri" className="flex h-9 w-9 items-center justify-center rounded-full bg-[rgba(43,29,23,0.06)]"><Icon name="x" color="#2B1D17" size={18} strokeWidth={2} /></button>
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-2.5">
+              <Mini l="Obiski" v={String(DEMO_PROFILE.visits)} />
+              <Mini l="Točke" v={String(DEMO_PROFILE.points)} />
+              <Mini l="Poraba" v={DEMO_PROFILE.spent} />
+              <Mini l="Povp. razmik" v={DEMO_PROFILE.avgGap} />
+              <Mini l="Najraje" v={DEMO_PROFILE.best} />
+              <Mini l="Zadnji" v="danes" />
+            </div>
+
+            <div className="mt-4 text-[13px] font-bold">Skeniranja</div>
+            <div className="mt-1.5 rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] px-4">
+              {DEMO_PROFILE.scans.map((s, i) => (
+                <div key={i} className="flex items-center justify-between border-t border-[#F1E7D2] py-2.5 text-[13.5px] first:border-0">
+                  <span className="text-[#5C4C3E]">{s.t}</span><span className="font-bold text-[#5E7F52]">{s.d}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 text-[13px] font-bold">Unovčene nagrade</div>
+            <div className="mt-1.5 rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] px-4">
+              {DEMO_PROFILE.redemptions.map((r, i) => (
+                <div key={i} className="flex items-center justify-between border-t border-[#F1E7D2] py-2.5 text-[13.5px] first:border-0">
+                  <span className="font-semibold">{r.d}</span><span className="text-[#8A7A66]">{r.t}</span>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={() => { setProfileCust(null); flash("Osebno sporočilo poslano (demo)"); }} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#2B1D17] text-[15px] font-semibold text-[#F5EFE6]">
+              <Icon name="send" color="#F5EFE6" size={18} /> Pošlji osebno sporočilo
+            </button>
+          </div>
+        </div>
+      )}
+
       {toast && (
         <div className="fixed inset-x-0 bottom-24 z-30 mx-auto w-[88%] max-w-sm rounded-xl bg-[#2B1D17] px-4 py-3 text-center text-[14px] font-medium text-[#F5EFE6] shadow-lg">{toast}</div>
       )}
+    </div>
+  );
+}
+
+function Mini({ l, v }: { l: string; v: string }) {
+  return (
+    <div className="rounded-xl border border-[#EFE6D4] bg-[#FFFCF6] p-2.5 text-center">
+      <div className="font-display text-[16px] font-extrabold">{v}</div>
+      <div className="text-[11px] text-[#8A7A66]">{l}</div>
     </div>
   );
 }

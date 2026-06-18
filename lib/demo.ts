@@ -108,10 +108,31 @@ export const DEMO_TEMPLATES = [
   { key: "nova", label: "Nova nagrada", text: "Nova nagrada v Moki: domača torta za 320 točk 🍰" },
 ];
 export const DEMO_CAMPAIGNS = [
-  { d: "12. jun", seg: "Neaktivni", ch: "SMS", sent: 26, back: 9 },
-  { d: "1. jun", seg: "Vsi", ch: "Email", sent: 45, back: 14 },
-  { d: "20. maj", seg: "Najboljši", ch: "SMS", sent: 12, back: 7 },
+  { d: "12. jun", seg: "Neaktivni", ch: "SMS", sent: 26, back: 9, used: 7, avgDays: 3, expired: 2 },
+  { d: "1. jun", seg: "Vsi", ch: "Email", sent: 45, back: 14, used: 10, avgDays: 5, expired: 4 },
+  { d: "20. maj", seg: "Najboljši", ch: "SMS", sent: 12, back: 7, used: 7, avgDays: 2, expired: 0 },
 ];
+
+// Profil posameznega gosta (demo — prikaže se ob kliku na stranko)
+export const DEMO_PROFILE = {
+  joined: "12. mar 2026",
+  visits: 24,
+  points: 360,
+  spent: "≈ 168 €",
+  avgGap: "6 dni",
+  best: "petek, 9h",
+  scans: [
+    { t: "danes · 9.12", d: "+15" },
+    { t: "pon · 8.40", d: "+15" },
+    { t: "pet · 17.20", d: "+15" },
+    { t: "sre · 8.55", d: "+15" },
+    { t: "pred 9 dni · 9.05", d: "+15" },
+  ],
+  redemptions: [
+    { t: "10. jun", d: "Kava po izbiri" },
+    { t: "22. maj", d: "Domač rogljiček" },
+  ],
+};
 export const DEMO_AUTOMATIONS = [
   { key: "review", label: "Google ocene", desc: "Po žigu prosi zadovoljne za oceno", on: true, days: 0, reward: "", validity: 0, reminder: 0, msg: "Kako ti je bilo? Pomagaj nam z oceno na Googlu." },
   { key: "winback", label: "Win-back", desc: "Neaktivnim samodejno pošlji bonus", on: true, days: 21, reward: "Brezplačna kava", validity: 7, reminder: 2, msg: "Dolgo te ni bilo! Tukaj je brezplačna kava ☕" },

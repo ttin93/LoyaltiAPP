@@ -49,6 +49,14 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-18 — seja 18 (logo, kustomizacija, detajlna analitika, profil gosta)
+- **Gostova stran:** logo upload (+ živ predogled kartice), pozdravno sporočilo, toggle "prikaži kolo" —
+  več kustomizacije strani, ki jo gost vidi.
+- **Analitika kampanj detajlna:** per kampanja poslano / vrnili / kupon uporabljen (+ povp. dni) / poteklo.
+- **Profil gosta:** klik na stranko (Marketing) → modal: obiski/točke/poraba/povp. razmik/najraje +
+  seznam vseh skeniranj + unovčenj + gumb "Pošlji osebno sporočilo". (DEMO_PROFILE)
+- tsc čist; preverjeno v `/demo/dashboard` (logo/welcome/preview, detajli kampanj, profil-modal).
+
 ### 2026-06-18 — seja 17 (Marketing v3 — kuponi/kanali/analitika)
 - **Kampanje: priloži kupon** (izbira nagrade + veljavnost dni) v composerju; shranjene kampanje
   hranijo tudi kupon+veljavnost (naloži/posodobi).

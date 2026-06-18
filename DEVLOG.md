@@ -49,6 +49,19 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-18 — seja 14 (QA tasks #2–#7 — prenova demo dashboarda)
+- **#2 Marketing v nulo:** avtomatizacije (Google ocene / win-back / rojstni dan, on/off), **nova
+  kampanja** s kanalom **SMS/Email** + segmenti (število prejemnikov po kanalu) + predloge +
+  **STROŠEK-ESTIMATOR** (X × 0,07 € = Y €, email zastonj) + zgodovina kampanj.
+- **#3 pomoč-(?):** nova `HelpDot` komponenta + razlage na naslovih (model nagrad, QR, aktivacija,
+  nagrade, kolo, obdobje, avtomatizacije).
+- **#4 Zgodovina "Unovčene"** toggle zdaj dela (+ prava zgodovina unovčenj, DEMO_REDEMPTIONS).
+- **#5 Analitika** izbirnik obdobja (1/7/30/Vse).
+- **#6 wheel editor** (6 polj) v Nastavitvah.
+- **#7 "Gostova stran"** urejanje (ime/podnapis/barva) v Nastavitvah.
+- Vse v **demu** (prodajni pitch surface). tsc čist; vsi zavihki preverjeni v `/demo/dashboard`.
+- Ostane **#8** (backend žigi-cikel v živo) + mirror v pravem owner Dashboardu (sledi).
+
 ### 2026-06-18 — seja 13 (QA: model nagrad razdeljen — task #1/7)
 Po obsežnem QA uporabnika (cel seznam → task lista #1–#7). Najprej **#1: gostova stran ne meša več
 modelov** — pokaže SAMO `venue.points_model`:

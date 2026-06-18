@@ -92,6 +92,40 @@ export const DEMO_CHURN = [
   { n: "marko···@···.com", v: "6 obiskov", last: "14 dni" },
 ];
 
+// ---- Marketing (#2) ----
+export const SMS_RATE = 0.07; // € na SMS (ocena)
+export const DEMO_SEGMENTS = [
+  { key: "vsi", label: "Vsi", count: 137, sms: 92, email: 45 },
+  { key: "aktivni", label: "Aktivni (30 dni)", count: 71, sms: 48, email: 23 },
+  { key: "neaktivni", label: "Neaktivni 21+ dni", count: 28, sms: 19, email: 9 },
+  { key: "rojstni", label: "Rojstni dnevi (7 dni)", count: 6, sms: 4, email: 2 },
+  { key: "najboljsi", label: "Najboljši", count: 12, sms: 8, email: 4 },
+];
+export const DEMO_TEMPLATES = [
+  { key: "winback", label: "Win-back", text: "Dolgo te ni bilo! Ta teden te pri Moki čaka brezplačna kava ☕" },
+  { key: "rojstni", label: "Rojstni dan", text: "Vse najboljše! 🎂 Danes je tvoja kava pri Moki na nas." },
+  { key: "dvojni", label: "Dvojni žigi", text: "Ta vikend dvojni žigi pri Moki — pridi po svojo kavo! ☕☕" },
+  { key: "nova", label: "Nova nagrada", text: "Nova nagrada v Moki: domača torta za 320 točk 🍰" },
+];
+export const DEMO_CAMPAIGNS = [
+  { d: "12. jun", seg: "Neaktivni", ch: "SMS", sent: 26, back: 9 },
+  { d: "1. jun", seg: "Vsi", ch: "Email", sent: 45, back: 14 },
+  { d: "20. maj", seg: "Najboljši", ch: "SMS", sent: 12, back: 7 },
+];
+export const DEMO_AUTOMATIONS = [
+  { key: "review", label: "Google ocene", desc: "Po žigu prosi zadovoljne za oceno", on: true },
+  { key: "winback", label: "Auto win-back", desc: "Neaktivnim 21+ dni samodejno pošlji bonus", on: true },
+  { key: "birthday", label: "Rojstnodnevna nagrada", desc: "Na rojstni dan samodejna ponudba", on: false },
+];
+
+// ---- Zgodovina: unovčene (#4) ----
+export const DEMO_REDEMPTIONS = [
+  { n: "+386 31 ··· 412", t: "danes · 9.40", d: "Kava po izbiri" },
+  { n: "+386 51 ··· 736", t: "včeraj · 17.02", d: "Domač rogljiček" },
+  { n: "ana.k@···.com", t: "pon · 12.30", d: "Kava po izbiri" },
+  { n: "+386 40 ··· 198", t: "pon · 8.55", d: "Kos torte dneva" },
+];
+
 export type Plan = {
   key: string;
   name: string;

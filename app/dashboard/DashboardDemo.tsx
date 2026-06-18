@@ -74,6 +74,7 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
   const [vWelcome, setVWelcome] = useState("Dobrodošel! Zberi 10 žigov in kava je na nas ☕");
   const [showWheel, setShowWheel] = useState(true);
   const [profileCust, setProfileCust] = useState<string | null>(null);
+  const [sect, setSect] = useState<"osnovno" | "kolo" | "zasloni">("osnovno");
   const [slots, setSlots] = useState(["Brezplačna kava", "−10 %", "+30 točk", "Piškot gratis", "−15 %", "Sirup gratis"]);
   const [spinTitle, setSpinTitle] = useState("Zavrti in osvoji");
   const [spinTagline, setSpinTagline] = useState("Zavrti kolo in osvoji nagrado za prvi obisk");
@@ -495,6 +496,13 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
         {/* === NASTAVITVE === */}
         {tab === "Nastavitve" && (
           <div className="space-y-4">
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {([["osnovno", "Osnovno"], ["kolo", "Kolo"], ["zasloni", "Zasloni gostov"]] as const).map(([k, l]) => (
+                <button key={k} onClick={() => setSect(k)} className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-semibold ${sect === k ? "bg-[#2B1D17] text-[#F5EFE6]" : "border border-[#E6DCC9] bg-[#FFFCF6] text-[#5C4C3E]"}`}>{l}</button>
+              ))}
+            </div>
+
+            {sect === "osnovno" && (<>
             <div className="rounded-3xl border-2 border-[#E8A23D] bg-[#FFFCF6] p-5">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 font-display text-[17px] font-bold leading-tight">Aktiviraj skeniranje računov <HelpDot text="Enkrat fotografiraš vzorčni račun lokala → preberemo davčno številko. Od tedaj točke prinesejo SAMO računi tvojega lokala. Lahko kadarkoli ponovno aktiviraš." /></div>
@@ -558,7 +566,9 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
               </div>
               <button onClick={() => flash("Gostova stran shranjena (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
             </div>
+            </>)}
 
+            {sect === "kolo" && (<>
             {/* Srečno kolo — prvi zaslon (editor) */}
             <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
               <div className="mb-1 flex items-center gap-1.5 text-[14px] font-bold">Srečno kolo — prvi zaslon <HelpDot text="Prvi zaslon novih gostov (spletna stran / QR plakat). Tu urejaš besedila, polja in zmagovalno polje. Barva, ime in logo se vzamejo iz 'Gostova stran'." /></div>
@@ -583,7 +593,9 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
 
               <button onClick={() => flash("Kolo shranjeno (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani kolo</button>
             </div>
+            </>)}
 
+            {sect === "zasloni" && (<>
             {/* Zaslon "Zadetek" — editor */}
             <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
               <div className="mb-2 flex items-center gap-1.5 text-[14px] font-bold">Zaslon &quot;Zadetek&quot; <HelpDot text="Zaslon, ki ga gost vidi takoj ko zadene nagrado (po vrtenju). Uredi vsa besedila in gumb." /></div>
@@ -633,7 +645,9 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
               <label className="mb-1 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naslov kuponov</span><input value={couponsHdr} onChange={(e) => setCouponsHdr(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
               <button onClick={() => flash("Zaslon shranjen (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
             </div>
+            </>)}
 
+            {sect === "osnovno" && (<>
             {/* Model točk */}
             <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
               <div className="mb-3 flex items-center gap-1.5 text-[14px] font-bold">Model nagrajevanja <HelpDot text="Žigi: vsak 10. obisk → 1 nagrada (kartonček se resetira). Točke: gost nabira točke in jih zapravi na meniju nagrad. Gost vidi SAMO izbrani model." /></div>
@@ -687,6 +701,7 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
               <SettingRow label="Profil" />
               <SettingRow label="Plačila" sub="Paket: Pro · 39€/mes" />
             </div>
+            </>)}
           </div>
         )}
       </main>

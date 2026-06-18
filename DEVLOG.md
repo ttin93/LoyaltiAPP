@@ -49,6 +49,12 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-18 — seja 23 (Nastavitve razdeljene na pod-sekcije)
+Nastavitve so postale predolg seznam → **pod-navigacija** (chipi): **Osnovno** (aktivacija, gostova stran,
+model nagrajevanja, nagrade, profil), **Kolo** (editor srečnega kolesa — svoja sekcija, kot želel user),
+**Zasloni gostov** (zadetek / prijava / kupon / kartonček editorji). Preverjeno: preklop sekcij pokaže prave
+kartice, ostale skrije. tsc čist (preostale napake le v generiranem `.next/dev/types`, se osvežijo ob buildu).
+
 ### 2026-06-18 — seja 22 (editor "Kartonček" — pregled 5. zaslona)
 Dodan editor zaslona **"Kartonček"** (podnapis / besedilo skeniraj-gumba / naslov kuponov; ime-logo-žigi-
 nagrade prihajajo iz Gostova-stran/Model/Nagrade editorjev). Skupaj **5 editorjev gostovih zaslonov**

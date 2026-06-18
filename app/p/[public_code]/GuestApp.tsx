@@ -72,7 +72,9 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const [errText, setErrText] = useState<{ t: string; h: string }>({ t: "", h: "" });
   const [busy, setBusy] = useState(false);
   const [phone, setPhone] = useState("");
-  const [rated, setRated] = useState<"up" | "down" | null>(null);
+  const [stars, setStars] = useState(0);
+  const [fb, setFb] = useState("");
+  const [reviewDone, setReviewDone] = useState(false);
   const [cardCompleted, setCardCompleted] = useState(false);
   const [completedReward, setCompletedReward] = useState("");
   const demoZois = useRef<Set<string>>(new Set());
@@ -486,26 +488,42 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           </div>
         </div>
 
-        {/* Google-ocene autopilot: zadovoljne usmerimo na Google, slabe prestrežemo zasebno */}
-        {rated === null ? (
-          <div className="w-full rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-4 text-center">
-            <div className="text-[14.5px] font-semibold">Kako ti je bilo danes?</div>
-            <div className="mt-3 flex gap-2.5">
-              <button onClick={() => { setRated("up"); window.open(googleReviewUrl, "_blank"); }} className="flex-1 rounded-full bg-[#5E7F52] py-3 text-[14px] font-bold text-[#F5EFE6]">😊 Super</button>
-              <button onClick={() => setRated("down")} className="flex-1 rounded-full border-[1.5px] border-[#D9CDBA] py-3 text-[14px] font-semibold text-[#5C4C3E]">🙁 Slabše</button>
+        {/* Google-ocene autopilot — 5-zvezdični gate: 4–5★ → Google, 1–3★ → zasebno */}
+        <div className="w-full rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5 text-center">
+          {!reviewDone ? (
+            <>
+              <div className="text-[15px] font-semibold">Kako ti je bilo danes?</div>
+              <div className="mt-3 flex justify-center gap-1.5">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button key={n} onClick={() => setStars(n)} aria-label={`${n} zvezdic`} className="text-[34px] leading-none transition-transform active:scale-90" style={{ color: n <= stars ? "#E8A23D" : "#E0D4BF" }}>★</button>
+                ))}
+              </div>
+              {stars >= 4 && (
+                <div className="mt-4 flex flex-col items-center gap-2.5">
+                  <div className="text-[14px] leading-snug text-[#5C4C3E]">Juhu! 🎉 Nam pomagaš z oceno na Googlu? Traja 10 sekund.</div>
+                  <a href={googleReviewUrl} target="_blank" rel="noreferrer" onClick={() => setReviewDone(true)} className="flex h-12 w-full items-center justify-center gap-2.5 rounded-full bg-white text-[15px] font-semibold text-[#2B1D17]" style={{ border: "1.5px solid #DDD2C0" }}>
+                    <GoogleG /> Oceni na Googlu
+                  </a>
+                </div>
+              )}
+              {stars >= 1 && stars <= 3 && (
+                <div className="mt-4 flex flex-col gap-2.5">
+                  <div className="text-[14px] leading-snug text-[#5C4C3E]">Žal nam je. Kaj naj popravimo? <span className="text-[#A6967F]">(vidi samo lokal)</span></div>
+                  <textarea value={fb} onChange={(e) => setFb(e.target.value)} rows={3} placeholder="Tvoje mnenje…" className="w-full rounded-xl border border-[#D9CDBA] bg-white p-3 text-left text-[14px] outline-none focus:border-[#2B1D17]" />
+                  <button onClick={() => setReviewDone(true)} className="h-12 w-full rounded-full bg-[#2B1D17] text-[15px] font-semibold text-[#F5EFE6]">Pošlji lokalu</button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="text-[28px]">🙏</div>
+              <div className="text-[15px] font-semibold">{stars >= 4 ? "Najlepša hvala!" : "Hvala za iskrenost!"}</div>
+              <div className="text-[13px] text-[#8A7A66]">{stars >= 4 ? "Tvoja ocena ogromno pomeni." : "Sporočili bomo lokalu, da izboljša."}</div>
             </div>
-          </div>
-        ) : rated === "up" ? (
-          <div className="w-full rounded-2xl border border-[#5E7F52] bg-[rgba(94,127,82,0.08)] p-4 text-center text-[14px] text-[#3E5536]">
-            Hvala! 🙏 Odpre se Google ocena. <a href={googleReviewUrl} target="_blank" rel="noreferrer" className="font-bold underline">Klikni, če se ni odprlo.</a>
-          </div>
-        ) : (
-          <div className="w-full rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-4 text-center text-[14px] text-[#5C4C3E]">
-            Hvala za iskrenost — sporočili bomo lokalu, da popravi. 🙏
-          </div>
-        )}
+          )}
+        </div>
 
-        <button onClick={() => { setView("home"); setRated(null); setCardCompleted(false); }} className="h-14 w-full rounded-full bg-[#2B1D17] text-[16.5px] font-semibold text-[#F5EFE6]">Super, nazaj na kartonček</button>
+        <button onClick={() => { setView("home"); setStars(0); setFb(""); setReviewDone(false); setCardCompleted(false); }} className="h-14 w-full rounded-full bg-[#2B1D17] text-[16.5px] font-semibold text-[#F5EFE6]">Super, nazaj na kartonček</button>
       </main>
     );
   }
@@ -639,6 +657,17 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         />
       )}
     </main>
+  );
+}
+
+function GoogleG() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+      <path d="M21.6 12.2c0-.7-.06-1.3-.18-1.9H12v3.6h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.2Z" fill="#4285F4" />
+      <path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22Z" fill="#34A853" />
+      <path d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1A10 10 0 0 0 2 12c0 1.6.4 3.2 1.1 4.6L6.4 14Z" fill="#FBBC05" />
+      <path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8C16.9 2.9 14.7 2 12 2A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4.1 5.6-4.1Z" fill="#EA4335" />
+    </svg>
   );
 }
 

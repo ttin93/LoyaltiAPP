@@ -113,9 +113,9 @@ export const DEMO_CAMPAIGNS = [
   { d: "20. maj", seg: "Najboljši", ch: "SMS", sent: 12, back: 7 },
 ];
 export const DEMO_AUTOMATIONS = [
-  { key: "review", label: "Google ocene", desc: "Po žigu prosi zadovoljne za oceno", on: true },
-  { key: "winback", label: "Auto win-back", desc: "Neaktivnim 21+ dni samodejno pošlji bonus", on: true },
-  { key: "birthday", label: "Rojstnodnevna nagrada", desc: "Na rojstni dan samodejna ponudba", on: false },
+  { key: "review", label: "Google ocene", desc: "Po žigu prosi zadovoljne za oceno", on: true, days: 0, reward: "", validity: 0, reminder: 0, msg: "Kako ti je bilo? Pomagaj nam z oceno na Googlu." },
+  { key: "winback", label: "Win-back", desc: "Neaktivnim samodejno pošlji bonus", on: true, days: 21, reward: "Brezplačna kava", validity: 7, reminder: 2, msg: "Dolgo te ni bilo! Tukaj je brezplačna kava ☕" },
+  { key: "birthday", label: "Rojstni dan", desc: "Na rojstni dan samodejna ponudba", on: false, days: 0, reward: "Brezplačna kava", validity: 14, reminder: 1, msg: "Vse najboljše! 🎂 Danes je kava na nas." },
 ];
 
 // ---- Zgodovina: unovčene (#4) ----

@@ -49,6 +49,16 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-18 — seja 16 (Marketing v2 + Google-ocene gate)
+- **Google-ocene popup** nadgrajen na **5-zvezdični gate**: 4–5★ → Google ocena (pravi Google gumb),
+  1–3★ → zasebno mnenje (review-gating, slabe prestrežemo). V GuestApp success ekranu. Uporabniku
+  prikazan inline interaktiven mockup.
+- **Avtomatizacije urejljive** ("Uredi"): dnevi sprožitve (npr. po 21 dneh / X dni pred rojstnim dnem),
+  sporočilo, **priloži kupon** (izbira nagrade) + **veljavnost (dni)** + **opomnik pred potekom (dni)**.
+- **Kampanje shranjene/poimenovane**: naloži (klik) / izbriši (×) / "Shrani" (novo ime = nova, isto =
+  posodobi). Predloge → prave shranjene kampanje.
+- tsc čist; preverjeno v `/demo/dashboard` (avtomatizacije editor + 4 shranjene kampanje + ime/Shrani).
+
 ### 2026-06-18 — seja 15 (#8 backend žigi-cikel — VSI QA taski #1–#8 končani)
 `award_scan` posodobljen: dodan `p_card_goal` + vrača `(total, card_completed)`; ko skeniranje doseže
 cilj kartončka, resetira točke z ostankom (carryover). `/api/scan` izračuna cilj (per_visit = najmanjša

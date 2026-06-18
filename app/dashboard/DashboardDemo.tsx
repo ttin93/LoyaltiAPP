@@ -54,6 +54,12 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
   const [autos, setAutos] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(DEMO_AUTOMATIONS.map((a) => [a.key, a.on])),
   );
+  const [autoEdit, setAutoEdit] = useState<string | null>(null);
+  const [autoCfg, setAutoCfg] = useState<Record<string, { days: number; reward: string; validity: number; reminder: number; msg: string }>>(() =>
+    Object.fromEntries(DEMO_AUTOMATIONS.map((a) => [a.key, { days: a.days, reward: a.reward, validity: a.validity, reminder: a.reminder, msg: a.msg }])),
+  );
+  const [campaigns, setCampaigns] = useState(() => DEMO_TEMPLATES.map((t) => ({ id: t.key, name: t.label, text: t.text })));
+  const [campName, setCampName] = useState("");
   const [hist, setHist] = useState<"given" | "redeemed">("given");
   const [tf, setTf] = useState("30");
   const [copied, setCopied] = useState(false);
@@ -67,6 +73,7 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
 
   const embedCode = `<script src="https://zig.app/widget.js" data-venue="demo" defer></script>`;
   const maxBar = Math.max(...DEMO_HOURS.map((h) => h[1]));
+  const rewardNames = Array.from(new Set(["Brezplačna kava", ...rewards.map((r) => r.name)]));
 
   return (
     <div className="min-h-dvh bg-[#F5EFE6] pb-24">
@@ -256,17 +263,52 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
             {/* Avtomatizacije */}
             <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
               <div className="mb-1 flex items-center gap-1.5 text-[14px] font-bold">Avtomatizacije <HelpDot text="Sporočila, ki se pošljejo sama ob dogodku — brez tvojega dela." /></div>
-              {DEMO_AUTOMATIONS.map((a) => (
-                <div key={a.key} className="flex items-center justify-between border-t border-[#F1E7D2] py-3 first:border-0">
-                  <div className="pr-3">
-                    <div className="text-[14px] font-semibold">{a.label}</div>
-                    <div className="text-[12.5px] text-[#A6967F]">{a.desc}</div>
+              {DEMO_AUTOMATIONS.map((a) => {
+                const cfg = autoCfg[a.key];
+                const open = autoEdit === a.key;
+                return (
+                  <div key={a.key} className="border-t border-[#F1E7D2] py-3 first:border-0">
+                    <div className="flex items-center justify-between">
+                      <div className="pr-3">
+                        <div className="text-[14px] font-semibold">{a.label}</div>
+                        <div className="text-[12.5px] text-[#A6967F]">{a.desc}</div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => setAutoEdit(open ? null : a.key)} className="text-[12.5px] font-semibold text-[#5C4C3E] underline">{open ? "Zapri" : "Uredi"}</button>
+                        <button onClick={() => setAutos((p) => ({ ...p, [a.key]: !p[a.key] }))} aria-label={a.label} className="relative h-[30px] w-[50px] flex-shrink-0 rounded-full transition" style={{ background: autos[a.key] ? "#5E7F52" : "#D9CDBA" }}>
+                          <span className="absolute top-[3px] h-6 w-6 rounded-full bg-white shadow transition-all" style={{ left: autos[a.key] ? 23 : 3 }} />
+                        </button>
+                      </div>
+                    </div>
+                    {open && (
+                      <div className="mt-3 space-y-2.5 rounded-xl bg-[#F5EFE6] p-3.5">
+                        {a.key !== "review" && (
+                          <Row label={a.key === "birthday" ? "Pošlji X dni pred rojstnim dnem" : "Po X dneh neaktivnosti"}>
+                            <Num value={cfg.days} onChange={(n) => setAutoCfg((p) => ({ ...p, [a.key]: { ...p[a.key], days: n } }))} />
+                          </Row>
+                        )}
+                        <label className="block">
+                          <span className="mb-1 block text-[12px] text-[#8A7A66]">Sporočilo</span>
+                          <textarea value={cfg.msg} onChange={(e) => setAutoCfg((p) => ({ ...p, [a.key]: { ...p[a.key], msg: e.target.value } }))} rows={2} className="w-full rounded-lg border border-[#D9CDBA] bg-white p-2.5 text-[13.5px] outline-none focus:border-[#2B1D17]" />
+                        </label>
+                        {a.key !== "review" && (
+                          <>
+                            <Row label="Priloži kupon">
+                              <select value={cfg.reward} onChange={(e) => setAutoCfg((p) => ({ ...p, [a.key]: { ...p[a.key], reward: e.target.value } }))} className="w-44 rounded-lg border border-[#D9CDBA] bg-white px-2 py-1.5 text-[13.5px]">
+                                <option value="">— brez —</option>
+                                {rewardNames.map((n) => <option key={n} value={n}>{n}</option>)}
+                              </select>
+                            </Row>
+                            <Row label="Veljavnost kupona (dni)"><Num value={cfg.validity} onChange={(n) => setAutoCfg((p) => ({ ...p, [a.key]: { ...p[a.key], validity: n } }))} /></Row>
+                            <Row label="Opomnik pred potekom (dni)"><Num value={cfg.reminder} onChange={(n) => setAutoCfg((p) => ({ ...p, [a.key]: { ...p[a.key], reminder: n } }))} /></Row>
+                          </>
+                        )}
+                        <button onClick={() => { setAutoEdit(null); flash(a.label + " posodobljen (demo)"); }} className="h-10 w-full rounded-full bg-[#2B1D17] text-[13.5px] font-semibold text-[#F5EFE6]">Shrani avtomatizacijo</button>
+                      </div>
+                    )}
                   </div>
-                  <button onClick={() => setAutos((p) => ({ ...p, [a.key]: !p[a.key] }))} aria-label={a.label} className="relative h-[30px] w-[50px] flex-shrink-0 rounded-full transition" style={{ background: autos[a.key] ? "#5E7F52" : "#D9CDBA" }}>
-                    <span className="absolute top-[3px] h-6 w-6 rounded-full bg-white shadow transition-all" style={{ left: autos[a.key] ? 23 : 3 }} />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Nova kampanja (SMS / Email) */}
@@ -294,14 +336,36 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
                 ))}
               </div>
 
-              <div className="mt-3 text-[12.5px] font-bold uppercase tracking-wide text-[#A6967F]">Predloga</div>
+              <div className="mt-3 flex items-center gap-1.5 text-[12.5px] font-bold uppercase tracking-wide text-[#A6967F]">Shranjene kampanje <HelpDot text="Klikni ime, da naložiš kampanjo. Spodaj poimenuj in shrani trenutno kot novo — ali posodobi obstoječo z istim imenom." /></div>
               <div className="mt-1.5 flex flex-wrap gap-2">
-                {DEMO_TEMPLATES.map((tpl) => (
-                  <button key={tpl.key} onClick={() => setSms(tpl.text)} className="rounded-full bg-[#F1E7D2] px-3 py-1.5 text-[12.5px] font-semibold text-[#5C4C3E]">{tpl.label}</button>
+                {campaigns.map((c) => (
+                  <span key={c.id} className="flex items-center gap-1.5 rounded-full bg-[#F1E7D2] py-1.5 pl-3 pr-1.5 text-[12.5px] font-semibold text-[#5C4C3E]">
+                    <button onClick={() => { setSms(c.text); setCampName(c.name); }}>{c.name}</button>
+                    <button onClick={() => setCampaigns((p) => p.filter((x) => x.id !== c.id))} aria-label={`Izbriši ${c.name}`} className="flex h-4 w-4 items-center justify-center rounded-full text-[13px] text-[#A33E1D]">×</button>
+                  </span>
                 ))}
               </div>
 
               <textarea value={sms} onChange={(e) => setSms(e.target.value)} rows={3} className="mt-3 w-full rounded-xl border border-[#D9CDBA] bg-[#FFFCF6] p-3 text-[14px] outline-none focus:border-[#2B1D17]" />
+
+              <div className="mt-2.5 flex gap-2">
+                <input value={campName} onChange={(e) => setCampName(e.target.value)} placeholder="Ime kampanje (npr. Rojstni dan)" className="min-w-0 flex-1 rounded-lg border border-[#D9CDBA] bg-white px-3 py-2 text-[13.5px]" />
+                <button
+                  onClick={() => {
+                    const name = campName.trim();
+                    if (!name) return flash("Vpiši ime kampanje");
+                    setCampaigns((p) => {
+                      const i = p.findIndex((x) => x.name.toLowerCase() === name.toLowerCase());
+                      if (i >= 0) { const n = [...p]; n[i] = { ...n[i], text: sms }; return n; }
+                      return [...p, { id: "c" + p.length + name, name, text: sms }];
+                    });
+                    flash("Kampanja shranjena");
+                  }}
+                  className="flex-shrink-0 rounded-lg bg-[#5E7F52] px-4 py-2 text-[13.5px] font-semibold text-white"
+                >
+                  Shrani
+                </button>
+              </div>
 
               {(() => {
                 const recip = channel === "sms" ? DEMO_SEGMENTS[seg].sms : DEMO_SEGMENTS[seg].email;

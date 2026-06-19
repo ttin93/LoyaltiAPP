@@ -49,6 +49,19 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 25 (landing + paketi prenovljeni za nov produkt)
+Landing zdaj odraža **cel produkt**, ne le žige:
+- **Hero reframe:** badge "Zvestoba · Google ocene · marketing"; podnaslov poudari pripelji-nazaj
+  (rojstni dnevi/win-back/SMS-email) + Google ocene.
+- **Nova sekcija "Funkcije"** (id `#funkcije`, v navigaciji): srečno kolo, win-back kampanje,
+  rojstnodnevne nagrade, SMS+email kampanje, kuponi z veljavnostjo, analitika+profili gostov.
+- **Google-ocene highlight z GRAFOM** (mesečna rast novih ocen, 3,9★→4,8★, +86 ocen).
+- **Anti-fraud sekcija ODSTRANJENA** (per [[loyalty-app-strategy]] — varnost ni wedge).
+- **PRICING posodobljen:** Doppio (29€) zdaj = Google ocene autopilot + win-back/rojstni avtomatizacije
+  + SMS/email segmenti + profili gostov; Veriga = + eBlagajna preverjanje + API.
+- **FAQ reframe:** dodani Google ocene / win-back / strošek SMS; manj anti-fraud.
+- Lokalni build čist (vse rute). Push → Vercel auto-deploy.
+
 ### 2026-06-18 — seja 24 (🚀 DEPLOY V ŽIVO + baza povezana)
 **App je v živo na Vercelu.** Uporabnik importal repo prek Vercel dashboarda (git integration →
 auto-deploy ob vsakem `git push`). Projekt `loyalti-app`, produkcijski URL

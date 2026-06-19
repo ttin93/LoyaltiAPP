@@ -51,18 +51,25 @@ const DASH_FEATURES = [
   ["Seznam strank", " — kdo je nov, kdo reden, koga si že dolgo ni videl."],
 ];
 
-const FRAUD = [
-  { icon: "shield", title: "Vsak račun le enkrat", text: "Unikatni ZOI iz QR kode prepreči ponovno oddajo istega računa." },
-  { icon: "home", title: "Samo tvoji računi", text: "Davčna številka iz vzorčnega računa — tuji lokali ne štejejo." },
-  { icon: "clock", title: "Časovno okno", text: "Račun se unovči v 24 urah od izdaje — ne kopičenje starih." },
-  { icon: "cup", title: "Točke na obisk", text: "Privzeto 15 točk na obisk — napihovanje zneska nima učinka." },
+const FEATURES = [
+  { icon: "star2", title: "Srečno kolo", text: "Novi obiskovalci zavrtijo kolo in osvojijo nagrado — pretvori mimoidoče v registrirane goste." },
+  { icon: "mega", title: "Win-back kampanje", text: "Sistem ve, kdo dolgo ni bil. Avtomatsko pošlje »pogrešamo te« + bonus neaktivnim — brez tvojega dela." },
+  { icon: "gift", title: "Rojstnodnevne nagrade", text: "Datum ob registraciji → samodejna ponudba za rojstni dan. Vleče goste nazaj ob pravem trenutku." },
+  { icon: "send", title: "SMS + email kampanje", text: "Ciljana sporočila segmentom — aktivni, neaktivni, najboljši — s pregledom stroška pred pošiljanjem." },
+  { icon: "ticket", title: "Kuponi z veljavnostjo", text: "Priloži kupon (npr. brezplačna kava) k sporočilu, z veljavnostjo in opomnikom pred potekom." },
+  { icon: "chart", title: "Analitika + profili gostov", text: "Kdo se vrača, kdo pada stran, gneča po urah. Klikni gosta za celo zgodovino obiskov in porabe." },
 ];
 
+// Google ocene — rast (mesečno novih ocen) za graf
+const REVIEW_BARS = [6, 11, 18, 24, 33, 47];
+const REVIEW_MONTHS = ["jan", "feb", "mar", "apr", "maj", "jun"];
+
 const FAQS = [
-  { q: "Mora gost naložiti aplikacijo?", a: "Ne. Stran se odpre v brskalniku prek QR kode na mizi. Registracija je en korak — telefon in koda iz SMS, brez gesla." },
-  { q: "Deluje z mojo blagajno?", a: "Da. Vsak slovenski fiskalni račun nosi QR kodo — sistem prebere izdajatelja in čas izdaje neposredno iz nje." },
-  { q: "Kako preprečite, da nekdo skenira isti račun večkrat?", a: "Vsak račun ima unikatno oznako (ZOI). Ko je enkrat unovčen, ga sistem zavrne. Štejejo le računi tvojega lokala, izdani v zadnjih 24 urah." },
-  { q: "Ali upoštevate znesek računa?", a: "V tej fazi ne — privzeto je 15 točk na obisk, kar je pošteno in odporno na zlorabe. Točke glede na znesek prihajajo kasneje." },
+  { q: "Mora gost naložiti aplikacijo?", a: "Ne. Stran se odpre v brskalniku prek QR kode na mizi. Registracija je en korak — Google ali telefonska številka, brez gesla." },
+  { q: "Kako dobim več Google ocen?", a: "Samodejno. Ko gost dobi žig (torej zadovoljen), ga povabimo k oceni na Googlu. Slabe izkušnje prestrežemo zasebno, da popraviš, preden gre javno — tvoj profil tako dobi le dobre ocene." },
+  { q: "Lahko pošljem sporočilo gostom, ki dolgo niso bili?", a: "Da. Vidiš segmente (aktivni, neaktivni 21+ dni, rojstni dnevi, najboljši) in jim z enim klikom pošlješ SMS ali email — ali pustiš, da gre samodejno (win-back, rojstni dan)." },
+  { q: "Koliko stane pošiljanje sporočil?", a: "Email je praktično zastonj; SMS približno nekaj centov na kos — pred pošiljanjem ti pokažemo točen strošek (npr. 28 prejemnikov × 0,07 € = 1,96 €), da ni presenečenj." },
+  { q: "Deluje z mojo blagajno?", a: "Da. Vsak slovenski fiskalni račun nosi QR kodo — sistem prebere izdajatelja in čas izdaje neposredno iz nje. Vsak račun šteje le enkrat." },
   { q: "Koliko časa traja postavitev?", a: "Okoli pet minut: vpišeš ime, logo in barvo, fotografiraš vzorčni račun za aktivacijo, natisneš QR. Gostje lahko zbirajo žige še isti dan." },
 ];
 
@@ -80,6 +87,7 @@ export default function Home() {
           </div>
           <div className="ml-6 hidden items-center gap-[26px] md:flex">
             <a href="#kako" className="text-[14.5px] font-medium text-[#5C4C3E]">Kako deluje</a>
+            <a href="#funkcije" className="text-[14.5px] font-medium text-[#5C4C3E]">Funkcije</a>
             <a href="#lokal" className="text-[14.5px] font-medium text-[#5C4C3E]">Za lokale</a>
             <a href="#cene" className="text-[14.5px] font-medium text-[#5C4C3E]">Cene</a>
             <a href="#faq" className="text-[14.5px] font-medium text-[#5C4C3E]">Vprašanja</a>
@@ -96,13 +104,13 @@ export default function Home() {
         <div className="flex flex-col gap-6" style={{ flex: "1.1", minWidth: 340 }}>
           <div className="flex h-[34px] items-center gap-2 self-start rounded-full px-3.5 text-[13px] font-bold" style={{ background: "rgba(232,162,61,0.18)", color: "#8A5B14" }}>
             <span className="h-[7px] w-[7px] rounded-full bg-[#E8A23D]" />
-            Loyalty na fiskalni račun · za slovenske lokale
+            Zvestoba · Google ocene · marketing — za slovenske lokale
           </div>
           <h1 className="font-display font-extrabold" style={{ fontSize: "clamp(40px,5.4vw,68px)", lineHeight: 1.02, letterSpacing: "-0.02em", margin: 0 }}>
             Stalni gosti se ne zgodijo.<br /><span style={{ color: "#C8512B" }}>Zgradiš jih.</span>
           </h1>
           <p className="text-[#5C4C3E]" style={{ fontSize: "clamp(16px,1.5vw,19px)", lineHeight: 1.55, maxWidth: 480, margin: 0 }}>
-            Gost skenira QR z računa in dobi žig — brez aplikacije, brez plastične kartice v denarnici. Ti pa dobiš nadzorno ploščo, ki pokaže, kdo se vrača.
+            Gost skenira QR z računa in nabira žige — brez aplikacije. Ti pa dobiš orodje, ki goste <strong>pripelje nazaj</strong> (rojstni dnevi, win-back, SMS/email) in ti <strong>prinese Google ocene</strong> — vse na enem mestu.
           </p>
           <div className="flex flex-wrap gap-3">
             <a href="#cene" className="flex h-14 items-center gap-2.5 rounded-full bg-[#2B1D17] px-7 text-[16.5px] font-semibold text-[#F5EFE6]" style={{ boxShadow: "0 10px 24px rgba(43,29,23,0.22)" }}>
@@ -238,14 +246,48 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ANTI-FRAUD */}
-      <div className="mx-auto max-w-[1200px] px-6 pb-10 pt-12">
-        <div className="mb-9 flex flex-col items-center gap-2 text-center">
-          <div className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#C8512B]">Zakaj računi ne lažejo</div>
-          <h2 className="font-display font-extrabold" style={{ fontSize: "clamp(28px,3.4vw,42px)", margin: 0 }}>Vgrajena zaščita pred zlorabami</h2>
+      {/* FUNKCIJE */}
+      <div id="funkcije" className="mx-auto max-w-[1200px] px-6 pb-10 pt-12">
+        <div className="mb-9 flex flex-col items-center gap-2.5 text-center">
+          <div className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#C8512B]">Več kot žigi</div>
+          <h2 className="font-display font-extrabold" style={{ fontSize: "clamp(28px,3.6vw,44px)", lineHeight: 1.08, margin: 0 }}>Cel stroj za stalne goste</h2>
+          <p className="text-[17px] text-[#5C4C3E]" style={{ maxWidth: 560, margin: 0 }}>Loyalty ujame tvoje redne goste in njihove kontakte. Vse ostalo jih pripelje nazaj — in ti prinese Google ocene.</p>
         </div>
-        <div className="grid gap-[18px]" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))" }}>
-          {FRAUD.map((f) => (
+
+        {/* Google ocene — highlight + graf */}
+        <div className="mb-[18px] flex flex-wrap items-center gap-9 overflow-hidden rounded-[26px] border border-[#EFE6D4] bg-[#FFFCF6]" style={{ padding: "clamp(24px,4vw,40px)" }}>
+          <div className="flex flex-col gap-3.5" style={{ flex: "1.1", minWidth: 280 }}>
+            <div className="flex h-[34px] w-fit items-center gap-2 rounded-full px-3.5 text-[12.5px] font-bold" style={{ background: "rgba(232,162,61,0.18)", color: "#8A5B14" }}>⭐ Google ocene na avtopilotu</div>
+            <h3 className="font-display font-extrabold" style={{ fontSize: "clamp(24px,2.6vw,32px)", lineHeight: 1.1, margin: 0 }}>Več zadovoljnih gostov = več ocen na Googlu</h3>
+            <p className="text-[15.5px] leading-relaxed text-[#5C4C3E]" style={{ maxWidth: 440, margin: 0 }}>Ko gost dobi žig (zadovoljen!), ga samodejno povabimo k oceni. Slabe izkušnje prestrežemo zasebno — tvoj profil dobi <strong>le dobre ocene</strong>, ti pa višje v Google iskanju.</p>
+            <div className="mt-1 flex items-center gap-7">
+              <div><div className="font-display text-[34px] font-extrabold text-[#B97F1F]">4,8★</div><div className="text-[12.5px] text-[#8A7A66]">prej 3,9★</div></div>
+              <div><div className="font-display text-[34px] font-extrabold text-[#5E7F52]">+86</div><div className="text-[12.5px] text-[#8A7A66]">novih ocen / 6 mes</div></div>
+            </div>
+          </div>
+          <div className="rounded-[20px] bg-[#2B1D17] p-6" style={{ flex: 1, minWidth: 260 }}>
+            <div className="mb-3.5 flex items-center justify-between">
+              <div className="text-[12.5px] font-semibold" style={{ color: "#B7A488" }}>Nove Google ocene / mesec</div>
+              <div className="text-[12.5px] font-bold text-[#5E7F52]">↑ rast</div>
+            </div>
+            <div className="flex h-[120px] items-end gap-2.5">
+              {REVIEW_BARS.map((v, i) => {
+                const max = Math.max(...REVIEW_BARS);
+                return (
+                  <div key={i} className="flex flex-1 flex-col items-center justify-end gap-2" style={{ height: "100%" }}>
+                    <div className="font-display text-[11px] font-bold" style={{ color: "#E8C99A" }}>{v}</div>
+                    <div className="w-full rounded-[5px]" style={{ height: `${Math.round((v / max) * 84)}px`, background: i === REVIEW_BARS.length - 1 ? "#E8A23D" : "rgba(232,162,61,0.4)" }} />
+                    <div className="text-[10px]" style={{ color: "#7C6B55" }}>{REVIEW_MONTHS[i]}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* ostali fičri */}
+        <div className="grid gap-[18px]" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))" }}>
+          {FEATURES.map((f) => (
             <div key={f.title} className="flex flex-col gap-2.5 rounded-[20px] border border-[#EFE6D4] bg-[#FFFCF6] p-6">
               <div className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-[#F1E7D2]"><Icon name={f.icon} color="#2B1D17" size={22} strokeWidth={1.8} /></div>
               <div className="font-display text-[17px] font-bold">{f.title}</div>

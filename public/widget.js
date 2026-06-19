@@ -23,22 +23,31 @@
   function open() {
     var overlay = el(
       "div",
-      "position:fixed;inset:0;z-index:1000000;background:rgba(20,12,8,.62);display:flex;align-items:center;justify-content:center;"
+      "position:fixed;inset:0;z-index:1000000;background:rgba(20,12,8,.62);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;"
     );
-    var box = el("div", "position:relative;width:390px;max-width:92vw;height:580px;max-height:90vh;");
-    var iframe = el("iframe", "width:100%;height:100%;border:none;border-radius:24px;");
+    var box = el("div", "position:relative;width:392px;max-width:92vw;");
+    var iframe = el("iframe", "width:100%;height:520px;border:none;border-radius:28px;background:#FFFCF6;display:block;");
     iframe.src = origin + "/embed/" + encodeURIComponent(code);
     iframe.setAttribute("allowtransparency", "true");
     var close = el(
       "button",
-      "position:absolute;top:-14px;right:-14px;width:36px;height:36px;border-radius:50%;border:none;background:#fff;cursor:pointer;font-size:17px;box-shadow:0 2px 8px rgba(0,0,0,.2);",
+      "position:absolute;top:-14px;right:-14px;width:36px;height:36px;border-radius:50%;border:none;background:#fff;cursor:pointer;font-size:17px;box-shadow:0 2px 8px rgba(0,0,0,.2);z-index:2;",
       "✕"
     );
-    close.onclick = function () {
-      document.body.removeChild(overlay);
-    };
+    function onMsg(e) {
+      if (e && e.data && e.data.type === "zig-wheel-height" && e.data.height) {
+        var max = Math.floor(window.innerHeight * 0.92);
+        iframe.style.height = Math.min(e.data.height, max) + "px";
+      }
+    }
+    window.addEventListener("message", onMsg);
+    function cleanup() {
+      window.removeEventListener("message", onMsg);
+      if (overlay.parentNode) document.body.removeChild(overlay);
+    }
+    close.onclick = cleanup;
     overlay.onclick = function (e) {
-      if (e.target === overlay) document.body.removeChild(overlay);
+      if (e.target === overlay) cleanup();
     };
     box.appendChild(iframe);
     box.appendChild(close);

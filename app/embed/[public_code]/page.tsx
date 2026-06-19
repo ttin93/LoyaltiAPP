@@ -1,5 +1,6 @@
 import { getServiceClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import SpinFlow from "@/app/components/SpinFlow";
+import EmbedFrame from "./EmbedFrame";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export default async function Page({ params }: { params: Promise<{ public_code: 
   const wheelBrand = brand && !["#2B1D17", "#16a34a", "#000000"].includes(brand) ? brand : "#E8A23D";
 
   return (
-    <div className="flex min-h-dvh items-center justify-center p-4">
+    <EmbedFrame>
       <SpinFlow
         code={public_code}
         venueName={name}
@@ -35,6 +36,6 @@ export default async function Page({ params }: { params: Promise<{ public_code: 
         brandColor={wheelBrand}
         tagline="Pozdrav! Zavrti kolo za nagrado dobrodošlice"
       />
-    </div>
+    </EmbedFrame>
   );
 }

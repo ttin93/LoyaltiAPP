@@ -41,6 +41,12 @@ export async function createVenue(formData: FormData) {
   const brand = String(formData.get("brand_color") || "#16a34a");
   if (!name) throw new Error("Vpiši ime lokala.");
 
+  const owner_name = String(formData.get("owner_name") || "").trim() || null;
+  const phone = String(formData.get("phone") || "").trim() || null;
+  const venue_type = String(formData.get("venue_type") || "").trim() || null;
+  const city = String(formData.get("city") || "").trim() || null;
+  const points_model = formData.get("points_model") === "per_euro" ? "per_euro" : "per_visit";
+
   // unikaten public_code
   const base = slugify(name);
   let code = base;
@@ -56,7 +62,7 @@ export async function createVenue(formData: FormData) {
 
   const { data: venue, error } = await db
     .from("venues")
-    .insert({ owner_user_id: user.id, name, brand_color: brand, public_code: code })
+    .insert({ owner_user_id: user.id, name, brand_color: brand, public_code: code, owner_name, phone, venue_type, city, points_model })
     .select("*")
     .single();
   if (error) throw error;

@@ -13,6 +13,10 @@ create table if not exists venues (
   public_code      text unique not null,
   logo_url         text,
   brand_color      text not null default '#16a34a',
+  owner_name       text,                       -- kontaktna oseba (onboarding)
+  phone            text,                       -- kontakt lokala (onboarding)
+  venue_type       text,                       -- kavarna / bistro / … (onboarding)
+  city             text,                       -- mesto (onboarding)
   davcna_stevilka  text,                       -- izdajatelj; iz vzorčnega računa
   points_model     text not null default 'per_visit',  -- 'per_visit' | 'per_euro'
   points_per_visit int  not null default 10,

@@ -49,6 +49,20 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 27 (rename, cene, pravne strani, kontakt, widget)
+- **Srečno kolo → Kolo sreče** povsod (landing, dashboard, widget label).
+- **Cene 29,99 € / 69,99 € / po dogovoru**; trial **14 dni** + **promo trak** na vrhu landinga.
+- **lib/brand.ts** — ime znamke centralizirano (`BRAND="Žig"` ZAČASNO; spremeniš na enem mestu →
+  posodobi se v footer/pravne/kontakt/nav). Footer prenovljen (stolpci Produkt/Podjetje/Pravno + spodnja vrstica).
+- **Pravne strani** (`/pogoji`, `/zasebnost`, `/piskotki`) prek `LegalShell` (topla tema, osnutek + opomba
+  za pravni pregled).
+- **Kontaktni obrazec** `/kontakt` (ime, lokal, email, telefon, tip lokala, mesto, št. gostov, kje slišal,
+  sporočilo) → `/api/lead` → tabela **`leads`** (migracija `0005_leads.sql`, pognana v živo, RLS samo
+  service-role). Demo fallback če ni baze.
+- **Vgrajen Kolo-sreče widget na landingu** (`public/widget.js` prek next/script — plavajoči gumb
+  »🎡 Zavrti kolo sreče« → iframe `/embed/demo`).
+- Build čist (19 strani). Push → Vercel auto-deploy.
+
 ### 2026-06-20 — seja 26 (cene + funkcije fino)
 Po uporabnikovem feedbacku: **cene** Espresso 30€ / Doppio 50€ / Veriga po dogovoru (ni več 0€ tier);
 **30-dnevni brezplačni preizkus** (badge + CTA "Začni 30 dni brezplačno"). **Funkcije sekcija

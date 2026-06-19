@@ -11,7 +11,7 @@
     })();
   var code = (s && s.getAttribute("data-venue")) || "demo";
   var origin = s && s.src ? new URL(s.src).origin : window.location.origin;
-  var label = (s && s.getAttribute("data-label")) || "🎡 Osvoji nagrado";
+  var label = (s && s.getAttribute("data-label")) || "🎡 Zavrti kolo sreče";
 
   function el(tag, css, text) {
     var e = document.createElement(tag);

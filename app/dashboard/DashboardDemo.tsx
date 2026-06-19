@@ -559,7 +559,7 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
                 <input value={vWelcome} onChange={(e) => setVWelcome(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13px]" />
               </label>
               <div className="mt-2.5 flex items-center justify-between">
-                <span className="text-[14px] text-[#5C4C3E]">Prikaži srečno kolo novim gostom</span>
+                <span className="text-[14px] text-[#5C4C3E]">Prikaži kolo sreče novim gostom</span>
                 <button onClick={() => setShowWheel(!showWheel)} aria-label="Kolo" className="relative h-[28px] w-[46px] flex-shrink-0 rounded-full" style={{ background: showWheel ? "#5E7F52" : "#D9CDBA" }}>
                   <span className="absolute top-[3px] h-[22px] w-[22px] rounded-full bg-white shadow transition-all" style={{ left: showWheel ? 21 : 3 }} />
                 </button>
@@ -569,9 +569,9 @@ export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: 
             </>)}
 
             {sect === "kolo" && (<>
-            {/* Srečno kolo — prvi zaslon (editor) */}
+            {/* Kolo sreče — prvi zaslon (editor) */}
             <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-1 flex items-center gap-1.5 text-[14px] font-bold">Srečno kolo — prvi zaslon <HelpDot text="Prvi zaslon novih gostov (spletna stran / QR plakat). Tu urejaš besedila, polja in zmagovalno polje. Barva, ime in logo se vzamejo iz 'Gostova stran'." /></div>
+              <div className="mb-1 flex items-center gap-1.5 text-[14px] font-bold">Kolo sreče — prvi zaslon <HelpDot text="Prvi zaslon novih gostov (spletna stran / QR plakat). Tu urejaš besedila, polja in zmagovalno polje. Barva, ime in logo se vzamejo iz 'Gostova stran'." /></div>
 
               <div className="mb-1 mt-2 text-[11px] font-bold uppercase tracking-wide text-[#A6967F]">Besedila</div>
               <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naslov</span><input value={spinTitle} onChange={(e) => setSpinTitle(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>

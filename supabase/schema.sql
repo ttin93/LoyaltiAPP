@@ -91,6 +91,15 @@ create table if not exists pos_connections (
   updated_at    timestamptz not null default now()
 );
 
+-- Povpraševanja iz kontaktnega obrazca (glej supabase/0005_leads.sql)
+create table if not exists leads (
+  id uuid primary key default gen_random_uuid(),
+  name text, venue text, email text, phone text,
+  venue_type text, city text, guests_est text, heard text, message text,
+  source text not null default 'kontakt',
+  created_at timestamptz not null default now()
+);
+
 -- ---------- Atomarne operacije ----------
 
 -- Dodeli skeniranje: vstavi scan (unique zoi = dedup) + prišteje točke.
@@ -174,6 +183,7 @@ alter table scans        enable row level security;
 alter table redemptions  enable row level security;
 alter table subscriptions enable row level security;
 alter table pos_connections enable row level security;  -- brez politik => samo service-role
+alter table leads enable row level security;  -- brez politik => samo service-role
 
 drop policy if exists "venues public read" on venues;
 create policy "venues public read" on venues for select using (true);

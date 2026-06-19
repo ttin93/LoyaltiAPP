@@ -1,6 +1,8 @@
 import Link from "next/link";
+import Script from "next/script";
 import { Icon } from "@/app/components/icons";
 import { PRICING, DEMO_HOURS } from "@/lib/demo";
+import { BRAND, BRAND_EMAIL, BRAND_CITY } from "@/lib/brand";
 
 const ROTS = [-5, 3, -2, 6, -4, 2, -6, 4, -3, 5];
 
@@ -52,7 +54,7 @@ const DASH_FEATURES = [
 ];
 
 const FEATURES = [
-  { icon: "star2", label: "Srečno kolo", title: "Mimoidoče spremeni v stalne goste", text: "Na tvoji spletni strani ali QR plakatu obiskovalci zavrtijo kolo, osvojijo nagrado in se registrirajo. Vsak vrtljaj = nov kontakt, ki ga lahko pripelješ nazaj — namesto da odide brez sledu." },
+  { icon: "star2", label: "Kolo sreče", title: "Mimoidoče spremeni v stalne goste", text: "Na tvoji spletni strani ali QR plakatu obiskovalci zavrtijo kolo, osvojijo nagrado in se registrirajo. Vsak vrtljaj = nov kontakt, ki ga lahko pripelješ nazaj — namesto da odide brez sledu." },
   { icon: "mega", label: "Win-back", title: "Pripelji nazaj tiste, ki so izginili", text: "Sistem sam opazi, kdo že 3 tedne ni bil, in mu pošlje »pogrešamo te« + bonus. Gost, ki bi sicer šel h konkurenci, se vrne — ti pa ne narediš nič." },
   { icon: "gift", label: "Rojstni dan", title: "Razveseli točno ob rojstnem dnevu", text: "Datum zberemo ob registraciji. Na rojstni dan gostu samodejno pošljemo darilo — eden najmočnejših razlogov za vrnitev, ravno ko ga najmanj pričakuje." },
   { icon: "send", label: "SMS + email", title: "Doseži vse goste z enim klikom", text: "Ciljaj segmente — aktivni, neaktivni, najboljši, rojstni dnevi. Pred pošiljanjem ti pokažemo točen strošek (npr. 28 × 0,07 € = 1,96 €), da nikoli ne plačaš preveč." },
@@ -78,19 +80,23 @@ export default function Home() {
 
   return (
     <div style={{ background: "#EAE2D3", color: "#2B1D17", minHeight: "100vh", overflowX: "hidden" }}>
+      {/* PROMO */}
+      <a href="#cene" className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-center text-[13.5px] font-semibold text-[#F5EFE6]" style={{ background: "#C8512B" }}>
+        🎉 Uvodna promocija — <strong className="font-bold">14 dni brezplačno</strong>, brez kartice · postavi stran v 5 minutah →
+      </a>
       {/* NAV */}
       <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(234,226,211,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", borderBottom: "1px solid rgba(43,29,23,0.08)" }}>
         <div className="mx-auto flex h-[68px] max-w-[1200px] items-center gap-3.5 px-6">
           <div className="flex items-center gap-2.5">
             <CupMark size={36} />
-            <span className="font-display text-[21px] font-extrabold tracking-tight">Žig</span>
+            <span className="font-display text-[21px] font-extrabold tracking-tight">{BRAND}</span>
           </div>
           <div className="ml-6 hidden items-center gap-[26px] md:flex">
             <a href="#kako" className="text-[14.5px] font-medium text-[#5C4C3E]">Kako deluje</a>
             <a href="#funkcije" className="text-[14.5px] font-medium text-[#5C4C3E]">Funkcije</a>
             <a href="#lokal" className="text-[14.5px] font-medium text-[#5C4C3E]">Za lokale</a>
             <a href="#cene" className="text-[14.5px] font-medium text-[#5C4C3E]">Cene</a>
-            <a href="#faq" className="text-[14.5px] font-medium text-[#5C4C3E]">Vprašanja</a>
+            <Link href="/kontakt" className="text-[14.5px] font-medium text-[#5C4C3E]">Kontakt</Link>
           </div>
           <div className="ml-auto flex items-center gap-2.5">
             <Link href="/p/demo" className="hidden h-[42px] items-center rounded-full border-[1.5px] border-[rgba(43,29,23,0.25)] px-[18px] text-[14.5px] font-semibold sm:flex">Poglej demo</Link>
@@ -344,8 +350,8 @@ export default function Home() {
         <div className="mb-11 flex flex-col items-center gap-2.5 text-center">
           <div className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#C8512B]">Cene</div>
           <h2 className="font-display font-extrabold" style={{ fontSize: "clamp(30px,3.8vw,46px)", lineHeight: 1.05, margin: 0 }}>Izberi svojo skodelico</h2>
-          <p className="text-[17px] text-[#5C4C3E]" style={{ maxWidth: 500, margin: 0 }}>Brez provizije na obisk, brez vezave. <strong>30 dni brezplačno</strong> — brez kartice.</p>
-          <div className="mt-1 flex h-[32px] items-center gap-2 rounded-full px-4 text-[13px] font-bold" style={{ background: "rgba(94,127,82,0.14)", color: "#3E5536" }}>✓ 30 dni brezplačen preizkus na vseh paketih</div>
+          <p className="text-[17px] text-[#5C4C3E]" style={{ maxWidth: 500, margin: 0 }}>Brez provizije na obisk, brez vezave. <strong>14 dni brezplačno</strong> — brez kartice.</p>
+          <div className="mt-1 flex h-[32px] items-center gap-2 rounded-full px-4 text-[13px] font-bold" style={{ background: "rgba(94,127,82,0.14)", color: "#3E5536" }}>✓ 14 dni brezplačen preizkus na vseh paketih</div>
         </div>
         <div className="grid items-stretch gap-[22px]" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(290px,1fr))" }}>
           {PRICING.map((p) => (
@@ -380,7 +386,7 @@ export default function Home() {
             </div>
           ))}
         </div>
-        <div className="mt-[22px] text-center text-[14px] text-[#8A7A66]">Vse cene brez DDV · prekličeš kadarkoli · 30 dni brezplačno, brez kartice</div>
+        <div className="mt-[22px] text-center text-[14px] text-[#8A7A66]">Vse cene brez DDV · prekličeš kadarkoli · 14 dni brezplačno, brez kartice</div>
       </div>
 
       {/* FAQ */}
@@ -416,22 +422,57 @@ export default function Home() {
       </div>
 
       {/* FOOTER */}
-      <div style={{ borderTop: "1px solid rgba(43,29,23,0.1)" }}>
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-5 px-6 py-9">
-          <div className="flex items-center gap-2.5">
-            <CupMark size={32} />
-            <span className="font-display text-[18px] font-extrabold">Žig</span>
-            <span className="ml-1.5 text-[13px] text-[#8A7A66]">Loyalty na fiskalni račun</span>
+      <div style={{ borderTop: "1px solid rgba(43,29,23,0.1)", background: "rgba(255,252,246,0.4)" }}>
+        <div className="mx-auto max-w-[1200px] px-6 py-12">
+          <div className="flex flex-wrap justify-between gap-10">
+            {/* brand */}
+            <div className="flex max-w-[300px] flex-col gap-3.5">
+              <div className="flex items-center gap-2.5">
+                <CupMark size={34} />
+                <span className="font-display text-[20px] font-extrabold">{BRAND}</span>
+              </div>
+              <p className="text-[14px] leading-relaxed text-[#5C4C3E]">Zvestoba, Google ocene in marketing za slovenske lokale — gost skenira QR z računa, ti pa zgradiš bazo rednih gostov.</p>
+              <a href={`mailto:${BRAND_EMAIL}`} className="flex items-center gap-2 text-[14px] font-semibold text-[#2B1D17]"><Icon name="send" color="#2B1D17" size={15} strokeWidth={1.9} />{BRAND_EMAIL}</a>
+            </div>
+
+            {/* columns */}
+            <div className="flex flex-wrap gap-x-14 gap-y-8">
+              <div className="flex flex-col gap-2.5">
+                <div className="mb-1 text-[12px] font-bold uppercase tracking-wide text-[#A6967F]">Produkt</div>
+                <a href="#funkcije" className="text-[14px] text-[#5C4C3E]">Funkcije</a>
+                <a href="#cene" className="text-[14px] text-[#5C4C3E]">Cene</a>
+                <a href="#kako" className="text-[14px] text-[#5C4C3E]">Kako deluje</a>
+                <Link href="/p/demo" className="text-[14px] text-[#5C4C3E]">Demo za goste</Link>
+                <Link href="/demo/dashboard" className="text-[14px] text-[#5C4C3E]">Demo dashboard</Link>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                <div className="mb-1 text-[12px] font-bold uppercase tracking-wide text-[#A6967F]">Podjetje</div>
+                <Link href="/kontakt" className="text-[14px] text-[#5C4C3E]">Kontakt</Link>
+                <a href="#faq" className="text-[14px] text-[#5C4C3E]">Pogosta vprašanja</a>
+                <Link href="/partner" className="text-[14px] text-[#5C4C3E]">Prijava za lokale</Link>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                <div className="mb-1 text-[12px] font-bold uppercase tracking-wide text-[#A6967F]">Pravno</div>
+                <Link href="/pogoji" className="text-[14px] text-[#5C4C3E]">Splošni pogoji</Link>
+                <Link href="/zasebnost" className="text-[14px] text-[#5C4C3E]">Politika zasebnosti</Link>
+                <Link href="/piskotki" className="text-[14px] text-[#5C4C3E]">Piškotki</Link>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-6">
-            <a href="#kako" className="text-[14px] text-[#5C4C3E]">Kako deluje</a>
-            <a href="#cene" className="text-[14px] text-[#5C4C3E]">Cene</a>
-            <a href="#faq" className="text-[14px] text-[#5C4C3E]">Vprašanja</a>
-            <Link href="/p/demo" className="text-[14px] text-[#5C4C3E]">Demo</Link>
+
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-[rgba(43,29,23,0.1)] pt-6">
+            <div className="text-[13px]" style={{ color: "#A6967F" }}>© 2026 {BRAND} · {BRAND_CITY} · Vse pravice pridržane.</div>
+            <div className="flex gap-5">
+              <Link href="/pogoji" className="text-[13px]" style={{ color: "#A6967F" }}>Pogoji</Link>
+              <Link href="/zasebnost" className="text-[13px]" style={{ color: "#A6967F" }}>Zasebnost</Link>
+              <Link href="/piskotki" className="text-[13px]" style={{ color: "#A6967F" }}>Piškotki</Link>
+            </div>
           </div>
-          <div className="text-[13px]" style={{ color: "#A6967F" }}>© 2026 Žig · Ljubljana</div>
         </div>
       </div>
+
+      {/* Vgrajen widget — plavajoči gumb, ki odpre kolo sreče (demo) */}
+      <Script src="/widget.js" strategy="afterInteractive" />
     </div>
   );
 }

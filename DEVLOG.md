@@ -49,6 +49,22 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-18 — seja 24 (🚀 DEPLOY V ŽIVO + baza povezana)
+**App je v živo na Vercelu.** Uporabnik importal repo prek Vercel dashboarda (git integration →
+auto-deploy ob vsakem `git push`). Projekt `loyalti-app`, produkcijski URL
+**https://loyalti-app-blond.vercel.app**.
+- Vercel CLI nameščen; **VERCEL_TOKEN** shranjen v `.env.local` (gitignored). Projekt linkan.
+- **3 Supabase env vari** nastavljeni v Vercel (Production, encrypted): `NEXT_PUBLIC_SUPABASE_URL`,
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` → `vercel deploy --prod` →
+  **BAZA POVEZANA**: test register na produkciji vrne pravi UUID (potrjeno + počiščeno).
+- HTTPS → **kamera/skener zdaj dela na telefonu** (prej blokiran na localhost/IP).
+- `/demo`, `/demo/dashboard`, `/p/demo/spin` vse 200 v živo. Lokalni `next build` čist (14 strani).
+- **Domena:** priporočeno **zigaj.si** (prosta, ~$25/leto). Kupi uporabnik → jaz povežem (Vercel
+  Settings → Domains + DNS). Za zdaj `*.vercel.app`.
+
+> **Handoff (PC #2):** `.env.local` zdaj poleg Supabase potrebuje tudi `VERCEL_TOKEN=vcp_…` (za CLI
+> deploy/env). Vercel projekt že obstaja (`loyalti-app`); `vercel link --project loyalti-app`.
+
 ### 2026-06-18 — seja 23 (Nastavitve razdeljene na pod-sekcije)
 Nastavitve so postale predolg seznam → **pod-navigacija** (chipi): **Osnovno** (aktivacija, gostova stran,
 model nagrajevanja, nagrade, profil), **Kolo** (editor srečnega kolesa — svoja sekcija, kot želel user),

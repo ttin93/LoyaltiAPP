@@ -110,7 +110,7 @@ export default function Home() {
             Stalni gosti se ne zgodijo.<br /><span style={{ color: "#C8512B" }}>Zgradiš jih.</span>
           </h1>
           <p className="text-[#5C4C3E]" style={{ fontSize: "clamp(16px,1.5vw,19px)", lineHeight: 1.55, maxWidth: 480, margin: 0 }}>
-            Gost skenira QR z računa in nabira žige — brez aplikacije. Ti pa dobiš orodje, ki goste <strong>pripelje nazaj</strong> (rojstni dnevi, win-back, SMS/email) in ti <strong>prinese Google ocene</strong> — vse na enem mestu.
+            Gost skenira QR z računa in nabira žige — brez aplikacije. Ti pa zgradiš <strong>bazo rednih gostov in njihovih kontaktov</strong>, ki jo lahko kadarkoli nagovoriš — nove ponudbe, win-back, rojstni dnevi — in ti <strong>prinese Google ocene</strong>.
           </p>
           <div className="flex flex-wrap gap-3">
             <a href="#cene" className="flex h-14 items-center gap-2.5 rounded-full bg-[#2B1D17] px-7 text-[16.5px] font-semibold text-[#F5EFE6]" style={{ boxShadow: "0 10px 24px rgba(43,29,23,0.22)" }}>
@@ -241,6 +241,45 @@ export default function Home() {
             <div className="rounded-[22px] bg-[#FFFCF6] p-6" style={{ width: 280, boxShadow: "0 24px 50px rgba(0,0,0,0.25)", transform: "rotate(2deg)" }}>
               <StampGrid stamps={9} />
               <div className="mt-4 text-center text-[13.5px] text-[#8A7A66]">9 / 10 — še en obisk ☕</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* BAZA GOSTOV (asset) */}
+      <div className="mx-auto max-w-[1200px] px-6 pb-4 pt-14">
+        <div className="flex flex-wrap items-center gap-10 overflow-hidden rounded-[28px] border border-[#EFE6D4] bg-[#FFFCF6]" style={{ padding: "clamp(28px,4vw,48px)" }}>
+          <div className="flex flex-col gap-4" style={{ flex: "1.1", minWidth: 300 }}>
+            <div className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#C8512B]">Tvoja prava prednost</div>
+            <h2 className="font-display font-extrabold" style={{ fontSize: "clamp(26px,3.2vw,40px)", lineHeight: 1.08, margin: 0 }}>Vsak gost postane kontakt v <span style={{ color: "#C8512B" }}>tvoji</span> bazi</h2>
+            <p className="text-[16.5px] leading-relaxed text-[#5C4C3E]" style={{ maxWidth: 460, margin: 0 }}>Vsakič ko nekdo skenira, dobiš novega rednega gosta — telefon ali email + vzorec obiskov. Baza raste sama in je <strong>samo tvoja</strong>. Kadarkoli jo lahko nagovoriš:</p>
+            <div className="flex flex-col gap-2.5">
+              {["Promoviraj novo ponudbo ali jed", "Najavi sezonske akcije in dogodke", "Sporoči novosti lokala", "Vrni neaktivne, razveseli za rojstni dan"].map((b) => (
+                <div key={b} className="flex items-center gap-3 text-[15.5px] text-[#41332A]">
+                  <span className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-[8px]" style={{ background: "rgba(94,127,82,0.14)" }}><Icon name="check" color="#5E7F52" size={15} strokeWidth={2.4} /></span>{b}
+                </div>
+              ))}
+            </div>
+            <p className="text-[14.5px] text-[#8A7A66]" style={{ margin: 0 }}>Brez Facebooka, brez plačanih oglasov — pišeš direktno tistim, ki že hodijo k tebi.</p>
+          </div>
+          <div className="rounded-[24px] bg-[#2B1D17] p-6" style={{ flex: 1, minWidth: 300, boxShadow: "0 24px 50px rgba(43,29,23,0.25)" }}>
+            <div className="mb-4 flex items-end justify-between">
+              <div>
+                <div className="font-display text-[40px] font-extrabold leading-none text-[#F5EFE6]">137</div>
+                <div className="text-[12.5px]" style={{ color: "#B7A488" }}>rednih gostov · +12 ta mesec</div>
+              </div>
+              <div className="flex h-[30px] items-center gap-1.5 rounded-full px-3 text-[12px] font-bold" style={{ background: "rgba(94,127,82,0.2)", color: "#9BC48D" }}>↑ raste</div>
+            </div>
+            <div className="flex flex-col gap-1 rounded-[14px] p-2" style={{ background: "rgba(245,239,230,0.06)" }}>
+              {[["+386 31 ··· 412", "24 obiskov"], ["+386 40 ··· 198", "19 obiskov"], ["ana.k@···.com", "12 obiskov"], ["+386 68 ··· 904", "9 obiskov"]].map(([n, v], i) => (
+                <div key={i} className="flex items-center justify-between rounded-[10px] px-3 py-2.5" style={{ background: "rgba(245,239,230,0.04)" }}>
+                  <span className="text-[13.5px] font-semibold text-[#F5EFE6]">{n}</span>
+                  <span className="text-[12.5px]" style={{ color: "#B7A488" }}>{v}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex h-[46px] items-center justify-center gap-2 rounded-full text-[14.5px] font-bold" style={{ background: "#E8A23D", color: "#2B1D17" }}>
+              <Icon name="send" color="#2B1D17" size={17} strokeWidth={2} /> Pošlji vsem ponudbo
             </div>
           </div>
         </div>

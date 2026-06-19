@@ -49,6 +49,12 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 26 (cene + funkcije fino)
+Po uporabnikovem feedbacku: **cene** Espresso 30€ / Doppio 50€ / Veriga po dogovoru (ni več 0€ tier);
+**30-dnevni brezplačni preizkus** (badge + CTA "Začni 30 dni brezplačno"). **Funkcije sekcija
+prenovljena** — benefit naslovi ("Mimoidoče spremeni v stalne goste" …) + oznaka funkcije (chip) +
+daljši, bolj marketinški opisi + lepše kartice (barvna ikona, 3-stolpčni grid). Build čist; push → deploy.
+
 ### 2026-06-20 — seja 25 (landing + paketi prenovljeni za nov produkt)
 Landing zdaj odraža **cel produkt**, ne le žige:
 - **Hero reframe:** badge "Zvestoba · Google ocene · marketing"; podnaslov poudari pripelji-nazaj

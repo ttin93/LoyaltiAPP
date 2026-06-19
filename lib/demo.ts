@@ -163,10 +163,10 @@ export const PRICING: Plan[] = [
   {
     key: "espresso",
     name: "Espresso",
-    tagline: "Za prvi korak v zvestobo",
-    price: "0 €",
+    tagline: "Za en lokal, ki začenja",
+    price: "30 €",
     period: "/ mesec",
-    cta: "Začni zastonj",
+    cta: "Začni 30 dni brezplačno",
     featured: false,
     features: [
       "1 lokal",
@@ -180,9 +180,9 @@ export const PRICING: Plan[] = [
     key: "doppio",
     name: "Doppio",
     tagline: "Cel stroj za stalne goste",
-    price: "29 €",
+    price: "50 €",
     period: "/ mesec",
-    cta: "Izberi Doppio",
+    cta: "Začni 30 dni brezplačno",
     featured: true,
     badge: "Najbolj priljubljeno",
     features: [

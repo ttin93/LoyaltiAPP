@@ -52,12 +52,12 @@ const DASH_FEATURES = [
 ];
 
 const FEATURES = [
-  { icon: "star2", title: "Srečno kolo", text: "Novi obiskovalci zavrtijo kolo in osvojijo nagrado — pretvori mimoidoče v registrirane goste." },
-  { icon: "mega", title: "Win-back kampanje", text: "Sistem ve, kdo dolgo ni bil. Avtomatsko pošlje »pogrešamo te« + bonus neaktivnim — brez tvojega dela." },
-  { icon: "gift", title: "Rojstnodnevne nagrade", text: "Datum ob registraciji → samodejna ponudba za rojstni dan. Vleče goste nazaj ob pravem trenutku." },
-  { icon: "send", title: "SMS + email kampanje", text: "Ciljana sporočila segmentom — aktivni, neaktivni, najboljši — s pregledom stroška pred pošiljanjem." },
-  { icon: "ticket", title: "Kuponi z veljavnostjo", text: "Priloži kupon (npr. brezplačna kava) k sporočilu, z veljavnostjo in opomnikom pred potekom." },
-  { icon: "chart", title: "Analitika + profili gostov", text: "Kdo se vrača, kdo pada stran, gneča po urah. Klikni gosta za celo zgodovino obiskov in porabe." },
+  { icon: "star2", label: "Srečno kolo", title: "Mimoidoče spremeni v stalne goste", text: "Na tvoji spletni strani ali QR plakatu obiskovalci zavrtijo kolo, osvojijo nagrado in se registrirajo. Vsak vrtljaj = nov kontakt, ki ga lahko pripelješ nazaj — namesto da odide brez sledu." },
+  { icon: "mega", label: "Win-back", title: "Pripelji nazaj tiste, ki so izginili", text: "Sistem sam opazi, kdo že 3 tedne ni bil, in mu pošlje »pogrešamo te« + bonus. Gost, ki bi sicer šel h konkurenci, se vrne — ti pa ne narediš nič." },
+  { icon: "gift", label: "Rojstni dan", title: "Razveseli točno ob rojstnem dnevu", text: "Datum zberemo ob registraciji. Na rojstni dan gostu samodejno pošljemo darilo — eden najmočnejših razlogov za vrnitev, ravno ko ga najmanj pričakuje." },
+  { icon: "send", label: "SMS + email", title: "Doseži vse goste z enim klikom", text: "Ciljaj segmente — aktivni, neaktivni, najboljši, rojstni dnevi. Pred pošiljanjem ti pokažemo točen strošek (npr. 28 × 0,07 € = 1,96 €), da nikoli ne plačaš preveč." },
+  { icon: "ticket", label: "Kuponi", title: "Pošlji nagrade, ki res pripeljejo nazaj", text: "Sporočilu priloži pravi kupon (npr. brezplačna kava) z veljavnostjo in opomnikom pred potekom. Konkretna spodbuda v žepu gosta — ne le lepe besede." },
+  { icon: "chart", label: "Profili gostov", title: "Spoznaj, kdo so tvoji najboljši", text: "Klikni gosta in vidiš vse: obiske, porabo, kako pogosto se vrača, kdaj nazadnje. Veš, koga nagraditi, koga pripeljati nazaj — in ob katerih urah je gneča." },
 ];
 
 // Google ocene — rast (mesečno novih ocen) za graf
@@ -286,12 +286,15 @@ export default function Home() {
         </div>
 
         {/* ostali fičri */}
-        <div className="grid gap-[18px]" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))" }}>
+        <div className="grid gap-5" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))" }}>
           {FEATURES.map((f) => (
-            <div key={f.title} className="flex flex-col gap-2.5 rounded-[20px] border border-[#EFE6D4] bg-[#FFFCF6] p-6">
-              <div className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-[#F1E7D2]"><Icon name={f.icon} color="#2B1D17" size={22} strokeWidth={1.8} /></div>
-              <div className="font-display text-[17px] font-bold">{f.title}</div>
-              <div className="text-[14px] leading-snug text-[#5C4C3E]">{f.text}</div>
+            <div key={f.title} className="flex flex-col gap-3.5 rounded-[22px] border border-[#EFE6D4] bg-[#FFFCF6] p-7">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-[14px]" style={{ background: "rgba(232,162,61,0.16)" }}><Icon name={f.icon} color="#B97F1F" size={24} strokeWidth={1.8} /></div>
+                <span className="rounded-full px-3 py-1 text-[11.5px] font-bold uppercase tracking-wide" style={{ background: "#F1E7D2", color: "#8A5B14" }}>{f.label}</span>
+              </div>
+              <div className="font-display text-[20px] font-extrabold leading-tight">{f.title}</div>
+              <div className="text-[14.5px] leading-relaxed text-[#5C4C3E]">{f.text}</div>
             </div>
           ))}
         </div>
@@ -302,7 +305,8 @@ export default function Home() {
         <div className="mb-11 flex flex-col items-center gap-2.5 text-center">
           <div className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#C8512B]">Cene</div>
           <h2 className="font-display font-extrabold" style={{ fontSize: "clamp(30px,3.8vw,46px)", lineHeight: 1.05, margin: 0 }}>Izberi svojo skodelico</h2>
-          <p className="text-[17px] text-[#5C4C3E]" style={{ maxWidth: 500, margin: 0 }}>Brez provizije na obisk, brez vezave. Začni zastonj, nadgradi, ko raste.</p>
+          <p className="text-[17px] text-[#5C4C3E]" style={{ maxWidth: 500, margin: 0 }}>Brez provizije na obisk, brez vezave. <strong>30 dni brezplačno</strong> — brez kartice.</p>
+          <div className="mt-1 flex h-[32px] items-center gap-2 rounded-full px-4 text-[13px] font-bold" style={{ background: "rgba(94,127,82,0.14)", color: "#3E5536" }}>✓ 30 dni brezplačen preizkus na vseh paketih</div>
         </div>
         <div className="grid items-stretch gap-[22px]" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(290px,1fr))" }}>
           {PRICING.map((p) => (
@@ -337,7 +341,7 @@ export default function Home() {
             </div>
           ))}
         </div>
-        <div className="mt-[22px] text-center text-[14px] text-[#8A7A66]">Vse cene brez DDV · prekličeš kadarkoli · 14 dni brezplačno na plačljivih paketih</div>
+        <div className="mt-[22px] text-center text-[14px] text-[#8A7A66]">Vse cene brez DDV · prekličeš kadarkoli · 30 dni brezplačno, brez kartice</div>
       </div>
 
       {/* FAQ */}

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
 import "./globals.css";
+import { LangProvider } from "@/app/components/LangContext";
 
 const display = Bricolage_Grotesque({
   variable: "--font-display",
@@ -34,7 +35,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="sl" className={`${display.variable} ${sans.variable} h-full antialiased`}>
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <LangProvider>{children}</LangProvider>
+      </body>
     </html>
   );
 }

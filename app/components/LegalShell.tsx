@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { BRAND } from "@/lib/brand";
+import SiteHeader from "@/app/components/SiteHeader";
+import SiteFooter from "@/app/components/SiteFooter";
 
 export function Section({ h, children }: { h: string; children: React.ReactNode }) {
   return (
@@ -12,13 +12,8 @@ export function Section({ h, children }: { h: string; children: React.ReactNode 
 
 export default function LegalShell({ title, updated, children }: { title: string; updated: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "#EAE2D3", color: "#2B1D17", minHeight: "100vh" }}>
-      <div className="border-b border-[rgba(43,29,23,0.08)]">
-        <div className="mx-auto flex h-[64px] max-w-[820px] items-center justify-between px-6">
-          <Link href="/" className="font-display text-[19px] font-extrabold">{BRAND}</Link>
-          <Link href="/" className="text-[14px] font-semibold text-[#5C4C3E]">← Nazaj na domov</Link>
-        </div>
-      </div>
+    <div style={{ background: "#EAE2D3", color: "#2B1D17", minHeight: "100vh", overflowX: "hidden" }}>
+      <SiteHeader />
       <div className="mx-auto max-w-[820px] px-6 py-12">
         <h1 className="font-display font-extrabold" style={{ fontSize: "clamp(30px,4vw,44px)", lineHeight: 1.1, margin: 0 }}>{title}</h1>
         <div className="mt-2 text-[14px] text-[#8A7A66]">Zadnja posodobitev: {updated}</div>
@@ -27,16 +22,7 @@ export default function LegalShell({ title, updated, children }: { title: string
         </div>
         <div className="mt-8 flex flex-col gap-7">{children}</div>
       </div>
-      <div className="border-t border-[rgba(43,29,23,0.1)]">
-        <div className="mx-auto flex max-w-[820px] flex-wrap items-center justify-between gap-3 px-6 py-7 text-[13px]" style={{ color: "#A6967F" }}>
-          <span>© 2026 {BRAND}</span>
-          <div className="flex gap-5">
-            <Link href="/pogoji">Pogoji</Link>
-            <Link href="/zasebnost">Zasebnost</Link>
-            <Link href="/piskotki">Piškotki</Link>
-          </div>
-        </div>
-      </div>
+      <SiteFooter />
     </div>
   );
 }

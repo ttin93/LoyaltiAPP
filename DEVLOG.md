@@ -49,6 +49,21 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 28 (TRIJEZIČNOST SLO/HR/ANG + skupni header/footer + marketinška bomba)
+- **Trijezičnost** z gumbi za preklop (SLO/HR/EN v headerju, shranjeno v localStorage):
+  - `lib/i18n.ts` — slovar za cel landing + nav + footer + kontakt v **sl/hr/en** (marketinško okrepljena kopija).
+  - `app/components/LangContext.tsx` — `LangProvider` (v layoutu) + `useLang()` / `useT()`.
+  - `app/page.tsx` prepisan kot **client** komponenta, bere slovar; mock-vizuali (kartonček, mini-dashboard)
+    imajo lokalni `MISC` po jeziku.
+  - Privzeto SLO (SSR), zato Google indeksira SLO; HR/EN prek gumba.
+- **Enak header + footer na VSEH straneh** (zahteva uporabnika):
+  - `app/components/SiteHeader.tsx` (logo + nav + jezikovni preklopnik + CTA) in `SiteFooter.tsx`.
+  - Landing, **/kontakt** in **pravne strani** (prek `LegalShell`) zdaj uporabljajo iste.
+- **Kontakt polepšan + trijezičen**: mini kartice »kaj ti postavimo« (stran / kolo sreče / QR plakat),
+  badge »14 dni brezplačno«, vsa polja iz slovarja.
+- Pravna **besedila** zaenkrat ostajajo SLO (chrome je trijezičen) — TODO: prevod HR/ANG.
+- Build čist (19 strani), lokalni smoke-test: preklop EN/HR zamenja kopijo, header/footer 200 na vseh, brez console napak.
+
 ### 2026-06-20 — seja 27 (rename, cene, pravne strani, kontakt, widget)
 - **Srečno kolo → Kolo sreče** povsod (landing, dashboard, widget label).
 - **Cene 29,99 € / 69,99 € / po dogovoru**; trial **14 dni** + **promo trak** na vrhu landinga.

@@ -636,35 +636,30 @@ function ActivateSheet({
   onActivate: () => void;
   onClose: () => void;
 }) {
+  const cancelBtn: React.CSSProperties = { marginTop: 8, height: 44, width: "100%", borderRadius: 16, background: "none", border: "none", fontSize: 14, fontWeight: 600, color: "#9A8F80", cursor: "pointer", fontFamily: JAK };
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40" onClick={onClose}>
-      <div className="rounded-t-3xl bg-[#F5EFE6] px-6 pb-10 pt-6" onClick={(e) => e.stopPropagation()}>
-        <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-[#D9CDBA]" />
+    <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(26,18,13,0.42)", fontFamily: JAK }} onClick={onClose}>
+      <div style={{ background: CREAM, borderRadius: "28px 28px 0 0", padding: "24px 24px 36px" }} onClick={(e) => e.stopPropagation()}>
+        <div className="mx-auto" style={{ marginBottom: 20, height: 5, width: 44, borderRadius: 999, background: "#E0D2BC" }} />
         {step === 1 ? (
           <>
-            <div className="flex flex-col items-center gap-2 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F1E7D2]">
-                <Icon name="cup" color="#2B1D17" size={28} />
-              </div>
-              <div className="font-display text-[24px] font-extrabold">{reward.name}</div>
-              <div className="text-[14.5px] text-[#8A7A66]">Za {reward.points_required} točk</div>
+            <div className="flex flex-col items-center text-center" style={{ gap: 8 }}>
+              <div className="flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: 18, background: "#FCEFD8" }}><Cup stroke={CORAL} size={28} /></div>
+              <div style={{ fontWeight: 800, fontSize: 24, letterSpacing: "-0.01em" }}>{reward.name}</div>
+              <div style={{ fontSize: 14.5, color: "#9A8F80" }}>Za {reward.points_required} točk</div>
             </div>
-            <button onClick={onNext} className="mt-6 h-14 w-full rounded-full bg-[#2B1D17] text-[16.5px] font-semibold text-[#F5EFE6]">Aktiviraj nagrado</button>
-            <button onClick={onClose} className="mt-2 h-11 w-full rounded-full text-[14px] font-semibold text-[#8A7A66]">Prekliči</button>
+            <button onClick={onNext} style={{ marginTop: 24, height: 54, width: "100%", borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Aktiviraj nagrado</button>
+            <button onClick={onClose} style={cancelBtn}>Prekliči</button>
           </>
         ) : (
           <>
-            <div className="flex flex-col items-center gap-2 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full border-[2.5px] border-[#E8A23D]" style={{ background: "rgba(232,162,61,0.14)" }}>
-                <Icon name="clock" color="#B97F1F" size={28} strokeWidth={2} />
-              </div>
-              <div className="font-display text-[22px] font-extrabold leading-tight">Aktiviraj zdaj?</div>
-              <div className="max-w-[300px] text-[14.5px] leading-relaxed text-[#5C4C3E]">
-                Točke ({reward.points_required}) se <strong>takoj porabijo</strong> in imaš <strong>{minutes} min</strong>, da kodo pokažeš natakarju. Časovnik teče, tudi če zapreš aplikacijo.
-              </div>
+            <div className="flex flex-col items-center text-center" style={{ gap: 8 }}>
+              <div className="flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: "50%", border: `2.5px solid ${AMBER}`, background: "rgba(226,160,74,0.14)" }}><Icon name="clock" color="#B4862F" size={28} strokeWidth={2} /></div>
+              <div style={{ fontWeight: 800, fontSize: 22, lineHeight: 1.1 }}>Aktiviraj zdaj?</div>
+              <div style={{ maxWidth: 300, fontSize: 14.5, lineHeight: 1.5, color: MUTED }}>Točke ({reward.points_required}) se <strong>takoj porabijo</strong> in imaš <strong>{minutes} min</strong>, da kodo pokažeš natakarju. Časovnik teče, tudi če zapreš aplikacijo.</div>
             </div>
-            <button onClick={onActivate} disabled={busy} className="mt-6 h-14 w-full rounded-full bg-[#5E7F52] text-[16.5px] font-bold text-[#F5EFE6] disabled:opacity-50">Da, aktiviraj</button>
-            <button onClick={onClose} className="mt-2 h-11 w-full rounded-full text-[14px] font-semibold text-[#8A7A66]">Ne, nazaj</button>
+            <button onClick={onActivate} disabled={busy} style={{ marginTop: 24, height: 54, width: "100%", borderRadius: 16, background: GREEN, color: "#F4F0E4", fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK, opacity: busy ? 0.5 : 1 }}>Da, aktiviraj</button>
+            <button onClick={onClose} style={cancelBtn}>Ne, nazaj</button>
           </>
         )}
       </div>

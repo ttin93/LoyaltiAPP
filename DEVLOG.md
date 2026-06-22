@@ -49,6 +49,11 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-23 — seja 44 (KRITIČNO: award_scan bug — skeniranje ni nikoli delalo)
+- **Root cause**: `award_scan` (migr. 0007) je vrgel `column reference "stamps" is ambiguous` — OUT stolpec `stamps` (iz `returns table(...stamps...)`) se je zaletel s `customers.stamps` v `update ... set stamps = stamps + 1`. Posledica: vsak realen sken → 500 »Prišlo je do napake«. Latentno od seje 39 (prej zadeli parse-error ali testirali samo aktivacijo/unovčenje, ne dejanskega skena).
+- **Fix** (migr. 0011): alias `customers c` + kvalificirani `c.points` / `c.stamps`. Preverjeno **end-to-end v živo**: register→scan = `+50 točk, žig 1/10, nextReward rogljiček (200)`; ponovni isti račun = »že unovčen« (dedup ok).
+- Pojasnilo testne številke: uporabnik je QR-je **random generiral** (nima realnih računov firme) → ZOI del je nestandarden; dedup popravek (seja 43) to že prenese. Davčna PrTinu = 97384933, okno 24h.
+
 ### 2026-06-22 — seja 43 (bugfix: skeniranje pravih računov — variabilna dolžina ZOI)
 - **Bug**: `parseFiscalQR` je zahteval točno `^\d{60}$`. ZOI (MD5→decimalno) ima lahko vodilne ničle → nekateri POS-i paddajo na 39 mest (skupaj 60), drugi NE (38 → skupaj 59). Realni račun z 59 mesti je vrgel »pričakovano 60 števk«.
 - **Fix**: parsiramo **od zadaj** (fiksni rep davčna(8)+datum(12)+kontrola(1)=21, ZOI je preostanek), tolerantna dolžina 40–60, najdaljši digit-run (prenese URL-ovit QR / predpono skenerja), datum kot varovalka. Dedup ostane konsistenten: `BigInt(zoiDec)` normalizira vodilne ničle → 59 in 60-mestni isti račun dasta isti `zoiHex` (preverjeno).

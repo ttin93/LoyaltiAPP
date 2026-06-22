@@ -482,9 +482,9 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const city = (venue as { city?: string | null }).city || null;
   return (
     <main style={{ background: BG, fontFamily: JAK, color: INK, minHeight: "100dvh", overflowX: "hidden" }}>
-      <div className="mx-auto" style={{ maxWidth: 1040, padding: "clamp(20px,4vw,44px) clamp(16px,3vw,32px) 64px" }}>
-        {/* split: levo welcome+statistika, desno kartonček+skeniraj+kuponi */}
-        <div className="overflow-hidden lg:grid" style={{ gridTemplateColumns: "1fr 440px", borderRadius: 24, border: "1px solid #E4D9C7", boxShadow: "0 26px 60px rgba(34,28,22,0.16)", background: "#fff" }}>
+      <div className="mx-auto w-full pb-16 lg:max-w-[1040px] lg:px-8 lg:pt-11">
+        {/* split: levo welcome+statistika, desno kartonček+skeniraj+kuponi — full-bleed na telefonu */}
+        <div className="overflow-hidden lg:grid lg:rounded-[24px] lg:border lg:border-[#E4D9C7] lg:shadow-[0_26px_60px_rgba(34,28,22,0.16)]" style={{ gridTemplateColumns: "1fr 440px", background: "#fff" }}>
           {/* LEVO */}
           <div className="relative flex flex-col justify-center" style={{ background: "linear-gradient(160deg,#FCEFD8 0%,#F6E3C5 100%)", padding: "clamp(28px,4vw,48px)", gap: 20, overflow: "hidden" }}>
             <div aria-hidden style={{ position: "absolute", bottom: -50, right: -30, width: 200, height: 200, borderRadius: "50%", background: "rgba(226,160,74,0.22)" }} />
@@ -546,7 +546,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         </div>
 
         {/* MENI NAGRAD */}
-        <div style={{ marginTop: 28 }}>
+        <div className="px-4 lg:px-0" style={{ marginTop: 28 }}>
           <div className="flex items-baseline justify-between" style={{ marginBottom: 14 }}>
             <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: "-0.01em" }}>{isStampMode ? "Nagrade v lokalu" : "Nagrade"}</div>
             <div style={{ fontSize: 13, color: "#9A8F80" }}>{isStampMode ? "poln kartonček = nagrada" : `1 € = ${venue.points_per_euro} točk`}</div>

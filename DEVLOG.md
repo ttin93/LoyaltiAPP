@@ -49,6 +49,17 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 35 (ime → TALLY + prenovljena prijava lastnika)
+- **Preimenovanje: `BRAND` = "Tally"** (vsi novi dizajni ga uporabljajo; Žig je bil začasen).
+  Posodobi se povsod prek `lib/brand.ts` (header, footer, pravno, kontakt, SpinFlow »powered by«).
+- **`AuthForm.tsx` (prijava lastnika) prepisan** v novi Tally dizajn (iz »Lastnik - prijava + onboarding.dc.html«):
+  split kartica — temni brand panel (radial gradient + amber »T« logo + »Zvestoba na fiskalni račun« + bullets)
+  na desktopu, desno forma z zavihki **Prijava/Registracija**, Plus Jakarta. Registracija doda polje »Ime in priimek«.
+  Google gumb (graceful »kmalu« če OAuth ni nastavljen). Ohranjena Supabase login/signup logika. Responsive.
+- Preverjeno /partner: brand panel, zavihki, Jakarta, ime-polje ob registraciji, brez napak. Build čist (18/18).
+- **ŠE ZA PRENOVIT** (imam dizajne v zipu): onboarding wizard (4 koraki + živi predogled, rabi backend za
+  nastavljiv žig-cilj), Dashboard, Nastavitve-urejevalniki, dom gosta + desktop, vgradni widget, uspeh/napaka skena.
+
 ### 2026-06-20 — seja 34 (skener računa prenovljen v novi dizajn)
 - Uporabnik: skeniranje računa je grdo. **`Scanner.tsx` prepisan** v novi dizajn (iz
   »Gost - klikabilen flow.dc.html«): temno ozadje `#1C160F`, Plus Jakarta, zlati vogalni okvirji

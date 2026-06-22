@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createBrowserSupabase } from "@/lib/supabase/ssrClient";
+import { BRAND } from "@/lib/brand";
 
 // Nova design paleta (Plus Jakarta Sans)
 const INK = "#2A241D";
@@ -354,7 +355,7 @@ export default function SpinFlow({
 
         <div className="flex items-center justify-center" style={{ padding: "12px 22px 16px", borderTop: "1px solid #F1E8D9", gap: 6 }}>
           <span style={{ fontSize: 11, color: "#B7AB97" }}>powered by</span>
-          <span style={{ fontWeight: 800, fontSize: 12, color: INK }}>Žig</span>
+          <span style={{ fontWeight: 800, fontSize: 12, color: INK }}>{BRAND}</span>
         </div>
       </div>
 

@@ -460,19 +460,19 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         <div className="relative flex w-full max-w-md flex-col items-center overflow-hidden px-6 py-8 lg:max-w-[440px] lg:rounded-[30px] lg:border lg:border-[#E8DCC8] lg:bg-[#FBF7F0] lg:px-9 lg:py-12 lg:shadow-[0_30px_70px_rgba(34,28,22,0.18)]" style={{ gap: 22 }}>
           {/* PROSLAVA ob polnem kartončku — konfeti burst + kupon "odleti" v denarnico (navzdol) */}
           {cardCompleted && (
-            <div aria-hidden style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
-              {Array.from({ length: 14 }).map((_, i) => {
-                const ang = (i / 14) * Math.PI * 2;
-                const dist = 64 + (i % 4) * 26;
+            <div aria-hidden style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 40 }}>
+              {Array.from({ length: 16 }).map((_, i) => {
+                const ang = (i / 16) * Math.PI * 2;
+                const dist = 70 + (i % 4) * 30;
                 const cols = [brand, AMBER, GREEN, CORAL, "#8E5BA6"];
                 return (
                   <span
                     key={i}
-                    style={{ position: "absolute", top: 80, left: "50%", width: 8, height: 12, borderRadius: 2, background: cols[i % cols.length], "--cx": `${Math.round(Math.cos(ang) * dist)}px`, "--cy": `${Math.round(Math.sin(ang) * dist) - 24}px`, "--cr": `${(i * 57) % 360}deg`, animation: `confettiPop 1.05s ease-out ${0.1 + (i % 5) * 0.04}s both` } as React.CSSProperties}
+                    style={{ position: "absolute", top: "46%", left: "50%", width: 9, height: 13, borderRadius: 2, background: cols[i % cols.length], "--cx": `${Math.round(Math.cos(ang) * dist)}px`, "--cy": `${Math.round(Math.sin(ang) * dist)}px`, "--cr": `${(i * 57) % 360}deg`, animation: `confettiPop 1.1s ease-out ${0.1 + (i % 5) * 0.04}s both` } as React.CSSProperties}
                   />
                 );
               })}
-              <div className="flex items-center justify-center" style={{ position: "absolute", top: 92, left: "50%", marginLeft: -72, width: 144, height: 46, gap: 8, borderRadius: 13, background: "#fff", border: `1.5px solid ${brand}`, boxShadow: "0 12px 28px rgba(42,36,29,0.22)", fontFamily: JAK, fontWeight: 800, fontSize: 14, color: INK, animation: "flyToWallet 1.7s cubic-bezier(0.45,0,0.75,1) 0.55s both" }}>
+              <div className="flex items-center justify-center" style={{ position: "absolute", top: "44%", left: "50%", marginLeft: -74, width: 148, height: 48, gap: 8, borderRadius: 13, background: "#fff", border: `2px solid ${brand}`, boxShadow: "0 14px 32px rgba(42,36,29,0.3)", fontFamily: JAK, fontWeight: 800, fontSize: 14.5, color: INK, animation: "flyToWallet 1.8s cubic-bezier(0.5,0,0.75,1) 0.5s both" }}>
                 <Cup stroke={brand} size={18} /> Kupon
               </div>
             </div>

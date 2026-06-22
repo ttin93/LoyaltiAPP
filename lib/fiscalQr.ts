@@ -30,27 +30,33 @@ export function zoiDecToHex(zoiDec: string): string {
 }
 
 export function parseFiscalQR(payload: string): ParsedFiscalQR {
-  const clean = payload.trim();
-  if (!/^\d{60}$/.test(clean)) {
-    throw new FiscalQRError("Neveljaven fiskalni QR (pričakovano 60 števk).");
+  // Nekateri skenerji/POS-i dodajo predpono ali URL ovoj — vzemi najdaljši niz samih števk.
+  const runs = (payload || "").trim().match(/\d+/g) || [];
+  const clean = runs.sort((a, b) => b.length - a.length)[0] || "";
+
+  // Struktura (od ZADAJ): ZOI(spremenljivo, ~38–39) + davčna(8) + datum(12) + kontrola(1).
+  // ZOI je MD5 v decimalni obliki → ima lahko vodilne ničle, zato POS-i različno paddajo
+  // in skupna dolžina niha (59 ali 60). Zato parsiramo fiksni 21-mestni rep od zadaj.
+  if (clean.length < 40 || clean.length > 60) {
+    throw new FiscalQRError("To ni QR koda davčno potrjenega računa. Skeniraj fiskalni QR z računa.");
   }
 
-  const zoiDec = clean.slice(0, 39);
-  const davcna = clean.slice(39, 47);
-  const dt = clean.slice(47, 59); // YYMMDDHHMMSS
-  const control = clean.slice(59);
+  const control = clean.slice(-1);
+  const dt = clean.slice(-13, -1); // YYMMDDHHMMSS
+  const davcna = clean.slice(-21, -13);
+  const zoiDec = clean.slice(0, -21);
 
   const issuedAt = new Date(
     `20${dt.slice(0, 2)}-${dt.slice(2, 4)}-${dt.slice(4, 6)}T` +
       `${dt.slice(6, 8)}:${dt.slice(8, 10)}:${dt.slice(10, 12)}`,
   );
   if (isNaN(issuedAt.getTime())) {
-    throw new FiscalQRError("Neveljaven datum v fiskalnem QR.");
+    throw new FiscalQRError("Neveljaven datum v fiskalnem QR — verjetno ni račun.");
   }
 
-  // kontrolni znak = vsota prvih 59 števk po modulu 10 (sklepano iz vzorca)
+  // kontrolni znak = vsota vseh števk razen zadnje, po modulu 10 (informativno)
   const sum = clean
-    .slice(0, 59)
+    .slice(0, -1)
     .split("")
     .reduce((a, c) => a + Number(c), 0);
   const controlValid = sum % 10 === Number(control);

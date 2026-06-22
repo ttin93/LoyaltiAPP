@@ -49,6 +49,11 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-22 — seja 43 (bugfix: skeniranje pravih računov — variabilna dolžina ZOI)
+- **Bug**: `parseFiscalQR` je zahteval točno `^\d{60}$`. ZOI (MD5→decimalno) ima lahko vodilne ničle → nekateri POS-i paddajo na 39 mest (skupaj 60), drugi NE (38 → skupaj 59). Realni račun z 59 mesti je vrgel »pričakovano 60 števk«.
+- **Fix**: parsiramo **od zadaj** (fiksni rep davčna(8)+datum(12)+kontrola(1)=21, ZOI je preostanek), tolerantna dolžina 40–60, najdaljši digit-run (prenese URL-ovit QR / predpono skenerja), datum kot varovalka. Dedup ostane konsistenten: `BigInt(zoiDec)` normalizira vodilne ničle → 59 in 60-mestni isti račun dasta isti `zoiHex` (preverjeno).
+- Opomba za test: za žig/točke mora biti račun iste **davčne** kot ob aktivaciji + svež (znotraj časovnega okna). Aktivacijski račun NI porabljen (lahko ga skeniraš za prvi žig).
+
 ### 2026-06-22 — seja 42 (anti-zloraba welcome nagrade + gostov password)
 - **Welcome kupon NE več zastonj za vsak random mail**: zadetek kolesa je zdaj **NA ČAKANJU** (`pending:true`) in se **aktivira šele ob 1. skeniranju pravega računa** lokala (ZOI unique + davčna + okno). To ubije zlorabo (brez resničnega računa = brez kave). Pokazano na: spin coupon zaslon (»Kupon te čaka… aktivira se ob prvem skeniranju«) + gostova domača stran (kupon z oznako »ČAKA«). GuestApp ob uspešnem skenu flipne vse pending kupone → aktivne.
 - **Gostov račun = email + GESLO (brez potrditvene kode)**: nov `customers.pass_hash` + RPC `guest_auth` (pgcrypto bcrypt; register ALI login v enem klicu). `/api/register` sprejme `password` → guest_auth. **Prepreči prevzem računa z znanim mailom** (za obstoječ email rabiš pravo geslo). SpinFlow register ima zdaj email+geslo polji + napake. Google pot ostane brez gesla (OAuth-trusted). Migracija 0010.

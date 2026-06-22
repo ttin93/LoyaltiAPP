@@ -49,6 +49,14 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 38 (avtonomni Tally sprint: gost + onboarding + dashboard + skener anti-fraud)
+- Uporabnik: delaj avtonomno brez vprašanj, prenovi VSE v Tally (za večerni test + outreach lokalov).
+- **Gostov dom** prenovljen v Tally (desktop split + telefon full-bleed) + rezultati skena (uspeh/Google-ocena/napaka/časovnik/unovčeno) + StampGrid coral.
+- **Skener**: odstranjen ročni vnos QR-številke (anti-fraud — vpis/deljenje znane številke); samo kamera + demo simulacija.
+- **Onboarding wizard** (`Onboarding.tsx`): 4 koraki (znamka/pravila/nagrade/objava) + živi predogled kartice; piše stamp_goal+points_per_visit+reward v createVenue.
+- **DashboardDemo** (`/demo/dashboard`) prepisan v Tally: sidebar nav (Pregled/Analitika/Zgodovina/Stranke/Marketing/Sistem/Nastavitve) + KPI/grafi/donut/tabela strank/profil modal/kampanje/QR/embed. Responsive (mobilni horizontalni nav). Preverjeno: nav preklop + profil modal + brez napak.
+- **ŠE**: pravi `Dashboard.tsx` (s pravimi podatki), Nastavitve-urejevalniki, vgradni widget, ActivateSheet.
+
 ### 2026-06-20 — seja 37 (NOV LANDING v2 — fokus na fičrih, Tally tema)
 - Iz handoff zipa »Landing v2.dc.html« (uporabnik prenovil landing). **`app/page.tsx` prepisan** v nov dizajn:
   Tally tema (cream #FBF7F0, coral #C4623D, amber #E2A04A, Plus Jakarta), samostojen nav + footer.

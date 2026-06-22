@@ -1,808 +1,219 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { Icon, FakeQr } from "@/app/components/icons";
-import HelpDot from "@/app/components/HelpDot";
-import {
-  DEMO_VENUE,
-  DEMO_REWARDS,
-  DEMO_STATS,
-  DEMO_HOURS,
-  DEMO_CUSTOMERS,
-  DEMO_HISTORY,
-  DEMO_MARKETING,
-  DEMO_REVIEW,
-  DEMO_BIRTHDAYS,
-  DEMO_CHURN,
-  DEMO_REDEMPTIONS,
-  DEMO_SEGMENTS,
-  DEMO_TEMPLATES,
-  DEMO_CAMPAIGNS,
-  DEMO_AUTOMATIONS,
-  DEMO_PROFILE,
-  SMS_RATE,
-} from "@/lib/demo";
+import { BRAND } from "@/lib/brand";
 
-const TABS = [
-  { key: "Zgodovina", icon: "clock" },
-  { key: "Analitika", icon: "chart" },
-  { key: "Sistem", icon: "qr" },
-  { key: "Marketing", icon: "mega" },
-  { key: "Nastavitve", icon: "sliders" },
-] as const;
-type Tab = (typeof TABS)[number]["key"];
+const JAK = "var(--font-jakarta), sans-serif";
+const INK = "#2A241D";
+const PAPER = "#FBF3E6";
+const CREAM = "#FBF7F0";
+const AMBER = "#E2A04A";
+const CORAL = "#C4623D";
+const GREEN = "#5E7F52";
+const MUTED = "#6E6253";
+const BORD = "#EFE6D6";
 
-const TIMEFRAMES = [
-  { key: "1", label: "1 dan" },
-  { key: "7", label: "7 dni" },
-  { key: "30", label: "30 dni" },
-  { key: "all", label: "Vse" },
+type IcName = "grid" | "chart" | "clock" | "users" | "mega" | "qr" | "sliders" | "gift" | "mail" | "cup" | "bell" | "palette";
+function Ic({ name, color = INK, size = 20 }: { name: IcName; color?: string; size?: number }) {
+  const st = { fill: "none", stroke: color, strokeWidth: 1.9, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  const paths: Record<IcName, React.ReactNode> = {
+    grid: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" style={st} />,
+    chart: <path d="M5 19v-7M12 19V5M19 19v-10" style={st} />,
+    clock: <><circle cx={12} cy={12} r={8.5} style={st} /><path d="M12 8v4.4l2.8 2" style={st} /></>,
+    users: <><circle cx={9} cy={8} r={3.2} style={st} /><path d="M3.5 19a5.5 5.5 0 0 1 11 0" style={st} /><path d="M16 5.2a3 3 0 0 1 0 5.6M17 19a5.5 5.5 0 0 0-2-4.3" style={st} /></>,
+    mega: <><path d="M18 6 7 9.8H4.5v4.4H7L18 18V6Z" style={st} /><path d="M8.5 14.8 9.6 19h2" style={st} /></>,
+    qr: <><path d="M4.5 4.5h5.5V10H4.5zM14 4.5h5.5V10H14zM4.5 14h5.5v5.5H4.5z" style={st} /><path d="M14 14h2.3v2.3H14zM17.4 17.4h2.1v2.1h-2.1z" style={st} /></>,
+    sliders: <><path d="M4 7.5h16M4 12h16M4 16.5h16" style={st} /><circle cx={15} cy={7.5} r={2.1} style={st} /><circle cx={8.5} cy={12} r={2.1} style={st} /><circle cx={16} cy={16.5} r={2.1} style={st} /></>,
+    gift: <><path d="M4.5 9.5h15V20h-15zM4 9.5h16v-3H4zM12 6.5V20" style={st} /><path d="M12 6.5C12 5 11 3.5 9 4c-1.6.4-1.4 2.5 0 2.5zM12 6.5C12 5 13 3.5 15 4c1.6.4 1.4 2.5 0 2.5z" style={st} /></>,
+    mail: <path d="M4 6.5h16v11H4zM4.5 7l7.5 5.5L19.5 7" style={st} />,
+    cup: <><path d="M5 9h10v5.5A4.5 4.5 0 0 1 10.5 19h-1A4.5 4.5 0 0 1 5 14.5V9Z" style={st} /><path d="M15 10.5h1.6a2.4 2.4 0 0 1 0 4.8H15" style={st} /></>,
+    bell: <><path d="M7 10a5 5 0 0 1 10 0c0 5 2 6 2 6H5s2-1 2-6" style={st} /><path d="M10.5 19a1.6 1.6 0 0 0 3 0" style={st} /></>,
+    palette: <><circle cx={12} cy={12} r={8.5} style={st} /><circle cx={8.5} cy={10} r={1} style={st} /><circle cx={12} cy={8} r={1} style={st} /><circle cx={15.5} cy={10} r={1} style={st} /></>,
+  };
+  return <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", flexShrink: 0 }}>{paths[name]}</svg>;
+}
+
+function Toggle({ on }: { on: boolean }) {
+  return <div style={{ width: 46, height: 28, borderRadius: 999, background: on ? GREEN : "#DAD0BF", position: "relative", flexShrink: 0 }}><div style={{ position: "absolute", top: 3, left: on ? 21 : 3, width: 22, height: 22, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(42,36,29,0.25)" }} /></div>;
+}
+
+function QrEl({ px, seed = 7 }: { px: number; seed?: number }) {
+  const n = 21; let s = seed;
+  const rnd = () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; };
+  const cells: React.ReactNode[] = [];
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    const inF = (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
+    let on: boolean;
+    if (inF) { const rr = r >= n - 7 ? r - (n - 7) : r; const cc = c >= n - 7 ? c - (n - 7) : c; on = rr === 0 || rr === 6 || cc === 0 || cc === 6 || (rr >= 2 && rr <= 4 && cc >= 2 && cc <= 4); }
+    else on = rnd() > 0.52;
+    cells.push(<div key={r + "-" + c} style={{ background: on ? INK : "transparent" }} />);
+  }
+  return <div style={{ width: px, height: px, display: "grid", gridTemplateColumns: "repeat(21,1fr)", gridTemplateRows: "repeat(21,1fr)" }}>{cells}</div>;
+}
+
+function Donut() {
+  const r = 42, c = 2 * Math.PI * r, frac = 0.91;
+  return <svg width={110} height={110} viewBox="0 0 110 110" style={{ transform: "rotate(-90deg)" }}><circle cx={55} cy={55} r={r} style={{ fill: "none", stroke: "rgba(196,98,61,0.22)", strokeWidth: 12 }} /><circle cx={55} cy={55} r={r} style={{ fill: "none", stroke: GREEN, strokeWidth: 12, strokeLinecap: "round", strokeDasharray: c, strokeDashoffset: c * (1 - frac) }} /></svg>;
+}
+
+const HOURS: [string, number][] = [["7", 18], ["8", 34], ["9", 46], ["10", 38], ["11", 22], ["12", 26], ["13", 20], ["14", 16], ["15", 30], ["16", 42], ["17", 28], ["18", 14], ["19", 10], ["20", 6], ["21", 4]];
+function HoursBars({ h = 130 }: { h?: number }) {
+  return <div className="flex items-end" style={{ gap: 6, height: h + 20 }}>{HOURS.map(([l, v], i) => <div key={i} className="flex flex-1 flex-col items-center justify-end" style={{ gap: 5, height: "100%" }}><div style={{ width: "100%", height: `${Math.round((v / 46) * h)}px`, borderRadius: "5px 5px 2px 2px", background: v === 46 ? INK : AMBER }} /><span style={{ fontSize: 9.5, color: "#B5AB9C", height: 12 }}>{l}</span></div>)}</div>;
+}
+
+const NAV: [string, string, IcName][] = [["pregled", "Pregled", "grid"], ["analitika", "Analitika", "chart"], ["zgodovina", "Zgodovina", "clock"], ["stranke", "Stranke", "users"], ["marketing", "Marketing", "mega"], ["sistem", "Sistem", "qr"], ["nastavitve", "Nastavitve", "sliders"]];
+const KPIS = [{ l: "Skeniranja", v: "482", d: "+18% na pretekli mesec", dc: GREEN }, { l: "Stranke", v: "137", d: "+12 novih ta mesec", dc: GREEN }, { l: "Povp. obiski / stranko", v: "3,5", d: "zadnjih 30 dni", dc: "#9A8F80" }, { l: "Pogostost obiskov", v: "8,2 dni", d: "med obiskoma", dc: "#9A8F80" }];
+const KPIS2 = [{ l: "Unovčene nagrade", v: "19", d: "+5 na pretekli mesec", dc: GREEN }, { l: "Podarjene točke", v: "7.230", d: "482 žigov", dc: "#9A8F80" }, { l: "Aktivni kuponi", v: "34", d: "iz kolesa sreče", dc: "#9A8F80" }, { l: "Konverzija kolesa", v: "62%", d: "vrtljaj → registracija", dc: GREEN }];
+const TOPC = [["1", "maja.k@…", "360 t"], ["2", "+386 40 ··· 198", "285 t"], ["3", "+386 51 ··· 736", "225 t"], ["4", "tomaz@…", "180 t"]];
+const WEEK: [string, number, number][] = [["pon", 22, 8], ["tor", 26, 10], ["sre", 30, 9], ["čet", 28, 14], ["pet", 40, 18], ["sob", 46, 22], ["ned", 18, 6]];
+const GIVEN = [["maja.k@gmail.com", "danes · 9.12"], ["+386 51 ··· 736", "danes · 8.47"], ["+386 40 ··· 198", "danes · 8.21"], ["tomaz@outlook.com", "včeraj · 16.30"], ["+386 31 ··· 412", "včeraj · 11.05"], ["+386 68 ··· 904", "včeraj · 9.58"]];
+const REDEEMED = [["maja.k@gmail.com", "danes · 9.40", "Brezplačna kava"], ["+386 51 ··· 736", "včeraj · 17.10", "Brezplačna kava"], ["tomaz@outlook.com", "28. maj · 8.30", "Rogljiček"]];
+const CUSTOMERS = [
+  { in: "MK", n: "maja.k@gmail.com", v: "24", p: "360", last: "danes", s: "Redni", sBg: "rgba(94,127,82,0.16)", sFg: "#3E5536" },
+  { in: "40", n: "+386 40 ··· 198", v: "19", p: "285", last: "včeraj", s: "Redni", sBg: "rgba(94,127,82,0.16)", sFg: "#3E5536" },
+  { in: "51", n: "+386 51 ··· 736", v: "15", p: "225", last: "danes", s: "Redni", sBg: "rgba(94,127,82,0.16)", sFg: "#3E5536" },
+  { in: "TZ", n: "tomaz@outlook.com", v: "12", p: "180", last: "pred 3 dnevi", s: "Aktiven", sBg: "#FCEFD8", sFg: "#B4781E" },
+  { in: "68", n: "+386 68 ··· 904", v: "9", p: "135", last: "pred 6 dnevi", s: "Aktiven", sBg: "#FCEFD8", sFg: "#B4781E" },
+  { in: "30", n: "+386 30 ··· 557", v: "4", p: "60", last: "pred 24 dni", s: "Tvegan", sBg: "rgba(196,98,61,0.14)", sFg: "#A8431F" },
 ];
+const CAMPAIGNS: [string, string, string, string, string, string, IcName, string][] = [
+  ["Pozdrav novim gostom", "avtomatska · email", "Aktivna", "rgba(94,127,82,0.16)", "#3E5536", "rgba(94,127,82,0.14)", "mail", GREEN],
+  ["Pogrešamo te (21+ dni)", "segment · 23 strank", "Osnutek", "#FCEFD8", "#B4781E", "#FCEFD8", "bell", "#B4862F"],
+  ["Dvojni žigi · vikend", "enkratna · sob–ned", "Načrtovana", "#F1E8D9", "#6E6253", "#F1E8D9", "cup", "#9A8F80"],
+];
+const AUTOS: [string, string, boolean][] = [["Dobrodošlica", "ob registraciji", true], ["Nagrada za rojstni dan", "−20% v tednu", true], ["Reaktivacija", "po 30 dneh neaktivnosti", false]];
+const SETTINGS: [string, string, IcName][] = [["Znamka", "Logo, ime, barve", "palette"], ["Kolo sreče", "Nagrade in verjetnosti", "gift"], ["Zasloni gosta", "Besedila vseh zaslonov", "sliders"], ["Kuponi & nagrade", "Pravila točk in žigov", "cup"], ["Obvestila", "Email in SMS", "bell"], ["Plačila", "Naročnina · Stripe", "chart"]];
 
-export default function DashboardDemo({ initialTab = "Sistem" }: { initialTab?: Tab } = {}) {
-  const [tab, setTab] = useState<Tab>(initialTab);
-  const [toast, setToast] = useState<string | null>(null);
-  const [rewards, setRewards] = useState(DEMO_REWARDS.map((r) => ({ id: r.id, name: r.name, pts: r.points_required })));
-  const [model, setModel] = useState<"per_visit" | "per_euro">("per_visit");
-  const [perEuro, setPerEuro] = useState(50);
-  const [perVisit, setPerVisit] = useState(15);
-  const [minutes, setMinutes] = useState(5);
-  const [manual, setManual] = useState(false);
-  const [seg, setSeg] = useState(0);
-  const [sms, setSms] = useState(DEMO_TEMPLATES[0].text);
-  const [channel, setChannel] = useState<"sms" | "email">("sms");
-  const [autos, setAutos] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(DEMO_AUTOMATIONS.map((a) => [a.key, a.on])),
-  );
-  const [autoEdit, setAutoEdit] = useState<string | null>(null);
-  const [autoCfg, setAutoCfg] = useState<Record<string, { days: number; reward: string; validity: number; reminder: number; msg: string; channel: string }>>(() =>
-    Object.fromEntries(DEMO_AUTOMATIONS.map((a) => [a.key, { days: a.days, reward: a.reward, validity: a.validity, reminder: a.reminder, msg: a.msg, channel: a.key === "review" ? "app" : "sms" }])),
-  );
-  const [campaigns, setCampaigns] = useState(() => DEMO_TEMPLATES.map((t) => ({ id: t.key, name: t.label, text: t.text, reward: "", validity: 7 })));
-  const [campName, setCampName] = useState("");
-  const [campReward, setCampReward] = useState("");
-  const [campValidity, setCampValidity] = useState(7);
-  const [gReview, setGReview] = useState("");
-  const [hist, setHist] = useState<"given" | "redeemed">("given");
-  const [tf, setTf] = useState("30");
-  const [copied, setCopied] = useState(false);
-  const [vName, setVName] = useState(DEMO_VENUE.name);
-  const [vColor, setVColor] = useState("#2B1D17");
-  const [vTagline, setVTagline] = useState("Zbiraj žige, prejmi nagrade");
-  const [vLogo, setVLogo] = useState<string | null>(null);
-  const [vWelcome, setVWelcome] = useState("Dobrodošel! Zberi 10 žigov in kava je na nas ☕");
-  const [showWheel, setShowWheel] = useState(true);
-  const [profileCust, setProfileCust] = useState<string | null>(null);
-  const [sect, setSect] = useState<"osnovno" | "kolo" | "zasloni">("osnovno");
-  const [slots, setSlots] = useState(["Brezplačna kava", "−10 %", "+30 točk", "Piškot gratis", "−15 %", "Sirup gratis"]);
-  const [spinTitle, setSpinTitle] = useState("Zavrti in osvoji");
-  const [spinTagline, setSpinTagline] = useState("Zavrti kolo in osvoji nagrado za prvi obisk");
-  const [spinBadge, setSpinBadge] = useState("1 VRTLJAJ");
-  const [winSlot, setWinSlot] = useState(0);
-  const [wonTitle, setWonTitle] = useState("Zadetek! 🎉");
-  const [wonDesc, setWonDesc] = useState("Osvojil si brezplačno kavo za svoj prvi obisk.");
-  const [wonReward, setWonReward] = useState("Brezplačna kava");
-  const [wonMeta, setWonMeta] = useState("vrednost 2,20 € · velja 14 dni");
-  const [wonBtn, setWonBtn] = useState("Prevzemi nagrado");
-  const [regTitle, setRegTitle] = useState("Skoraj tvoje ☕");
-  const [regDesc, setRegDesc] = useState("Prijavi se, da shranimo tvoj kupon in ti pošljemo nagrado.");
-  const [regGoogle, setRegGoogle] = useState("Nadaljuj z Googlom");
-  const [regPhoneBtn, setRegPhoneBtn] = useState("Prevzemi nagrado");
-  const [regFine, setRegFine] = useState("S prijavo se strinjaš s pogoji. Brez gesla, brez spama.");
-  const [coupTitle, setCoupTitle] = useState("Kupon je tvoj!");
-  const [coupDesc, setCoupDesc] = useState("Shranili smo ga na tvojo stran zvestobe.");
-  const [coupValidity, setCoupValidity] = useState("Velja 14 dni · ob prvem obisku");
-  const [coupFoot, setCoupFoot] = useState("Pokaži kodo osebju ob naročilu.");
-  const [coupBtn, setCoupBtn] = useState("Na mojo stran zvestobe");
-  const [cardSubtitle, setCardSubtitle] = useState("Zbiraj žige, prejmi nagrade");
-  const [scanBtn, setScanBtn] = useState("Skeniraj račun");
-  const [couponsHdr, setCouponsHdr] = useState("Tvoji kuponi 🎟️");
+const card: React.CSSProperties = { background: "#fff", border: `1px solid ${BORD}`, borderRadius: 18, padding: 22 };
 
-  const accent = "#2B1D17";
-  const flash = (t: string) => { setToast(t); setTimeout(() => setToast(null), 2500); };
-
-  const embedCode = `<script src="https://zig.app/widget.js" data-venue="demo" defer></script>`;
-  const maxBar = Math.max(...DEMO_HOURS.map((h) => h[1]));
-  const rewardNames = Array.from(new Set(["Brezplačna kava", ...rewards.map((r) => r.name)]));
+export default function DashboardDemo() {
+  const [sec, setSec] = useState("pregled");
+  const [histTab, setHistTab] = useState<"given" | "redeemed">("given");
+  const [profile, setProfile] = useState<{ name: string; in: string; v: string; p: string } | null>(null);
+  const title = NAV.find((n) => n[0] === sec)?.[1] || "Pregled";
 
   return (
-    <div className="min-h-dvh bg-[#F5EFE6] pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-[#E6DCC9] bg-[#F5EFE6]/95 px-5 pt-12 pb-3 backdrop-blur">
-        <div className="mx-auto flex max-w-md items-center justify-between">
-          <div className="font-display text-[26px] font-extrabold">{tab}</div>
-          <div className="flex h-8 items-center gap-2 rounded-full border border-[#E6DCC9] bg-[#FFFCF6] px-3 text-[13px] font-semibold">
-            <span className="h-2 w-2 rounded-full bg-[#5E7F52]" />
-            {DEMO_VENUE.name}
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-md px-5 pt-5">
-        {/* === SISTEM === */}
-        {tab === "Sistem" && (
-          <div className="space-y-4">
-            <div className="flex flex-col items-center gap-4 rounded-3xl border border-[#EFE6D4] bg-[#FFFCF6] p-6 shadow-[0_2px_10px_rgba(43,29,23,0.05)]">
-              <div className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.09em] text-[#8A7A66]">Tvoja stran za goste <HelpDot text="Natisni ta QR in ga postavi na mizo. Gost ga skenira → odpre se njegova stran zvestobe. En QR za cel lokal." /></div>
-              <div className="rounded-2xl border border-[#EFE6D4] bg-white p-4"><FakeQr px={180} seed={7} /></div>
-              <Link href="/p/demo" className="flex h-10 items-center gap-2 rounded-full bg-[#F1E7D2] px-4 text-[14.5px] font-semibold text-[#5C4C3E]">
-                zig.app/p/demo <Icon name="link" color="#8A7A66" size={15} />
-              </Link>
-              <div className="flex w-full gap-2.5">
-                <button onClick={() => flash("Prenos PNG (demo)")} className="flex-1 rounded-full border-[1.5px] border-[#2B1D17] py-3 text-[14px] font-semibold">Prenesi PNG</button>
-                <button onClick={() => flash("Prenos PDF (demo)")} className="flex-1 rounded-full border-[1.5px] border-[#2B1D17] py-3 text-[14px] font-semibold">Prenesi PDF</button>
+    <main style={{ background: "#E9E2D6", fontFamily: JAK, color: INK, minHeight: "100dvh", overflowX: "hidden" }}>
+      <div className="mx-auto" style={{ maxWidth: 1180, padding: "0 0 40px" }}>
+        <div className="lg:my-6 lg:overflow-hidden lg:rounded-[18px] lg:border lg:border-[#D9CDBA] lg:shadow-[0_30px_70px_rgba(34,28,22,0.18)]" style={{ background: "#fff" }}>
+          <div className="relative flex" style={{ minHeight: "100dvh" }}>
+            {/* SIDEBAR (desktop) */}
+            <div className="hidden flex-col lg:flex" style={{ width: 248, flexShrink: 0, background: "#fff", borderRight: `1px solid ${BORD}`, padding: "22px 16px" }}>
+              <div className="flex items-center" style={{ gap: 10, padding: "0 8px 18px", borderBottom: "1px solid #F1E8D9", marginBottom: 16 }}>
+                <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 13, background: INK, color: PAPER, fontWeight: 800, fontSize: 18 }}>M</div>
+                <div className="flex flex-col" style={{ lineHeight: 1.25, flex: 1, minWidth: 0 }}><span style={{ fontWeight: 800, fontSize: 15 }}>Mora</span><span style={{ fontSize: 12, color: "#9A8F80" }}>Ljubljana</span></div>
+              </div>
+              <div className="flex flex-col" style={{ gap: 3 }}>
+                {NAV.map(([id, label, icon]) => { const on = id === sec; return (
+                  <button key={id} onClick={() => setSec(id)} className="flex items-center" style={{ gap: 12, height: 44, padding: "0 12px", border: "none", borderRadius: 12, background: on ? "#FCEFD8" : "transparent", color: on ? INK : MUTED, fontFamily: JAK, fontSize: 14.5, fontWeight: on ? 700 : 600, cursor: "pointer", textAlign: "left" }}><Ic name={icon} color={on ? INK : "#A89B88"} size={20} /><span>{label}</span></button>
+                ); })}
+              </div>
+              <div className="flex items-center" style={{ marginTop: "auto", gap: 10, padding: "10px 8px 0", borderTop: "1px solid #F1E8D9" }}>
+                <div className="flex items-center justify-center" style={{ width: 34, height: 34, borderRadius: "50%", background: "#FCEFD8", color: "#B4781E", fontWeight: 800, fontSize: 14 }}>AK</div>
+                <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13, fontWeight: 700 }}>Ana Kovač</div><div style={{ fontSize: 11.5, color: "#9A8F80" }}>ana@mora.si</div></div>
               </div>
             </div>
 
-            {/* Embed widget */}
-            <div className="rounded-3xl border-2 border-[#E8A23D] bg-[#FFFCF6] p-6">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🎡</span>
-                <div className="font-display text-[18px] font-extrabold">Wheel na tvojem websiteu</div>
-              </div>
-              <p className="mt-1.5 text-[14px] leading-relaxed text-[#5C4C3E]">Prilepi to kodo na svojo spletno stran — obiskovalci zavrtijo kolo, osvojijo kavo in se registrirajo.</p>
-              <div className="mt-3 overflow-x-auto rounded-xl bg-[#2B1D17] p-3.5">
-                <code className="whitespace-nowrap text-[12px] text-[#E8A23D]">{embedCode}</code>
-              </div>
-              <div className="mt-3 flex gap-2.5">
-                <button
-                  onClick={() => { navigator.clipboard?.writeText(embedCode); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-                  className="flex-1 rounded-full bg-[#2B1D17] py-3 text-[14px] font-semibold text-[#F5EFE6]"
-                >
-                  {copied ? "Kopirano ✓" : "Kopiraj kodo"}
-                </button>
-                <Link href="/embed/demo" target="_blank" className="flex-1 rounded-full border-[1.5px] border-[#2B1D17] py-3 text-center text-[14px] font-semibold">Predogled</Link>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-dashed border-[#E8A23D] bg-[rgba(232,162,61,0.14)] p-4 text-[13.5px] leading-relaxed text-[#6E4F14]">
-              Natisni QR in ga postavi na vsako mizo — gostje stran odprejo brez aplikacije.
-            </div>
-          </div>
-        )}
-
-        {/* === ANALITIKA === */}
-        {tab === "Analitika" && (
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-end gap-1.5">
-              <HelpDot text="Izberi obdobje, za katero se prikažejo številke." />
-              {TIMEFRAMES.map((f) => (
-                <button key={f.key} onClick={() => setTf(f.key)} className={`rounded-full px-3 py-1.5 text-[13px] font-semibold ${tf === f.key ? "bg-[#2B1D17] text-[#F5EFE6]" : "bg-[#F1E7D2] text-[#5C4C3E]"}`}>{f.label}</button>
-              ))}
-            </div>
-            <div className="grid grid-cols-2 gap-2.5">
-              {DEMO_STATS.map((s, i) => (
-                <div key={i} className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-3.5">
-                  <div className="text-[12px] font-semibold text-[#8A7A66]">{s.l}</div>
-                  <div className="font-display text-[24px] font-extrabold">{s.v}</div>
-                  <div className="text-[11.5px] text-[#A6967F]">{s.s}</div>
+            {/* MAIN */}
+            <div className="flex flex-1 flex-col" style={{ minWidth: 0, background: CREAM }}>
+              {/* topbar */}
+              <div className="flex flex-wrap items-center justify-between" style={{ minHeight: 64, flexShrink: 0, borderBottom: `1px solid ${BORD}`, padding: "12px 20px", gap: 12 }}>
+                <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: "-0.01em" }}>{title}</div>
+                <div className="flex items-center" style={{ gap: 10 }}>
+                  <div className="flex" style={{ background: "#fff", border: "1px solid #EFE4D2", borderRadius: 11, padding: 3 }}>{["30 dni", "90 dni", "Leto"].map((t, i) => <span key={t} className="flex items-center" style={{ height: 32, padding: "0 13px", borderRadius: 8, background: i === 0 ? INK : "transparent", color: i === 0 ? PAPER : MUTED, fontSize: 12.5, fontWeight: i === 0 ? 700 : 600 }}>{t}</span>)}</div>
+                  <button style={{ height: 38, padding: "0 16px", border: "none", borderRadius: 11, background: AMBER, color: INK, fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>Izvozi</button>
                 </div>
-              ))}
-            </div>
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-4 text-[13px] font-bold">Obiski po urah</div>
-              <div className="flex h-[120px] items-end gap-1.5">
-                {DEMO_HOURS.map(([h, v, lbl], i) => (
-                  <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1.5" style={{ height: "100%" }}>
-                    <div className="w-full rounded-t" style={{ height: `${(v / maxBar) * 100}%`, background: v === maxBar ? "#2B1D17" : "#E8A23D" }} />
-                    <span className="text-[9px] text-[#A6967F]">{lbl}</span>
-                  </div>
-                ))}
               </div>
-              <div className="mt-2 text-[12.5px] text-[#8A7A66]">Vrh: <strong className="text-[#2B1D17]">ob 9h</strong> — jutranja kava.</div>
-            </div>
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-2.5 text-[13px] font-bold">Najboljše stranke</div>
-              {DEMO_CUSTOMERS.map((c) => (
-                <div key={c.r} className="flex items-center gap-3 border-t border-[#F1E7D2] py-2.5 first:border-0">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#F1E7D2] font-display text-[12.5px] font-bold text-[#8A5B14]">{c.r}</div>
-                  <div className="flex-1 text-[14px] font-semibold">{c.n}</div>
-                  <div className="text-[13px] text-[#8A7A66]">{c.v}</div>
-                  <div className="text-[13px] font-bold text-[#B97F1F]">{c.p}</div>
-                </div>
-              ))}
-            </div>
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-1 flex items-center gap-2 text-[13px] font-bold">Kdo pada stran <span className="rounded-full bg-[rgba(200,81,43,0.12)] px-2 py-0.5 text-[11px] font-bold text-[#A33E1D]">{DEMO_CHURN.length}</span></div>
-              <div className="mb-2.5 text-[12px] text-[#A6967F]">Redni, ki dolgo niso bili — pošlji jim win-back.</div>
-              {DEMO_CHURN.map((c, i) => (
-                <div key={i} className="flex items-center gap-3 border-t border-[#F1E7D2] py-2.5 first:border-0">
-                  <div className="flex-1 text-[14px] font-semibold">{c.n}</div>
-                  <div className="text-[13px] text-[#8A7A66]">{c.v}</div>
-                  <div className="text-[13px] font-bold text-[#A33E1D]">−{c.last}</div>
-                </div>
-              ))}
-            </div>
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-1 flex items-center gap-1.5 text-[13px] font-bold">Uspešnost kampanj <HelpDot text="Koliko gostov se je vrnilo po posamezni kampanji (vrnitve / poslano)." /></div>
-              <div className="mb-2.5 text-[12px] text-[#A6967F]">Stopnja vrnitve po kampanji</div>
-              {DEMO_CAMPAIGNS.map((c, i) => {
-                const pct = Math.round((c.back / c.sent) * 100);
-                return (
-                  <div key={i} className="border-t border-[#F1E7D2] py-2.5 first:border-0">
-                    <div className="flex items-center justify-between text-[13.5px]">
-                      <div className="font-semibold">{c.seg} <span className="text-[11px] font-normal text-[#A6967F]">· {c.ch} · {c.d}</span></div>
-                      <div className="font-bold text-[#5E7F52]">{pct}%</div>
-                    </div>
-                    <div className="mt-1.5 h-[6px] overflow-hidden rounded-full bg-[#EFE6D4]">
-                      <div className="h-full rounded-full bg-[#5E7F52]" style={{ width: `${pct}%` }} />
-                    </div>
-                    <div className="mt-2 grid grid-cols-4 gap-1.5 text-center">
-                      <div><div className="text-[14px] font-bold">{c.sent}</div><div className="text-[10.5px] text-[#A6967F]">poslano</div></div>
-                      <div><div className="text-[14px] font-bold text-[#5E7F52]">{c.back}</div><div className="text-[10.5px] text-[#A6967F]">vrnili</div></div>
-                      <div><div className="text-[14px] font-bold text-[#B97F1F]">{c.used}</div><div className="text-[10.5px] text-[#A6967F]">kupon · {c.avgDays}d</div></div>
-                      <div><div className="text-[14px] font-bold text-[#A33E1D]">{c.expired}</div><div className="text-[10.5px] text-[#A6967F]">poteklo</div></div>
+
+              {/* MOBILE nav */}
+              <div className="flex gap-2 overflow-x-auto px-4 py-3 lg:hidden" style={{ borderBottom: `1px solid ${BORD}` }}>
+                {NAV.map(([id, label, icon]) => { const on = id === sec; return <button key={id} onClick={() => setSec(id)} className="flex flex-shrink-0 items-center gap-1.5" style={{ height: 34, padding: "0 12px", borderRadius: 10, border: "none", background: on ? INK : "#fff", color: on ? PAPER : MUTED, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}><Ic name={icon} color={on ? PAPER : "#A89B88"} size={15} />{label}</button>; })}
+              </div>
+
+              <div style={{ flex: 1, padding: "20px clamp(16px,2.5vw,28px)" }}>
+                {sec === "pregled" && (
+                  <div className="flex flex-col" style={{ gap: 20 }}>
+                    <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))" }}>{KPIS.map((k) => <div key={k.l} style={{ ...card, padding: 18, display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: 12.5, fontWeight: 600, color: "#9A8F80" }}>{k.l}</span><span style={{ fontWeight: 800, fontSize: 28, letterSpacing: "-0.01em" }}>{k.v}</span><span style={{ fontSize: 12, fontWeight: 700, color: k.dc }}>{k.d}</span></div>)}</div>
+                    <div className="grid gap-3.5 lg:grid-cols-[1.6fr_1fr]">
+                      <div style={card}><div className="flex items-center justify-between" style={{ marginBottom: 20 }}><span style={{ fontWeight: 700, fontSize: 15 }}>Obiski po urah</span><span style={{ fontSize: 12.5, color: "#9A8F80" }}>vrh ob 9h</span></div><HoursBars h={150} /></div>
+                      <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}><span style={{ fontWeight: 700, fontSize: 15 }}>Najboljše stranke</span>{TOPC.map(([r, n, p]) => <div key={r} className="flex items-center" style={{ gap: 11 }}><div className="flex items-center justify-center" style={{ width: 30, height: 30, borderRadius: "50%", background: "#FCEFD8", color: "#B4781E", fontWeight: 800, fontSize: 12 }}>{r}</div><span className="flex-1 truncate" style={{ fontSize: 13.5, fontWeight: 600 }}>{n}</span><span style={{ fontSize: 13, fontWeight: 700, color: "#B4862F" }}>{p}</span></div>)}</div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+                )}
 
-        {/* === ZGODOVINA === */}
-        {tab === "Zgodovina" && (
-          <div className="space-y-4">
-            <div className="flex rounded-full bg-[#EDE3D0] p-1">
-              <button onClick={() => setHist("given")} className={`flex-1 rounded-full py-2 text-center text-[14px] font-bold ${hist === "given" ? "bg-[#2B1D17] text-[#F5EFE6]" : "text-[#5C4C3E]"}`}>Podarjene</button>
-              <button onClick={() => setHist("redeemed")} className={`flex-1 rounded-full py-2 text-center text-[14px] font-bold ${hist === "redeemed" ? "bg-[#2B1D17] text-[#F5EFE6]" : "text-[#5C4C3E]"}`}>Unovčene</button>
-            </div>
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] px-4">
-              {hist === "given"
-                ? DEMO_HISTORY.map((h, i) => (
-                    <div key={i} className="flex items-center gap-3 border-t border-[#F1E7D2] py-3 first:border-0">
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 border-[#C8512B]" style={{ background: "rgba(200,81,43,0.07)", transform: "rotate(-4deg)" }}>
-                        <Icon name="cup" color="#C8512B" size={16} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-[14.5px] font-semibold">{h.n}</div>
-                        <div className="text-[12.5px] text-[#A6967F]">{h.t}</div>
-                      </div>
-                      <div className="text-[14.5px] font-bold text-[#5E7F52]">{h.d}</div>
+                {sec === "analitika" && (
+                  <div className="flex flex-col" style={{ gap: 20 }}>
+                    <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))" }}>{KPIS2.map((k) => <div key={k.l} style={{ ...card, padding: 18, display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: 12.5, fontWeight: 600, color: "#9A8F80" }}>{k.l}</span><span style={{ fontWeight: 800, fontSize: 28, letterSpacing: "-0.01em" }}>{k.v}</span><span style={{ fontSize: 12, fontWeight: 700, color: k.dc }}>{k.d}</span></div>)}</div>
+                    <div className="grid gap-3.5 lg:grid-cols-2">
+                      <div style={card}><div style={{ fontWeight: 700, fontSize: 15, marginBottom: 20 }}>Novi vs. ponovni obiski</div><div className="flex items-end" style={{ gap: 10, height: 150 }}>{WEEK.map(([l, rep, nw]) => <div key={l} className="flex flex-1 flex-col items-center justify-end" style={{ gap: 6, height: "100%" }}><div className="flex w-full flex-col justify-end" style={{ height: "100%", gap: 2 }}><div style={{ width: "100%", height: `${Math.round((nw / 68) * 150)}px`, borderRadius: "5px 5px 0 0", background: AMBER }} /><div style={{ width: "100%", height: `${Math.round((rep / 68) * 150)}px`, borderRadius: "0 0 3px 3px", background: INK }} /></div><span style={{ fontSize: 10, color: "#B5AB9C" }}>{l}</span></div>)}</div><div className="flex" style={{ gap: 16, marginTop: 14, fontSize: 12, color: MUTED }}><span className="flex items-center" style={{ gap: 6 }}><span style={{ width: 10, height: 10, borderRadius: 3, background: INK }} />Ponovni</span><span className="flex items-center" style={{ gap: 6 }}><span style={{ width: 10, height: 10, borderRadius: 3, background: AMBER }} />Novi</span></div></div>
+                      <div style={{ ...card, display: "flex", flexDirection: "column", gap: 16 }}><div style={{ fontWeight: 700, fontSize: 15 }}>Zadržanje strank</div><div className="flex items-center" style={{ gap: 22 }}><Donut /><div className="flex flex-col" style={{ gap: 12 }}><div><div style={{ fontWeight: 800, fontSize: 24, color: GREEN }}>91%</div><div style={{ fontSize: 12, color: "#9A8F80" }}>aktivnih po 30 dneh</div></div><div><div style={{ fontWeight: 800, fontSize: 24, color: CORAL }}>9%</div><div style={{ fontSize: 12, color: "#9A8F80" }}>churn · ↓ 2% / mesec</div></div></div></div><div style={{ background: "#FCEFD8", borderRadius: 12, padding: "12px 14px", fontSize: 12.5, lineHeight: 1.45, color: "#7A5E1E" }}>23 strank ni bilo &gt; 21 dni. Razmisli o »pogrešamo te« kampanji.</div></div>
                     </div>
-                  ))
-                : DEMO_REDEMPTIONS.map((r, i) => (
-                    <div key={i} className="flex items-center gap-3 border-t border-[#F1E7D2] py-3 first:border-0">
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 border-[#5E7F52]" style={{ background: "rgba(94,127,82,0.1)" }}>
-                        <Icon name="gift" color="#5E7F52" size={16} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-[14.5px] font-semibold">{r.d}</div>
-                        <div className="text-[12.5px] text-[#A6967F]">{r.n} · {r.t}</div>
-                      </div>
-                      <div className="text-[13px] font-bold text-[#8A7A66]">unovčeno</div>
-                    </div>
-                  ))}
-            </div>
-          </div>
-        )}
-
-        {/* === MARKETING === */}
-        {tab === "Marketing" && (
-          <div className="space-y-4">
-            {/* Google ocene autopilot */}
-            <div className="rounded-3xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">⭐</span>
-                  <div className="font-display text-[18px] font-extrabold">Google ocene — autopilot</div>
-                </div>
-                <span className="flex h-6 items-center rounded-full bg-[rgba(94,127,82,0.14)] px-2.5 text-[11px] font-bold text-[#3E5536]">Vklopljeno</span>
-              </div>
-              <p className="mt-1.5 text-[13.5px] leading-relaxed text-[#5C4C3E]">Ko gost dobi žig (zadovoljen!), ga prosimo za Google oceno. Slabe izkušnje prestrežemo zasebno.</p>
-              <div className="mt-3 grid grid-cols-3 gap-2.5 text-center">
-                <div className="rounded-xl bg-[#F5EFE6] p-2.5"><div className="font-display text-[20px] font-extrabold">{DEMO_REVIEW.requested}</div><div className="text-[11px] text-[#8A7A66]">zaprošenih</div></div>
-                <div className="rounded-xl bg-[#F5EFE6] p-2.5"><div className="font-display text-[20px] font-extrabold text-[#5E7F52]">+{DEMO_REVIEW.left}</div><div className="text-[11px] text-[#8A7A66]">novih ocen</div></div>
-                <div className="rounded-xl bg-[#F5EFE6] p-2.5"><div className="font-display text-[20px] font-extrabold text-[#B97F1F]">{DEMO_REVIEW.rating}★</div><div className="text-[11px] text-[#8A7A66]">prej {DEMO_REVIEW.before}</div></div>
-              </div>
-            </div>
-
-            {/* Rojstni dnevi */}
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🎂</span>
-                <div className="font-display text-[16px] font-extrabold">Rojstni dnevi</div>
-                <span className="ml-auto text-[12px] text-[#8A7A66]">avtomatska ponudba</span>
-              </div>
-              <div className="mt-2.5">
-                {DEMO_BIRTHDAYS.map((b, i) => (
-                  <div key={i} className="flex items-center gap-3 border-t border-[#F1E7D2] py-2.5 first:border-0">
-                    <div className="flex-1 text-[14px] font-semibold">{b.n}</div>
-                    <div className="text-[13px] font-semibold" style={{ color: b.soon ? "#B97F1F" : "#8A7A66" }}>{b.d}</div>
                   </div>
-                ))}
-              </div>
-            </div>
+                )}
 
-            {/* Avtomatizacije */}
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-1 flex items-center gap-1.5 text-[14px] font-bold">Avtomatizacije <HelpDot text="Sporočila, ki se pošljejo sama ob dogodku — brez tvojega dela." /></div>
-              {DEMO_AUTOMATIONS.map((a) => {
-                const cfg = autoCfg[a.key];
-                const open = autoEdit === a.key;
-                return (
-                  <div key={a.key} className="border-t border-[#F1E7D2] py-3 first:border-0">
-                    <div className="flex items-center justify-between">
-                      <div className="pr-3">
-                        <div className="text-[14px] font-semibold">{a.label}</div>
-                        <div className="text-[12.5px] text-[#A6967F]">{a.desc}</div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button onClick={() => setAutoEdit(open ? null : a.key)} className="text-[12.5px] font-semibold text-[#5C4C3E] underline">{open ? "Zapri" : "Uredi"}</button>
-                        <button onClick={() => setAutos((p) => ({ ...p, [a.key]: !p[a.key] }))} aria-label={a.label} className="relative h-[30px] w-[50px] flex-shrink-0 rounded-full transition" style={{ background: autos[a.key] ? "#5E7F52" : "#D9CDBA" }}>
-                          <span className="absolute top-[3px] h-6 w-6 rounded-full bg-white shadow transition-all" style={{ left: autos[a.key] ? 23 : 3 }} />
-                        </button>
-                      </div>
-                    </div>
-                    {open && (
-                      <div className="mt-3 space-y-2.5 rounded-xl bg-[#F5EFE6] p-3.5">
-                        {a.key !== "review" && (
-                          <Row label={a.key === "birthday" ? "Pošlji X dni pred rojstnim dnem" : "Po X dneh neaktivnosti"}>
-                            <Num value={cfg.days} onChange={(n) => setAutoCfg((p) => ({ ...p, [a.key]: { ...p[a.key], days: n } }))} />
-                          </Row>
-                        )}
-                        {a.key !== "review" && (
-                          <Row label="Pošlji prek">
-                            <div className="flex rounded-full bg-[#EDE3D0] p-0.5">
-                              {(["sms", "email"] as const).map((c) => (
-                                <button key={c} onClick={() => setAutoCfg((p) => ({ ...p, [a.key]: { ...p[a.key], channel: c } }))} className={`rounded-full px-3 py-1 text-[12px] font-bold ${cfg.channel === c ? "bg-[#2B1D17] text-[#F5EFE6]" : "text-[#5C4C3E]"}`}>{c === "sms" ? "SMS" : "Email"}</button>
-                              ))}
-                            </div>
-                          </Row>
-                        )}
-                        <label className="block">
-                          <span className="mb-1 block text-[12px] text-[#8A7A66]">Sporočilo</span>
-                          <textarea value={cfg.msg} onChange={(e) => setAutoCfg((p) => ({ ...p, [a.key]: { ...p[a.key], msg: e.target.value } }))} rows={2} className="w-full rounded-lg border border-[#D9CDBA] bg-white p-2.5 text-[13.5px] outline-none focus:border-[#2B1D17]" />
-                        </label>
-                        {a.key !== "review" && (
-                          <>
-                            <Row label="Priloži kupon">
-                              <select value={cfg.reward} onChange={(e) => setAutoCfg((p) => ({ ...p, [a.key]: { ...p[a.key], reward: e.target.value } }))} className="w-44 rounded-lg border border-[#D9CDBA] bg-white px-2 py-1.5 text-[13.5px]">
-                                <option value="">— brez —</option>
-                                {rewardNames.map((n) => <option key={n} value={n}>{n}</option>)}
-                              </select>
-                            </Row>
-                            <Row label="Veljavnost kupona (dni)"><Num value={cfg.validity} onChange={(n) => setAutoCfg((p) => ({ ...p, [a.key]: { ...p[a.key], validity: n } }))} /></Row>
-                            <Row label="Opomnik pred potekom (dni)"><Num value={cfg.reminder} onChange={(n) => setAutoCfg((p) => ({ ...p, [a.key]: { ...p[a.key], reminder: n } }))} /></Row>
-                          </>
-                        )}
-                        <button onClick={() => { setAutoEdit(null); flash(a.label + " posodobljen (demo)"); }} className="h-10 w-full rounded-full bg-[#2B1D17] text-[13.5px] font-semibold text-[#F5EFE6]">Shrani avtomatizacijo</button>
-                      </div>
-                    )}
+                {sec === "zgodovina" && (
+                  <div className="flex flex-col" style={{ gap: 16 }}>
+                    <div className="flex" style={{ background: "#F1E8D9", borderRadius: 12, padding: 4, width: 280 }}>{(["given", "redeemed"] as const).map((t) => <button key={t} onClick={() => setHistTab(t)} style={{ flex: 1, height: 36, border: "none", borderRadius: 9, background: histTab === t ? "#fff" : "transparent", color: histTab === t ? INK : "#9A8F80", fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>{t === "given" ? "Podarjene" : "Unovčene"}</button>)}</div>
+                    <div style={{ ...card, padding: "6px 22px" }}>{(histTab === "given" ? GIVEN : REDEEMED).map((h, i) => <div key={i} className="flex items-center" style={{ gap: 14, padding: "15px 0", borderTop: i ? "1px solid #F4ECDF" : "none" }}><div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: "50%", background: histTab === "given" ? "rgba(196,98,61,0.1)" : "#FCEFD8", flexShrink: 0 }}><Ic name={histTab === "given" ? "cup" : "gift"} color={histTab === "given" ? CORAL : "#B4862F"} size={18} /></div><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 14, fontWeight: 600 }}>{h[0]}</div><div style={{ fontSize: 12.5, color: "#9A8F80" }}>{h[1]}</div></div><div style={{ fontSize: 14, fontWeight: 700, color: histTab === "given" ? GREEN : CORAL, whiteSpace: "nowrap" }}>{histTab === "given" ? "+15 točk" : h[2]}</div></div>)}</div>
                   </div>
-                );
-              })}
-            </div>
+                )}
 
-            {/* Nova kampanja (SMS / Email) */}
-            <div className="rounded-3xl border-2 border-[#E8A23D] bg-[#FFFCF6] p-5">
-              <div className="flex items-center gap-1.5">
-                <Icon name="mega" color="#B97F1F" size={20} />
-                <div className="font-display text-[18px] font-extrabold">Nova kampanja</div>
-                <HelpDot text="Pošlji ciljano sporočilo segmentu gostov. SMS stane ~0,07 €/kos, email je zastonj." />
-              </div>
+                {sec === "stranke" && (
+                  <div className="flex flex-col" style={{ gap: 16 }}>
+                    <div className="flex items-center" style={{ gap: 12 }}><div className="flex flex-1 items-center" style={{ height: 44, border: "1px solid #EFE4D2", borderRadius: 12, background: "#fff", gap: 10, padding: "0 14px" }}><Ic name="users" color="#B5AB9C" size={17} /><span style={{ fontSize: 14, color: "#B5AB9C" }}>Išči po emailu ali telefonu…</span></div><div className="flex items-center" style={{ height: 44, padding: "0 16px", border: "1px solid #EFE4D2", borderRadius: 12, background: "#fff", gap: 8, fontSize: 13.5, fontWeight: 600, color: MUTED }}>Vsi · 137</div></div>
+                    <div style={{ ...card, padding: 0, overflow: "hidden" }}>
+                      <div className="hidden items-center sm:flex" style={{ gap: 14, padding: "14px 22px", fontSize: 11.5, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: "#A89B88", background: "#FBF6EC" }}><div style={{ flex: 1 }}>Stranka</div><div style={{ width: 70, textAlign: "right" }}>Obiski</div><div style={{ width: 70, textAlign: "right" }}>Točke</div><div style={{ width: 110, textAlign: "right" }}>Zadnji</div><div style={{ width: 80, textAlign: "right" }}>Status</div></div>
+                      {CUSTOMERS.map((c, i) => <button key={c.n} onClick={() => setProfile({ name: c.n, in: c.in, v: c.v, p: c.p })} className="flex w-full items-center" style={{ gap: 14, padding: "15px 22px", border: "none", borderTop: i ? "1px solid #F4ECDF" : "none", background: "transparent", cursor: "pointer", fontFamily: JAK, textAlign: "left" }}><div className="flex flex-1 items-center" style={{ gap: 11, minWidth: 0 }}><div className="flex items-center justify-center" style={{ width: 34, height: 34, borderRadius: "50%", background: "#FCEFD8", color: "#B4781E", fontWeight: 800, fontSize: 12.5, flexShrink: 0 }}>{c.in}</div><span className="truncate" style={{ fontSize: 14, fontWeight: 600 }}>{c.n}</span></div><div className="hidden sm:block" style={{ width: 70, textAlign: "right", fontSize: 13.5, color: MUTED }}>{c.v}</div><div className="hidden sm:block" style={{ width: 70, textAlign: "right", fontSize: 13.5, fontWeight: 700, color: "#B4862F" }}>{c.p}</div><div className="hidden sm:block" style={{ width: 110, textAlign: "right", fontSize: 13, color: "#9A8F80" }}>{c.last}</div><div style={{ width: 80, textAlign: "right" }}><span style={{ height: 24, padding: "0 10px", borderRadius: 999, background: c.sBg, color: c.sFg, fontSize: 11.5, fontWeight: 700, display: "inline-flex", alignItems: "center" }}>{c.s}</span></div></button>)}
+                    </div>
+                  </div>
+                )}
 
-              <div className="mt-3 flex rounded-full bg-[#EDE3D0] p-1">
-                {(["sms", "email"] as const).map((c) => (
-                  <button key={c} onClick={() => setChannel(c)} className={`flex-1 rounded-full py-2 text-[13.5px] font-bold ${channel === c ? "bg-[#2B1D17] text-[#F5EFE6]" : "text-[#5C4C3E]"}`}>
-                    {c === "sms" ? "SMS" : "Email"}
-                  </button>
-                ))}
-              </div>
+                {sec === "marketing" && (
+                  <div className="flex flex-col" style={{ gap: 18 }}>
+                    <div className="grid gap-3.5 lg:grid-cols-[1.4fr_1fr]">
+                      <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}><div className="flex items-center justify-between"><span style={{ fontWeight: 700, fontSize: 15 }}>Kampanje</span><button style={{ height: 34, padding: "0 14px", border: "none", borderRadius: 10, background: INK, color: PAPER, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Nova kampanja</button></div>{CAMPAIGNS.map(([n, meta, st, sBg, sFg, bg, icon, icc]) => <div key={n} className="flex items-center" style={{ gap: 13, padding: 13, border: "1px solid #F1E8D9", borderRadius: 14 }}><div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, background: bg, flexShrink: 0 }}><Ic name={icon} color={icc} size={20} /></div><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 14, fontWeight: 700 }}>{n}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>{meta}</div></div><span style={{ height: 24, padding: "0 10px", borderRadius: 999, background: sBg, color: sFg, fontSize: 11.5, fontWeight: 700, display: "inline-flex", alignItems: "center" }}>{st}</span></div>)}</div>
+                      <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}><span style={{ fontWeight: 700, fontSize: 15 }}>Avtomatizacije</span>{AUTOS.map(([n, d, on]) => <div key={n} className="flex items-center" style={{ gap: 12 }}><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13.5, fontWeight: 600 }}>{n}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>{d}</div></div><Toggle on={on} /></div>)}</div>
+                    </div>
+                    <div className="flex flex-wrap items-center" style={{ background: INK, borderRadius: 18, padding: 24, gap: 24, color: PAPER }}><div style={{ flex: 1, minWidth: 240 }}><div style={{ fontWeight: 800, fontSize: 17, marginBottom: 4 }}>Kalkulator stroška kampanje</div><div style={{ fontSize: 13.5, color: "rgba(251,243,230,0.65)", lineHeight: 1.5 }}>Segment <strong style={{ color: AMBER }}>»Neaktivni 21+ dni«</strong> · 23 strank · nagrada −15% (povp. 0,9 €/unovčitev).</div></div><div className="flex" style={{ gap: 26 }}><div><div style={{ fontSize: 12, color: "rgba(251,243,230,0.55)" }}>Doseg</div><div style={{ fontWeight: 800, fontSize: 24 }}>23</div></div><div><div style={{ fontSize: 12, color: "rgba(251,243,230,0.55)" }}>Pričak. unovč.</div><div style={{ fontWeight: 800, fontSize: 24 }}>~9</div></div><div><div style={{ fontSize: 12, color: "rgba(251,243,230,0.55)" }}>Ocena stroška</div><div style={{ fontWeight: 800, fontSize: 24, color: AMBER }}>8 €</div></div></div></div>
+                  </div>
+                )}
 
-              <div className="mt-3 text-[12.5px] font-bold uppercase tracking-wide text-[#A6967F]">Komu</div>
-              <div className="mt-1.5 flex flex-wrap gap-2">
-                {DEMO_SEGMENTS.map((s, i) => (
-                  <button key={s.key} onClick={() => setSeg(i)} className={`rounded-full px-3 py-1.5 text-[13px] font-semibold ${seg === i ? "bg-[#2B1D17] text-[#F5EFE6]" : "bg-[#F1E7D2] text-[#5C4C3E]"}`}>
-                    {s.label} ({channel === "sms" ? s.sms : s.email})
-                  </button>
-                ))}
-              </div>
+                {sec === "sistem" && (
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <div style={{ ...card, display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: 24 }}><span className="self-start" style={{ fontWeight: 700, fontSize: 15 }}>QR plakat za mize</span><div style={{ background: "#fff", border: "1px solid #EFE4D2", borderRadius: 16, padding: 18 }}><QrEl px={190} seed={7} /></div><div className="flex items-center" style={{ height: 40, padding: "0 16px", borderRadius: 999, background: CREAM, border: "1px solid #EFE4D2", gap: 8, fontSize: 14, fontWeight: 600, color: MUTED }}>tally.app/p/mora</div><div className="flex w-full" style={{ gap: 10 }}>{["Prenesi PNG", "Prenesi PDF"].map((t) => <button key={t} style={{ flex: 1, height: 46, border: `1.5px solid ${INK}`, borderRadius: 12, background: "transparent", color: INK, fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t}</button>)}</div></div>
+                    <div className="flex flex-col" style={{ gap: 16 }}>
+                      <div style={{ ...card, display: "flex", flexDirection: "column", gap: 12 }}><span style={{ fontWeight: 700, fontSize: 15 }}>Vgradi na svojo spletno stran</span><span style={{ fontSize: 13, color: "#9A8F80", lineHeight: 1.5 }}>Prilepi to kodo v &lt;body&gt; — gostom pokaže plavajoči gumb s kolesom sreče.</span><div style={{ background: INK, borderRadius: 12, padding: 14, fontFamily: "ui-monospace,Menlo,monospace", fontSize: 12.5, color: "#E8C99A", lineHeight: 1.5, wordBreak: "break-all" }}>&lt;script src=&quot;https://tally.app/w.js&quot; data-venue=&quot;mora&quot;&gt;&lt;/script&gt;</div><button style={{ height: 42, border: "none", borderRadius: 11, background: AMBER, color: INK, fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>Kopiraj kodo</button></div>
+                      <div style={{ background: "#fff", border: `2px solid ${AMBER}`, borderRadius: 18, padding: 22, display: "flex", flexDirection: "column", gap: 10 }}><div className="flex items-center justify-between"><span style={{ fontWeight: 700, fontSize: 15 }}>Skeniranje računov</span><span style={{ height: 26, padding: "0 11px", borderRadius: 999, background: "rgba(94,127,82,0.16)", color: "#3E5536", fontSize: 11.5, fontWeight: 800, display: "flex", alignItems: "center" }}>Aktivno</span></div><span style={{ fontSize: 13, color: MUTED, lineHeight: 1.5 }}>Davčna št. prebrana iz vzorčnega računa. Točke prinesejo samo tvoji računi.</span></div>
+                    </div>
+                  </div>
+                )}
 
-              <div className="mt-3 flex items-center gap-1.5 text-[12.5px] font-bold uppercase tracking-wide text-[#A6967F]">Shranjene kampanje <HelpDot text="Klikni ime, da naložiš kampanjo. Spodaj poimenuj in shrani trenutno kot novo — ali posodobi obstoječo z istim imenom." /></div>
-              <div className="mt-1.5 flex flex-wrap gap-2">
-                {campaigns.map((c) => (
-                  <span key={c.id} className="flex items-center gap-1.5 rounded-full bg-[#F1E7D2] py-1.5 pl-3 pr-1.5 text-[12.5px] font-semibold text-[#5C4C3E]">
-                    <button onClick={() => { setSms(c.text); setCampName(c.name); setCampReward(c.reward || ""); setCampValidity(c.validity || 7); }}>{c.name}</button>
-                    <button onClick={() => setCampaigns((p) => p.filter((x) => x.id !== c.id))} aria-label={`Izbriši ${c.name}`} className="flex h-4 w-4 items-center justify-center rounded-full text-[13px] text-[#A33E1D]">×</button>
-                  </span>
-                ))}
-              </div>
-
-              <textarea value={sms} onChange={(e) => setSms(e.target.value)} rows={3} className="mt-3 w-full rounded-xl border border-[#D9CDBA] bg-[#FFFCF6] p-3 text-[14px] outline-none focus:border-[#2B1D17]" />
-
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl bg-[#F5EFE6] px-3.5 py-3">
-                <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[#5C4C3E]">Priloži kupon <HelpDot text="Prejemnik ob prejemu dobi ta kupon v denarnico, z veljavnostjo. (Pravo pripenjanje se aktivira s SMS/email providerjem.)" /></div>
-                <select value={campReward} onChange={(e) => setCampReward(e.target.value)} className="rounded-lg border border-[#D9CDBA] bg-white px-2 py-1.5 text-[13px]">
-                  <option value="">— brez —</option>
-                  {rewardNames.map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
-                {campReward && (
-                  <label className="flex items-center gap-1.5 text-[13px] text-[#5C4C3E]">veljavnost
-                    <input type="number" value={campValidity} onChange={(e) => setCampValidity(+e.target.value)} className="w-14 rounded-lg border border-[#D9CDBA] bg-white px-2 py-1 text-right text-[13px]" /> dni
-                  </label>
+                {sec === "nastavitve" && (
+                  <div className="flex flex-col" style={{ gap: 16 }}>
+                    <div style={{ fontSize: 14, color: MUTED, maxWidth: 560, lineHeight: 1.5 }}>Vse prilagodiš sam — barve, besedila, kupone in zaslone gosta.</div>
+                    <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))" }}>{SETTINGS.map(([n, d, icon]) => <div key={n} style={{ ...card, padding: 20, display: "flex", flexDirection: "column", gap: 10 }}><div className="flex items-center justify-center" style={{ width: 42, height: 42, borderRadius: 12, background: CREAM }}><Ic name={icon} color="#B4862F" size={22} /></div><div style={{ fontWeight: 700, fontSize: 15 }}>{n}</div><div style={{ fontSize: 13, color: "#9A8F80", lineHeight: 1.45 }}>{d}</div></div>)}</div>
+                  </div>
                 )}
               </div>
+            </div>
 
-              <div className="mt-2.5 flex gap-2">
-                <input value={campName} onChange={(e) => setCampName(e.target.value)} placeholder="Ime kampanje (npr. Rojstni dan)" className="min-w-0 flex-1 rounded-lg border border-[#D9CDBA] bg-white px-3 py-2 text-[13.5px]" />
-                <button
-                  onClick={() => {
-                    const name = campName.trim();
-                    if (!name) return flash("Vpiši ime kampanje");
-                    setCampaigns((p) => {
-                      const i = p.findIndex((x) => x.name.toLowerCase() === name.toLowerCase());
-                      if (i >= 0) { const n = [...p]; n[i] = { ...n[i], text: sms, reward: campReward, validity: campValidity }; return n; }
-                      return [...p, { id: "c" + p.length + name, name, text: sms, reward: campReward, validity: campValidity }];
-                    });
-                    flash("Kampanja shranjena");
-                  }}
-                  className="flex-shrink-0 rounded-lg bg-[#5E7F52] px-4 py-2 text-[13.5px] font-semibold text-white"
-                >
-                  Shrani
-                </button>
-              </div>
-
-              {(() => {
-                const recip = channel === "sms" ? DEMO_SEGMENTS[seg].sms : DEMO_SEGMENTS[seg].email;
-                const cost = channel === "sms" ? recip * SMS_RATE : 0;
-                return (
-                  <div className="mt-3 flex items-center justify-between rounded-xl bg-[#F5EFE6] px-3.5 py-3 text-[13.5px]">
-                    <span className="text-[#5C4C3E]">{recip} prejemnikov{channel === "sms" ? ` × ${SMS_RATE.toFixed(2).replace(".", ",")} €` : " · email"}</span>
-                    <span className="font-display text-[16px] font-extrabold" style={{ color: cost > 0 ? "#A33E1D" : "#3E5536" }}>{cost > 0 ? `${cost.toFixed(2).replace(".", ",")} €` : "0 € (zastonj)"}</span>
+            {/* PROFILE MODAL */}
+            {profile && (
+              <div onClick={() => setProfile(null)} className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(26,18,13,0.42)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)", padding: 24, zIndex: 20 }}>
+                <div onClick={(e) => e.stopPropagation()} style={{ width: 440, maxWidth: "100%", background: CREAM, borderRadius: 24, overflow: "hidden", boxShadow: "0 30px 70px rgba(26,18,13,0.4)" }}>
+                  <div className="flex items-center" style={{ background: INK, padding: 24, gap: 14, color: PAPER }}><div className="flex items-center justify-center" style={{ width: 52, height: 52, borderRadius: 16, background: AMBER, color: INK, fontWeight: 800, fontSize: 21 }}>{profile.in}</div><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 800, fontSize: 18 }}>{profile.name}</div><div style={{ fontSize: 12.5, color: "rgba(251,243,230,0.6)" }}>Član od mar 2026 · {profile.v} obiskov</div></div><button onClick={() => setProfile(null)} aria-label="Zapri" className="flex items-center justify-center" style={{ width: 36, height: 36, borderRadius: "50%", border: "none", background: "rgba(251,243,230,0.14)", cursor: "pointer" }}><svg width="15" height="15" viewBox="0 0 24 24" style={{ fill: "none", stroke: PAPER, strokeWidth: 2.2, strokeLinecap: "round" }}><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></svg></button></div>
+                  <div className="flex flex-col" style={{ padding: 22, gap: 16 }}>
+                    <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>{[[profile.p, "točk", "#B4862F"], [profile.v, "obiskov", INK], ["2", "nagrade", GREEN]].map(([v, l, c], i) => <div key={i} style={{ background: "#fff", border: `1px solid ${BORD}`, borderRadius: 14, padding: 14, textAlign: "center" }}><div style={{ fontWeight: 800, fontSize: 22, color: c }}>{v}</div><div style={{ fontSize: 11.5, color: "#9A8F80" }}>{l}</div></div>)}</div>
+                    <div style={{ background: "#fff", border: `1px solid ${BORD}`, borderRadius: 14, padding: 16 }}><div style={{ fontSize: 12, fontWeight: 700, color: "#9A8F80", marginBottom: 10 }}>Zadnji obiski</div><div className="flex flex-col" style={{ gap: 9 }}>{[["danes · 9.12", "+15 točk", GREEN], ["včeraj · 8.40", "+15 točk", GREEN], ["28. maj · unovčil kavo", "−150 točk", CORAL]].map(([t, d, c], i) => <div key={i} className="flex justify-between" style={{ fontSize: 13 }}><span style={{ color: MUTED }}>{t}</span><span style={{ fontWeight: 700, color: c }}>{d}</span></div>)}</div></div>
+                    <div className="flex" style={{ gap: 10 }}><button style={{ flex: 1, height: 46, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Pošlji sporočilo</button><button style={{ height: 46, padding: "0 16px", border: "1.5px solid #E4D9C7", borderRadius: 12, background: "transparent", color: MUTED, fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Dodaj točke</button></div>
                   </div>
-                );
-              })()}
-
-              <button onClick={() => flash(channel === "sms" ? "SMS poslan (demo)" : "Email poslan (demo)")} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#2B1D17] text-[15px] font-semibold text-[#F5EFE6]">
-                <Icon name="send" color="#F5EFE6" size={18} /> Pošlji {channel === "sms" ? "SMS" : "email"}
-              </button>
-            </div>
-
-            {/* Zgodovina kampanj */}
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-2 text-[14px] font-bold">Pretekle kampanje</div>
-              <div className="flex items-center gap-3 pb-1 text-[11.5px] font-bold uppercase tracking-wide text-[#A6967F]">
-                <div className="w-12">Datum</div><div className="flex-1">Segment</div><div className="w-14 text-right">Poslano</div><div className="w-14 text-right">Vrnili</div>
-              </div>
-              {DEMO_CAMPAIGNS.map((c, i) => (
-                <div key={i} className="flex items-center gap-3 border-t border-[#F1E7D2] py-2.5 text-[13px]">
-                  <div className="w-12 text-[#8A7A66]">{c.d}</div>
-                  <div className="flex-1 font-semibold">{c.seg} <span className="text-[11px] font-normal text-[#A6967F]">· {c.ch}</span></div>
-                  <div className="w-14 text-right">{c.sent}</div>
-                  <div className="w-14 text-right font-bold text-[#5E7F52]">+{c.back}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] px-4 py-1">
-              <div className="flex items-center gap-1.5 py-2 text-[11.5px] font-bold uppercase tracking-wide text-[#A6967F]">Stranke <HelpDot text="Klikni stranko za njen profil: vsi obiski, unovčenja, poraba, vzorec — in pošlji ji osebno sporočilo." /></div>
-              <div className="flex items-center gap-3 pb-2 text-[11.5px] font-bold uppercase tracking-wide text-[#A6967F]">
-                <div className="flex-1">Stranka</div><div className="w-12 text-right">Obiski</div><div className="w-14 text-right">Točke</div><div className="w-16 text-right">Zadnji</div>
-              </div>
-              {DEMO_MARKETING.map((m, i) => (
-                <button key={i} onClick={() => setProfileCust(m.n)} className="flex w-full items-center gap-3 border-t border-[#F1E7D2] py-3 text-left text-[13.5px] hover:bg-[#F9F4EA]">
-                  <div className="flex-1 truncate font-semibold">{m.n}</div>
-                  <div className="w-12 text-right text-[#5C4C3E]">{m.v}</div>
-                  <div className="w-14 text-right font-bold text-[#B97F1F]">{m.p}</div>
-                  <div className="w-16 text-right text-[12.5px] font-semibold" style={{ color: m.ac }}>{m.a}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* === NASTAVITVE === */}
-        {tab === "Nastavitve" && (
-          <div className="space-y-4">
-            <div className="flex gap-1.5 overflow-x-auto pb-1">
-              {([["osnovno", "Osnovno"], ["kolo", "Kolo"], ["zasloni", "Zasloni gostov"]] as const).map(([k, l]) => (
-                <button key={k} onClick={() => setSect(k)} className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-semibold ${sect === k ? "bg-[#2B1D17] text-[#F5EFE6]" : "border border-[#E6DCC9] bg-[#FFFCF6] text-[#5C4C3E]"}`}>{l}</button>
-              ))}
-            </div>
-
-            {sect === "osnovno" && (<>
-            <div className="rounded-3xl border-2 border-[#E8A23D] bg-[#FFFCF6] p-5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 font-display text-[17px] font-bold leading-tight">Aktiviraj skeniranje računov <HelpDot text="Enkrat fotografiraš vzorčni račun lokala → preberemo davčno številko. Od tedaj točke prinesejo SAMO računi tvojega lokala. Lahko kadarkoli ponovno aktiviraš." /></div>
-                <div className="flex h-7 items-center rounded-full px-2.5 text-[12px] font-bold" style={{ background: "rgba(200,81,43,0.12)", color: "#A33E1D" }}>Ni aktivirano</div>
-              </div>
-              <p className="mt-2 text-[13.5px] leading-relaxed text-[#41332A]">Fotografiraj vzorčni račun → preberemo davčno → od takrat točke prinesejo samo tvoji računi.</p>
-              <button onClick={() => flash("Skeniranje aktivirano (demo)")} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#2B1D17] text-[15px] font-semibold text-[#F5EFE6]">
-                <Icon name="camera" color="#F5EFE6" size={18} /> Fotografiraj račun
-              </button>
-            </div>
-
-            {/* Gostova stran */}
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-3 flex items-center gap-1.5 text-[14px] font-bold">Gostova stran <HelpDot text="Stran, ki jo gost vidi, ko skenira tvoj QR. Tu urejaš videz." /></div>
-
-              <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-[#A6967F]">Predogled</div>
-              <div className="mb-3 flex items-center gap-3 rounded-xl p-3" style={{ background: vColor }}>
-                {vLogo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={vLogo} alt="logo" className="h-11 w-11 rounded-full object-cover" />
-                ) : (
-                  <div className="font-display flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[18px] font-bold" style={{ color: vColor }}>{vName.charAt(0)}</div>
-                )}
-                <div className="min-w-0">
-                  <div className="font-display truncate text-[15px] font-bold text-white">{vName}</div>
-                  <div className="truncate text-[12px] text-white/80">{vTagline}</div>
                 </div>
               </div>
-              <label className="mb-2.5 flex items-center justify-between">
-                <span className="text-[14px] text-[#5C4C3E]">Logotip</span>
-                <span className="cursor-pointer rounded-lg border border-[#D9CDBA] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#5C4C3E]">
-                  {vLogo ? "Zamenjaj" : "Naloži"}
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { const rd = new FileReader(); rd.onload = () => setVLogo(rd.result as string); rd.readAsDataURL(f); } }} />
-                </span>
-              </label>
-              <label className="mb-2.5 block">
-                <span className="mb-1 block text-[12px] text-[#8A7A66]">Ime lokala</span>
-                <input value={vName} onChange={(e) => setVName(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[14px]" />
-              </label>
-              <label className="mb-2.5 block">
-                <span className="mb-1 block text-[12px] text-[#8A7A66]">Podnapis</span>
-                <input value={vTagline} onChange={(e) => setVTagline(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[14px]" />
-              </label>
-              <div className="mb-2.5 flex items-center justify-between">
-                <span className="text-[14px] text-[#5C4C3E]">Barva znamke</span>
-                <input type="color" value={vColor} onChange={(e) => setVColor(e.target.value)} className="h-9 w-14 rounded-lg border border-[#D9CDBA]" />
-              </div>
-              <label className="block">
-                <span className="mb-1 flex items-center gap-1.5 text-[12px] text-[#8A7A66]">Google review link <HelpDot text="Iz Google Business Profile → 'Prejmi več ocen' dobiš kratko povezavo (g.page/r/…). Gumb 'Oceni na Googlu' jo odpre naravnost v okencu za oceno. Brez nje gumb odpre iskanje po imenu lokala." /></span>
-                <input value={gReview} onChange={(e) => setGReview(e.target.value)} placeholder="https://g.page/r/…" className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13px]" />
-              </label>
-              <label className="mt-2.5 block">
-                <span className="mb-1 block text-[12px] text-[#8A7A66]">Pozdravno sporočilo</span>
-                <input value={vWelcome} onChange={(e) => setVWelcome(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13px]" />
-              </label>
-              <div className="mt-2.5 flex items-center justify-between">
-                <span className="text-[14px] text-[#5C4C3E]">Prikaži kolo sreče novim gostom</span>
-                <button onClick={() => setShowWheel(!showWheel)} aria-label="Kolo" className="relative h-[28px] w-[46px] flex-shrink-0 rounded-full" style={{ background: showWheel ? "#5E7F52" : "#D9CDBA" }}>
-                  <span className="absolute top-[3px] h-[22px] w-[22px] rounded-full bg-white shadow transition-all" style={{ left: showWheel ? 21 : 3 }} />
-                </button>
-              </div>
-              <button onClick={() => flash("Gostova stran shranjena (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
-            </div>
-            </>)}
-
-            {sect === "kolo" && (<>
-            {/* Kolo sreče — prvi zaslon (editor) */}
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-1 flex items-center gap-1.5 text-[14px] font-bold">Kolo sreče — prvi zaslon <HelpDot text="Prvi zaslon novih gostov (spletna stran / QR plakat). Tu urejaš besedila, polja in zmagovalno polje. Barva, ime in logo se vzamejo iz 'Gostova stran'." /></div>
-
-              <div className="mb-1 mt-2 text-[11px] font-bold uppercase tracking-wide text-[#A6967F]">Besedila</div>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naslov</span><input value={spinTitle} onChange={(e) => setSpinTitle(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Podnapis</span><input value={spinTagline} onChange={(e) => setSpinTagline(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-3 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Značka (zgoraj desno)</span><input value={spinBadge} onChange={(e) => setSpinBadge(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-
-              <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[#A6967F]">Polja kolesa <HelpDot text="Označi ★ na polje, na katero kolo VEDNO pristane (zmagovalno). Tako vsak nov gost dobi izbrano nagrado." /></div>
-              <div className="space-y-2">
-                {slots.map((s, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <button onClick={() => setWinSlot(i)} aria-label="Zmagovalno polje" className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-[13px]" style={{ background: winSlot === i ? "#E8A23D" : "#F1E7D2", color: winSlot === i ? "#2B1D17" : "#C9BCA5" }}>★</button>
-                    <input value={s} onChange={(e) => setSlots((p) => p.map((x, j) => (j === i ? e.target.value : x)))} className="flex-1 rounded-lg border border-[#D9CDBA] px-3 py-1.5 text-[13.5px]" />
-                  </div>
-                ))}
-              </div>
-              <div className="mt-2 text-[12px] text-[#8A7A66]">Vedno pristane na: <strong className="text-[#2B1D17]">{slots[winSlot]}</strong></div>
-
-              <div className="mt-3 rounded-xl bg-[#F5EFE6] px-3.5 py-2.5 text-[12.5px] leading-snug text-[#5C4C3E]">Barva, ime in logo se vzamejo iz <strong>Gostova stran</strong> (zgoraj) — en sam vir za celotno gostovo izkušnjo.</div>
-
-              <button onClick={() => flash("Kolo shranjeno (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani kolo</button>
-            </div>
-            </>)}
-
-            {sect === "zasloni" && (<>
-            {/* Zaslon "Zadetek" — editor */}
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-2 flex items-center gap-1.5 text-[14px] font-bold">Zaslon &quot;Zadetek&quot; <HelpDot text="Zaslon, ki ga gost vidi takoj ko zadene nagrado (po vrtenju). Uredi vsa besedila in gumb." /></div>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naslov</span><input value={wonTitle} onChange={(e) => setWonTitle(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Opis</span><input value={wonDesc} onChange={(e) => setWonDesc(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naziv nagrade</span><input value={wonReward} onChange={(e) => setWonReward(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Vrednost / veljavnost</span><input value={wonMeta} onChange={(e) => setWonMeta(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-1 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Besedilo gumba</span><input value={wonBtn} onChange={(e) => setWonBtn(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-
-              <div className="mt-3 rounded-xl border border-[#EFE6D4] bg-[#F5EFE6] p-3 text-center">
-                <div className="mb-0.5 text-[11px] font-bold uppercase tracking-wide text-[#A6967F]">Predogled</div>
-                <div className="font-display text-[18px] font-extrabold text-[#2B1D17]">{wonTitle}</div>
-                <div className="text-[12.5px] text-[#5C4C3E]">{wonDesc}</div>
-                <div className="mx-auto mt-2 w-fit rounded-lg bg-[#2B1D17] px-4 py-1.5 text-[12.5px] font-semibold text-[#F5EFE6]">{wonBtn} →</div>
-              </div>
-
-              <button onClick={() => flash("Zaslon shranjen (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
-            </div>
-
-            {/* Zaslon "Prijava" — editor */}
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-2 flex items-center gap-1.5 text-[14px] font-bold">Zaslon &quot;Prijava&quot; <HelpDot text="Zaslon, kjer se gost prijavi (Google ali telefon), da prevzame nagrado in shrani kupon." /></div>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naslov</span><input value={regTitle} onChange={(e) => setRegTitle(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Opis</span><input value={regDesc} onChange={(e) => setRegDesc(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Gumb Google</span><input value={regGoogle} onChange={(e) => setRegGoogle(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Gumb telefon</span><input value={regPhoneBtn} onChange={(e) => setRegPhoneBtn(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-1 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Drobni tisk</span><input value={regFine} onChange={(e) => setRegFine(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <button onClick={() => flash("Zaslon shranjen (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
-            </div>
-
-            {/* Zaslon "Kupon" — editor */}
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-2 flex items-center gap-1.5 text-[14px] font-bold">Zaslon &quot;Kupon&quot; <HelpDot text="Zadnji zaslon — kupon, ki ga gost pokaže osebju. Naziv nagrade se vzame iz zaslona 'Zadetek'." /></div>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naslov</span><input value={coupTitle} onChange={(e) => setCoupTitle(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Opis (telefon)</span><input value={coupDesc} onChange={(e) => setCoupDesc(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Veljavnost (na kuponu)</span><input value={coupValidity} onChange={(e) => setCoupValidity(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Navodilo pod kuponom</span><input value={coupFoot} onChange={(e) => setCoupFoot(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-1 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Besedilo gumba</span><input value={coupBtn} onChange={(e) => setCoupBtn(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <button onClick={() => flash("Zaslon shranjen (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
-            </div>
-
-            {/* Zaslon "Kartonček" — editor */}
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-2 flex items-center gap-1.5 text-[14px] font-bold">Zaslon &quot;Kartonček&quot; <HelpDot text="Gostova domača stran po prijavi. Ime/logo (Gostova stran), žigi/točke (Model nagrajevanja) in nagrade (Nagrade) se urejajo v svojih sekcijah — tu le besedila." /></div>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Podnapis</span><input value={cardSubtitle} onChange={(e) => setCardSubtitle(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-2 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Besedilo gumba za skeniranje</span><input value={scanBtn} onChange={(e) => setScanBtn(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <label className="mb-1 block"><span className="mb-1 block text-[12px] text-[#8A7A66]">Naslov kuponov</span><input value={couponsHdr} onChange={(e) => setCouponsHdr(e.target.value)} className="w-full rounded-lg border border-[#D9CDBA] px-3 py-2 text-[13.5px]" /></label>
-              <button onClick={() => flash("Zaslon shranjen (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
-            </div>
-            </>)}
-
-            {sect === "osnovno" && (<>
-            {/* Model točk */}
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-3 flex items-center gap-1.5 text-[14px] font-bold">Model nagrajevanja <HelpDot text="Žigi: vsak 10. obisk → 1 nagrada (kartonček se resetira). Točke: gost nabira točke in jih zapravi na meniju nagrad. Gost vidi SAMO izbrani model." /></div>
-              <div className="flex gap-2">
-                <button onClick={() => setModel("per_visit")} className={`flex-1 rounded-xl border-2 p-3 text-left ${model === "per_visit" ? "border-[#2B1D17] bg-[#F1E7D2]" : "border-[#E6DCC9]"}`}>
-                  <div className="text-[14px] font-bold">Žigi (obisk)</div>
-                  <div className="text-[12px] text-[#8A7A66]">Osnovni paket</div>
-                </button>
-                <button onClick={() => setModel("per_euro")} className={`flex-1 rounded-xl border-2 p-3 text-left ${model === "per_euro" ? "border-[#2B1D17] bg-[#F1E7D2]" : "border-[#E6DCC9]"}`}>
-                  <div className="text-[14px] font-bold">Točke (€)</div>
-                  <div className="text-[12px] text-[#8A7A66]">Pro paket</div>
-                </button>
-              </div>
-              <div className="mt-4 space-y-3">
-                {model === "per_visit" ? (
-                  <Row label="Točke na obisk"><Num value={perVisit} onChange={setPerVisit} /></Row>
-                ) : (
-                  <Row label="1 € = X točk"><Num value={perEuro} onChange={setPerEuro} /></Row>
-                )}
-                <Row label="Čas unovčenja (min)"><Num value={minutes} onChange={setMinutes} /></Row>
-              </div>
-              <button onClick={() => flash("Nastavitve shranjene (demo)")} className="mt-4 h-11 w-full rounded-full bg-[#2B1D17] text-[14px] font-semibold text-[#F5EFE6]">Shrani</button>
-            </div>
-
-            {/* Nagrade */}
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5">
-              <div className="mb-3 flex items-center gap-1.5 text-[14px] font-bold">Nagrade <HelpDot text="Kaj gost dobi. Pri žigih: kaj prinese poln kartonček. Pri točkah: meni nagrad s ceno v točkah." /></div>
-              <div className="space-y-2">
-                {rewards.map((r) => (
-                  <div key={r.id} className="flex items-center gap-2">
-                    <input value={r.name} onChange={(e) => setRewards((p) => p.map((x) => (x.id === r.id ? { ...x, name: e.target.value } : x)))} className="flex-1 rounded-lg border border-[#D9CDBA] px-3 py-1.5 text-[13.5px]" />
-                    <input type="number" value={r.pts} onChange={(e) => setRewards((p) => p.map((x) => (x.id === r.id ? { ...x, pts: +e.target.value } : x)))} className="w-20 rounded-lg border border-[#D9CDBA] px-2 py-1.5 text-[13.5px]" />
-                    <button onClick={() => setRewards((p) => p.filter((x) => x.id !== r.id))} className="text-[#C8512B]"><Icon name="trash" color="#C8512B" size={18} /></button>
-                  </div>
-                ))}
-              </div>
-              <button onClick={() => setRewards((p) => [...p, { id: "n" + p.length, name: "Nova nagrada", pts: 100 }])} className="mt-3 flex items-center gap-1.5 text-[13.5px] font-semibold text-[#5E7F52]"><Icon name="plus" color="#5E7F52" size={16} /> Dodaj nagrado</button>
-            </div>
-
-            {/* Toggli + vrstice */}
-            <div className="rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] px-5">
-              <div className="flex items-center justify-between border-b border-[#F1E7D2] py-4">
-                <div>
-                  <div className="text-[14.5px] font-semibold">Ročno dodajanje točk</div>
-                  <div className="text-[12.5px] text-[#A6967F]">Osebje lahko točke vpiše brez QR</div>
-                </div>
-                <button onClick={() => setManual(!manual)} className="relative h-[30px] w-[50px] rounded-full transition" style={{ background: manual ? "#5E7F52" : "#D9CDBA" }}>
-                  <span className="absolute top-[3px] h-6 w-6 rounded-full bg-white shadow transition-all" style={{ left: manual ? 23 : 3 }} />
-                </button>
-              </div>
-              <SettingRow label="Profil" />
-              <SettingRow label="Plačila" sub="Paket: Pro · 39€/mes" />
-            </div>
-            </>)}
-          </div>
-        )}
-      </main>
-
-      {/* Spodnja navigacija */}
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-[#E6DCC9] bg-[#FFFCF6]">
-        <div className="mx-auto flex max-w-md px-2 pb-7 pt-2.5">
-          {TABS.map((t) => {
-            const on = t.key === tab;
-            return (
-              <button key={t.key} onClick={() => setTab(t.key)} className="flex flex-1 flex-col items-center gap-1">
-                <Icon name={t.icon} color={on ? "#2B1D17" : "#A6967F"} size={22} />
-                <span className="text-[10.5px]" style={{ color: on ? "#2B1D17" : "#A6967F", fontWeight: on ? 700 : 500 }}>{t.key}</span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-
-      {profileCust && (
-        <div className="fixed inset-0 z-40 flex flex-col justify-end bg-black/40" onClick={() => setProfileCust(null)}>
-          <div className="mx-auto max-h-[88vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-[#F5EFE6] px-5 pb-8 pt-5" onClick={(e) => e.stopPropagation()}>
-            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[#D9CDBA]" />
-            <div className="flex items-center gap-3">
-              <div className="font-display flex h-12 w-12 items-center justify-center rounded-full bg-[#2B1D17] text-[20px] font-bold text-[#F5EFE6]">{/^[A-Za-zČŠŽ]/.test(profileCust) ? profileCust.charAt(0).toUpperCase() : "G"}</div>
-              <div className="min-w-0 flex-1">
-                <div className="font-display truncate text-[18px] font-extrabold">{profileCust}</div>
-                <div className="text-[12.5px] text-[#8A7A66]">Član od {DEMO_PROFILE.joined}</div>
-              </div>
-              <button onClick={() => setProfileCust(null)} aria-label="Zapri" className="flex h-9 w-9 items-center justify-center rounded-full bg-[rgba(43,29,23,0.06)]"><Icon name="x" color="#2B1D17" size={18} strokeWidth={2} /></button>
-            </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-2.5">
-              <Mini l="Obiski" v={String(DEMO_PROFILE.visits)} />
-              <Mini l="Točke" v={String(DEMO_PROFILE.points)} />
-              <Mini l="Poraba" v={DEMO_PROFILE.spent} />
-              <Mini l="Povp. razmik" v={DEMO_PROFILE.avgGap} />
-              <Mini l="Najraje" v={DEMO_PROFILE.best} />
-              <Mini l="Zadnji" v="danes" />
-            </div>
-
-            <div className="mt-4 text-[13px] font-bold">Skeniranja</div>
-            <div className="mt-1.5 rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] px-4">
-              {DEMO_PROFILE.scans.map((s, i) => (
-                <div key={i} className="flex items-center justify-between border-t border-[#F1E7D2] py-2.5 text-[13.5px] first:border-0">
-                  <span className="text-[#5C4C3E]">{s.t}</span><span className="font-bold text-[#5E7F52]">{s.d}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 text-[13px] font-bold">Unovčene nagrade</div>
-            <div className="mt-1.5 rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] px-4">
-              {DEMO_PROFILE.redemptions.map((r, i) => (
-                <div key={i} className="flex items-center justify-between border-t border-[#F1E7D2] py-2.5 text-[13.5px] first:border-0">
-                  <span className="font-semibold">{r.d}</span><span className="text-[#8A7A66]">{r.t}</span>
-                </div>
-              ))}
-            </div>
-
-            <button onClick={() => { setProfileCust(null); flash("Osebno sporočilo poslano (demo)"); }} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#2B1D17] text-[15px] font-semibold text-[#F5EFE6]">
-              <Icon name="send" color="#F5EFE6" size={18} /> Pošlji osebno sporočilo
-            </button>
+            )}
           </div>
         </div>
-      )}
-
-      {toast && (
-        <div className="fixed inset-x-0 bottom-24 z-30 mx-auto w-[88%] max-w-sm rounded-xl bg-[#2B1D17] px-4 py-3 text-center text-[14px] font-medium text-[#F5EFE6] shadow-lg">{toast}</div>
-      )}
-    </div>
-  );
-}
-
-function Mini({ l, v }: { l: string; v: string }) {
-  return (
-    <div className="rounded-xl border border-[#EFE6D4] bg-[#FFFCF6] p-2.5 text-center">
-      <div className="font-display text-[16px] font-extrabold">{v}</div>
-      <div className="text-[11px] text-[#8A7A66]">{l}</div>
-    </div>
-  );
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-[14px] text-[#5C4C3E]">{label}</span>
-      {children}
-    </div>
-  );
-}
-function Num({ value, onChange }: { value: number; onChange: (n: number) => void }) {
-  return <input type="number" value={value} onChange={(e) => onChange(+e.target.value)} className="w-24 rounded-lg border border-[#D9CDBA] px-3 py-1.5 text-right text-[14px]" />;
-}
-function SettingRow({ label, sub }: { label: string; sub?: string }) {
-  return (
-    <div className="flex items-center justify-between py-4 last:border-0" style={{ borderTop: "1px solid #F1E7D2" }}>
-      <div>
-        <div className="text-[14.5px] font-semibold">{label}</div>
-        {sub && <div className="text-[12.5px] text-[#A6967F]">{sub}</div>}
       </div>
-      <Icon name="chevronR" color="#A6967F" size={16} strokeWidth={2} />
-    </div>
+      <div className="text-center" style={{ fontSize: 12, color: "#A89B88", paddingBottom: 8 }}>{BRAND} · demo nadzorne plošče</div>
+    </main>
   );
 }

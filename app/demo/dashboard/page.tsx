@@ -4,5 +4,5 @@ import DashboardDemo from "@/app/dashboard/DashboardDemo";
 export const dynamic = "force-static";
 
 export default function DemoDashboardPage() {
-  return <DashboardDemo initialTab="Analitika" />;
+  return <DashboardDemo />;
 }

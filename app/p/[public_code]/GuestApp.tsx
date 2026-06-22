@@ -79,7 +79,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const [awarded, setAwarded] = useState(0);
   const [errText, setErrText] = useState<{ t: string; h: string }>({ t: "", h: "" });
   const [busy, setBusy] = useState(false);
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [stars, setStars] = useState(0);
   const [fb, setFb] = useState("");
   const [reviewDone, setReviewDone] = useState(false);
@@ -198,7 +198,8 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
 
   async function register(e: React.FormEvent) {
     e.preventDefault();
-    if (!phone.trim()) return;
+    const mail = email.trim();
+    if (!mail || !/.+@.+\..+/.test(mail)) return;
     if (demo) {
       localStorage.setItem(storageKey, "demo");
       setCustomerId("demo");
@@ -211,7 +212,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
       const r = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ venueCode: venue.public_code, phone: "+386 " + phone }),
+        body: JSON.stringify({ venueCode: venue.public_code, email: mail }),
       });
       const j = await r.json();
       if (j.ok) {
@@ -411,30 +412,46 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   // REGISTRACIJA
   if (!customerId) {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pb-10 pt-16">
-        <div className="mb-6 flex items-center gap-3">
-          <Logo bg={logoBg} name={venue.name} />
-          <div className="font-display text-lg font-bold">{venue.name}</div>
-        </div>
-        {pendingPrize && (
-          <div className="mb-5 flex items-center gap-3 rounded-2xl bg-[#5E7F52] px-4 py-3.5 text-[#F5EFE6]">
-            <span className="text-2xl">🎉</span>
-            <div>
-              <div className="font-display text-[15.5px] font-bold">Osvojil si: {pendingPrize}</div>
-              <div className="text-[12.5px] opacity-85">Registriraj se, da nagrado prevzameš.</div>
+      <main className="relative flex min-h-dvh w-full items-center justify-center overflow-hidden px-5 py-10" style={{ background: "#EAE2D3" }}>
+        {/* topli žarki v ozadju */}
+        <div aria-hidden className="pointer-events-none absolute" style={{ top: -130, left: -110, width: 360, height: 360, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,162,61,0.22), transparent 70%)" }} />
+        <div aria-hidden className="pointer-events-none absolute" style={{ bottom: -150, right: -120, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(200,81,43,0.15), transparent 70%)" }} />
+
+        <div className="relative z-[2] w-full max-w-[460px] rounded-[32px] border border-[#EFE6D4] bg-[#FFFCF6] px-6 py-8 sm:px-8" style={{ boxShadow: "0 2px 10px rgba(43,29,23,0.05), 0 30px 70px rgba(43,29,23,0.16)" }}>
+          <div className="mb-5 flex items-center gap-3">
+            <Logo bg={logoBg} name={venue.name} />
+            <div className="font-display text-lg font-bold">{venue.name}</div>
+          </div>
+          {pendingPrize && (
+            <div className="mb-5 flex items-center gap-3 rounded-2xl bg-[#5E7F52] px-4 py-3.5 text-[#F5EFE6]">
+              <span className="text-2xl">🎉</span>
+              <div>
+                <div className="font-display text-[15.5px] font-bold">Osvojil si: {pendingPrize}</div>
+                <div className="text-[12.5px] opacity-85">Registriraj se, da nagrado prevzameš.</div>
+              </div>
             </div>
+          )}
+          <h1 className="font-display text-[28px] font-extrabold leading-tight sm:text-[31px]">Shrani svoje žige</h1>
+          <p className="mb-6 mt-2 text-[15px] leading-relaxed text-[#5C4C3E]">Pusti email, da žigi in nagrade ostanejo tvoji. Brez gesla, brez aplikacije.</p>
+          <form onSubmit={register} className="flex flex-col gap-3">
+            <label className="text-[13px] font-semibold text-[#5C4C3E]">Email</label>
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="ime@email.com"
+              className="h-14 w-full rounded-2xl border-[1.5px] border-[#D9CDBA] bg-[#FFFCF6] px-4 text-[16px] font-semibold text-[#2B1D17] outline-none transition focus:border-[#2B1D17] focus:ring-2 focus:ring-[rgba(43,29,23,0.08)] placeholder:font-normal placeholder:text-[#A6967F]"
+            />
+            <button disabled={busy} className="mt-1 h-14 rounded-full bg-[#2B1D17] text-[16.5px] font-semibold text-[#F5EFE6] disabled:opacity-50">{busy ? "…" : "Pridruži se"}</button>
+          </form>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
+            {["Brez gesla", "Brez aplikacije", "Zastonj"].map((t) => (
+              <span key={t} className="flex items-center gap-1.5 text-[12.5px] font-semibold text-[#8A7A66]"><Icon name="check" color="#5E7F52" size={14} strokeWidth={2.4} />{t}</span>
+            ))}
           </div>
-        )}
-        <h1 className="font-display text-[32px] font-extrabold leading-tight">Shrani svoje žige</h1>
-        <p className="mb-7 mt-2 text-[15.5px] leading-relaxed text-[#5C4C3E]">Vpiši telefonsko številko, da točke ostanejo tvoje. Brez gesla, brez aplikacije.</p>
-        <form onSubmit={register} className="flex flex-col gap-3">
-          <label className="text-[13px] font-semibold text-[#5C4C3E]">Telefonska številka</label>
-          <div className="flex h-14 items-center overflow-hidden rounded-2xl border-[1.5px] border-[#D9CDBA] bg-[#FFFCF6]">
-            <div className="flex h-full items-center bg-[#F1E7D2] px-4 text-[15px] font-semibold text-[#5C4C3E]">+386</div>
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="31 204 412" className="h-full min-w-0 flex-1 bg-transparent px-4 text-[17px] font-semibold text-[#2B1D17] outline-none" />
-          </div>
-          <button disabled={busy} className="mt-1 h-14 rounded-full bg-[#2B1D17] text-[16.5px] font-semibold text-[#F5EFE6] disabled:opacity-50">{busy ? "…" : "Pridruži se"}</button>
-        </form>
+        </div>
       </main>
     );
   }

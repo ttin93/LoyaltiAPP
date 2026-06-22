@@ -49,6 +49,16 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 30 (gost registracija: telefon → EMAIL + prenovljen zaslon)
+- **Registracija gosta (`/p/[code]`) preklopljena s telefona na EMAIL** (uporabnik: SMS predrag za start).
+  Opomba: telefon pri nama itak NI pošiljal SMS-a (zastonj), a email je za pošiljanje kampanj zastonj → boljši za start.
+  `register()` zdaj pošlje `{ email }` na `/api/register` (ta že podpira email + dedup). Validacija `/.+@.+\..+/`.
+  Potrjeno end-to-end v predogledu: vnos emaila → Pridruži se → kartonček.
+- **Zaslon prenovljen** v isto temo kot wheel-intro: topla kartica + žarki v ozadju + trust vrstica
+  (Brez gesla · Brez aplikacije · Zastonj) + responsive (na mobilcu se kartica prilega).
+- **Google login** = TODO (rabi enkratno Google Cloud OAuth nastavitev na uporabnikovi strani; dodava kasneje).
+- Stanje `phone`/`setPhone` v GuestApp odstranjeno (zamenjano z `email`).
+
 ### 2026-06-20 — seja 29 (BUGFIX onboarding loop + wheel-intro hero + onboarding polja)
 - **BUG (kritičen): »Ustvari lokal« te je vrglo nazaj na Onboarding.** Vzrok: `maybeSingle()`
   na `venues` po `owner_user_id` **vrže napako, če lastnik ima >1 lokal**. Med testiranjem je

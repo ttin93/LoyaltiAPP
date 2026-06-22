@@ -49,6 +49,17 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 38b (avtonomni Tally sprint — DOKONČANO: pravi dashboard + widget + ActivateSheet)
+- **ActivateSheet** (unovčenje bottom-sheet) → Tally. Guest del 100% Tally.
+- **Pravi `Dashboard.tsx`** (prijavljen lokal) → Tally sidebar (Pregled/Zgodovina/Stranke/Sistem/Nastavitve) s PRAVIMI
+  podatki + vse akcije ohranjene (nastavitve, urejevalnik nagrad, ročne točke, aktivacija skena, QR).
+- **`public/widget.js`** → Tally launcher (»Osvoji nagrado« + zlat krog z ikono kolesa, floaty) + lepši popup okvir;
+  iframe še naprej kaže `/embed` (SpinFlow Tally).
+- **STANJE: cel app je Tally** — landing v2, kolo+registracija, skener, gostov dom+rezultati+sheet, prijava+onboarding wizard,
+  demo+pravi dashboard, widget. Ime = Tally.
+- Ostane (napredne fore, ne nujne za test): detajlni urejevalniki gostovih besedil/kolesa (»Nastavitve - urejevalniki«),
+  pravi logo upload, pošiljanje SMS/email kampanj (backend), Google OAuth nastavitev.
+
 ### 2026-06-20 — seja 38 (avtonomni Tally sprint: gost + onboarding + dashboard + skener anti-fraud)
 - Uporabnik: delaj avtonomno brez vprašanj, prenovi VSE v Tally (za večerni test + outreach lokalov).
 - **Gostov dom** prenovljen v Tally (desktop split + telefon full-bleed) + rezultati skena (uspeh/Google-ocena/napaka/časovnik/unovčeno) + StampGrid coral.

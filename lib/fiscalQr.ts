@@ -46,13 +46,29 @@ export function parseFiscalQR(payload: string): ParsedFiscalQR {
   const davcna = clean.slice(-21, -13);
   const zoiDec = clean.slice(0, -21);
 
-  const issuedAt = new Date(
-    `20${dt.slice(0, 2)}-${dt.slice(2, 4)}-${dt.slice(4, 6)}T` +
-      `${dt.slice(6, 8)}:${dt.slice(8, 10)}:${dt.slice(10, 12)}`,
-  );
-  if (isNaN(issuedAt.getTime())) {
+  const Y = 2000 + Number(dt.slice(0, 2));
+  const MO = Number(dt.slice(2, 4));
+  const DD = Number(dt.slice(4, 6));
+  const HH = Number(dt.slice(6, 8));
+  const MI = Number(dt.slice(8, 10));
+  const SS = Number(dt.slice(10, 12));
+  if (MO < 1 || MO > 12 || DD < 1 || DD > 31 || HH > 23 || MI > 59 || SS > 59) {
     throw new FiscalQRError("Neveljaven datum v fiskalnem QR — verjetno ni račun.");
   }
+  // Datum je v SLOVENSKEM lokalnem času (CET/CEST). Brez TZ bi ga brali kot UTC, kar bi
+  // svež račun naredilo videti ~1–2h v prihodnosti → napačna zavrnitev. Interpretiraj kot Europe/Ljubljana.
+  const naiveUTC = Date.UTC(Y, MO - 1, DD, HH, MI, SS);
+  let offMin = 60; // privzeto CET (+1)
+  try {
+    const nm = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Ljubljana", timeZoneName: "longOffset" })
+      .formatToParts(new Date(naiveUTC))
+      .find((p) => p.type === "timeZoneName")?.value;
+    const m = nm?.match(/([+-])(\d{2}):?(\d{2})?/);
+    if (m) offMin = (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3] || 0));
+  } catch {
+    /* fallback CET */
+  }
+  const issuedAt = new Date(naiveUTC - offMin * 60000);
 
   // kontrolni znak = vsota vseh števk razen zadnje, po modulu 10 (informativno)
   const sum = clean

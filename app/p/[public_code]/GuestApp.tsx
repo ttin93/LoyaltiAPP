@@ -10,6 +10,26 @@ import SpinFlow from "@/app/components/SpinFlow";
 const ROTS = [-5, 3, -2, 6, -4, 2, -6, 4, -3, 5];
 const REWARD_ICONS = ["cup", "croissant", "cake"];
 
+// Tally tema
+const INK = "#2A241D";
+const CREAM = "#FBF7F0";
+const PAPER = "#FBF3E6";
+const CORAL = "#C4623D";
+const AMBER = "#E2A04A";
+const GREEN = "#5E7F52";
+const MUTED = "#6E6253";
+const BG = "#E9E2D6";
+const JAK = "var(--font-jakarta), sans-serif";
+
+function Cup({ stroke, size }: { stroke: string; size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", fill: "none", stroke, strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" }}>
+      <path d="M5 9h10v5.5A4.5 4.5 0 0 1 10.5 19h-1A4.5 4.5 0 0 1 5 14.5V9Z" />
+      <path d="M15 10.5h1.6a2.4 2.4 0 0 1 0 4.8H15" />
+    </svg>
+  );
+}
+
 function shortLabel(name: string): string {
   const w = name.split(/\s+/).filter((x) => !/^brezpla/i.test(x));
   return (w[0] || name).toUpperCase().slice(0, 6);
@@ -20,10 +40,10 @@ function mmss(ms: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-function StampGrid({ stamps, count = 10, animateNew, goalLabel }: { stamps: number; count?: number; animateNew?: boolean; goalLabel: string }) {
+function StampGrid({ stamps, count = 10, animateNew }: { stamps: number; count?: number; animateNew?: boolean; goalLabel?: string }) {
   const cols = count <= 10 ? 5 : 6;
   return (
-    <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${cols},1fr)` }}>
+    <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${cols},1fr)` }}>
       {Array.from({ length: count }).map((_, i) => {
         const filled = i < stamps;
         const isNew = animateNew && filled && i === stamps - 1;
@@ -31,22 +51,18 @@ function StampGrid({ stamps, count = 10, animateNew, goalLabel }: { stamps: numb
         return (
           <div
             key={i}
-            className="relative flex aspect-square items-center justify-center rounded-full"
-            style={{ boxSizing: "border-box", border: filled ? "2px solid transparent" : `2px dashed ${isReward ? "#E8A23D" : "#D9CDBA"}` }}
+            className="flex items-center justify-center"
+            style={{
+              aspectRatio: "1",
+              borderRadius: "50%",
+              boxSizing: "border-box",
+              border: filled ? `2px solid ${CORAL}` : isReward ? "none" : "2px solid #EFE4D2",
+              background: filled ? "rgba(196,98,61,0.09)" : isReward ? "#FCEFD8" : CREAM,
+              transform: filled ? `rotate(${ROTS[i % ROTS.length]}deg)` : undefined,
+              animation: isNew ? "stampIn 0.55s cubic-bezier(0.2,1.4,0.5,1) both 0.3s" : undefined,
+            }}
           >
-            {filled ? (
-              <div style={{ position: "absolute", inset: 0, animation: isNew ? "stampIn 0.55s cubic-bezier(0.2,1.4,0.5,1) both 0.3s" : "none" }}>
-                <div
-                  style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "2.5px solid #C8512B", background: "rgba(200,81,43,0.07)", display: "flex", alignItems: "center", justifyContent: "center", transform: `rotate(${ROTS[i % ROTS.length]}deg)` }}
-                >
-                  <Icon name="cup" color="#C8512B" size={24} />
-                </div>
-              </div>
-            ) : isReward ? (
-              <span className="font-display" style={{ fontWeight: 700, fontSize: 10, letterSpacing: "0.05em", color: "#B97F1F" }}>{goalLabel}</span>
-            ) : (
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#C9BCA5" }}>{i + 1}</span>
-            )}
+            {filled ? <Cup stroke={CORAL} size={count <= 10 ? 15 : 13} /> : isReward ? <Cup stroke={AMBER} size={count <= 10 ? 15 : 13} /> : null}
           </div>
         );
       })}
@@ -309,7 +325,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   }
 
   // ---------- render ----------
-  if (!loaded) return <div className="flex min-h-dvh items-center justify-center text-[#8A7A66]">…</div>;
+  if (!loaded) return <div className="flex min-h-dvh items-center justify-center" style={{ background: BG, color: "#9A8F80", fontFamily: JAK }}>…</div>;
 
   // NOV GOST — kolo + registracija (nov dizajn) prek SpinFlow
   if (!customerId) {
@@ -328,13 +344,13 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   // UNOVČENO (po potrditvi osebja)
   if (redeemedName) {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-[18px] px-6 py-12 text-center">
-        <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full border-[2.5px] border-[#5E7F52]" style={{ background: "rgba(94,127,82,0.14)", animation: "popIn 0.5s cubic-bezier(0.2,1.4,0.5,1) both" }}>
-          <Icon name="check" color="#5E7F52" size={36} strokeWidth={1.9} />
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center text-center" style={{ background: BG, fontFamily: JAK, color: INK, padding: "48px 24px", gap: 18 }}>
+        <div className="flex items-center justify-center" style={{ width: 84, height: 84, borderRadius: "50%", border: `2.5px solid ${GREEN}`, background: "rgba(94,127,82,0.14)", animation: "popIn 0.5s cubic-bezier(0.2,1.4,0.5,1) both" }}>
+          <Icon name="check" color={GREEN} size={36} strokeWidth={1.9} />
         </div>
-        <div className="font-display text-[28px] font-extrabold">{redeemedName} unovčeno</div>
-        <div className="max-w-[260px] text-[15.5px] leading-relaxed text-[#5C4C3E]">Dober tek! Kartonček se začne polniti znova.</div>
-        <button onClick={() => setRedeemedName(null)} className="mt-2 h-14 w-full rounded-full bg-[#2B1D17] text-[16px] font-semibold text-[#F5EFE6]">Nazaj na kartonček</button>
+        <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.01em" }}>{redeemedName} unovčeno</div>
+        <div style={{ maxWidth: 260, fontSize: 15.5, lineHeight: 1.5, color: MUTED }}>Dober tek! Kartica se začne polniti znova.</div>
+        <button onClick={() => setRedeemedName(null)} style={{ marginTop: 8, height: 54, width: "100%", borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Nazaj na kartico</button>
       </main>
     );
   }
@@ -356,23 +372,19 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
       );
     }
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pb-10 pt-14">
-        <div className="text-center text-[12px] font-bold uppercase tracking-[0.1em] text-[#8A7A66]">Pokaži natakarju</div>
-        <div className="mt-1 text-center font-display text-[52px] font-extrabold tabular-nums" style={{ color: remaining < 60000 ? "#C8512B" : "#2B1D17" }}>{mmss(remaining)}</div>
-        <div className="mt-1 text-center text-[14px] text-[#8A7A66]">Velja še, tudi če zapreš aplikacijo.</div>
-
-        <div className="mt-7 flex flex-1 flex-col items-center justify-center">
-          <div className="flex w-full flex-col items-center gap-4 rounded-3xl border border-[#EFE6D4] bg-[#FFFCF6] px-8 py-7 shadow-[0_2px_10px_rgba(43,29,23,0.05),0_14px_34px_rgba(43,29,23,0.08)]">
-            <div className="font-display text-[22px] font-extrabold">{activation.rewardName}</div>
-            <div className="rounded-2xl border border-[#EFE6D4] bg-white p-3.5">
-              <FakeQr px={132} seed={(activation.expiresAt % 900) + 7} />
-            </div>
-            <div className="font-display text-[19px] font-bold tracking-[0.22em]">{code}</div>
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col" style={{ background: BG, fontFamily: JAK, color: INK, padding: "56px 24px 40px" }}>
+        <div className="text-center" style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9A8F80" }}>Pokaži natakarju</div>
+        <div className="text-center tabular-nums" style={{ marginTop: 4, fontSize: 52, fontWeight: 800, color: remaining < 60000 ? CORAL : INK }}>{mmss(remaining)}</div>
+        <div className="text-center" style={{ marginTop: 4, fontSize: 14, color: "#9A8F80" }}>Velja še, tudi če zapreš aplikacijo.</div>
+        <div className="flex flex-1 flex-col items-center justify-center" style={{ marginTop: 28 }}>
+          <div className="flex w-full flex-col items-center" style={{ gap: 16, borderRadius: 24, border: "1px solid #EFE6D6", background: "#fff", padding: "28px 32px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)" }}>
+            <div style={{ fontSize: 22, fontWeight: 800 }}>{activation.rewardName}</div>
+            <div style={{ borderRadius: 16, border: "1px solid #EFE6D6", background: "#fff", padding: 14 }}><FakeQr px={132} seed={(activation.expiresAt % 900) + 7} /></div>
+            <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "0.22em" }}>{code}</div>
           </div>
         </div>
-
-        <button onClick={confirmActivation} disabled={busy} className="mt-6 h-14 w-full rounded-full bg-[#5E7F52] text-[16.5px] font-bold text-[#F5EFE6] shadow-[0_10px_24px_rgba(94,127,82,0.3)] disabled:opacity-50">Osebje potrdi</button>
-        <button onClick={dismissActivation} className="mt-2 h-11 w-full rounded-full text-[14px] font-semibold text-[#8A7A66]">Skrij (časovnik še teče)</button>
+        <button onClick={confirmActivation} disabled={busy} style={{ marginTop: 24, height: 56, width: "100%", borderRadius: 16, background: GREEN, color: "#F4F0E4", fontSize: 16.5, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK, boxShadow: "0 10px 24px rgba(94,127,82,0.3)", opacity: busy ? 0.5 : 1 }}>Osebje potrdi</button>
+        <button onClick={dismissActivation} style={{ marginTop: 8, height: 44, width: "100%", borderRadius: 16, background: "none", border: "none", fontSize: 14, fontWeight: 600, color: "#9A8F80", cursor: "pointer", fontFamily: JAK }}>Skrij (časovnik še teče)</button>
       </main>
     );
   }
@@ -380,67 +392,62 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   // SUCCESS (po skeniranju)
   if (view === "success") {
     const displayStamps = cardCompleted ? stampGoal : stamps;
+    const successMsg = cardCompleted
+      ? `Kupon za ${completedReward.toLowerCase()} je v tvoji denarnici 🎟️`
+      : isStampMode
+        ? `Še ${visitsLeft} ${visitWord} do brezplačne ${(sorted[0]?.name || "kave").toLowerCase()}.`
+        : rewardReady ? "Lahko unovčiš nagrado pri osebju." : `Še ${left} točk do nagrade.`;
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-6 px-6 py-12">
-        <div className="font-display text-[42px] font-extrabold text-[#5E7F52]" style={{ animation: "popIn 0.5s cubic-bezier(0.2,1.4,0.5,1) both" }}>
-          {cardCompleted ? "🎉" : isStampMode ? "+1 žig" : `+${awarded} točk`}
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center" style={{ background: BG, fontFamily: JAK, color: INK, padding: "48px 24px", gap: 22 }}>
+        <div className="flex items-center justify-center" style={{ minWidth: 92, height: 92, borderRadius: 26, padding: "0 18px", background: cardCompleted ? `linear-gradient(150deg,#EBB05F,${AMBER})` : "rgba(94,127,82,0.14)", border: cardCompleted ? "none" : `2.5px solid ${GREEN}`, animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
+          <span style={{ fontWeight: 800, fontSize: cardCompleted ? 40 : 24, color: cardCompleted ? "#fff" : GREEN }}>{cardCompleted ? "🎉" : isStampMode ? "+1 žig" : `+${awarded}`}</span>
         </div>
         {isStampMode && (
-          <div className="w-full rounded-3xl border border-[#EFE6D4] bg-[#FFFCF6] p-5 shadow-[0_2px_10px_rgba(43,29,23,0.05),0_14px_34px_rgba(43,29,23,0.08)]">
-            <StampGrid stamps={displayStamps} count={stampGoal} animateNew goalLabel={goalLabel} />
+          <div style={{ width: "100%", background: "#fff", borderRadius: 24, padding: "22px 20px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)" }}>
+            <StampGrid stamps={displayStamps} count={stampGoal} animateNew />
           </div>
         )}
-        <div className="flex flex-col items-center gap-2 text-center">
-          <div className="font-display text-[28px] font-extrabold">
-            {cardCompleted ? "Kartonček je poln!" : isStampMode ? `Žig št. ${displayStamps} je tvoj` : `+${awarded} točk`}
-          </div>
-          <div className="max-w-[280px] text-[15.5px] leading-relaxed text-[#5C4C3E]">
-            {cardCompleted
-              ? `Kupon za ${completedReward.toLowerCase()} je v tvoji denarnici 🎟️`
-              : isStampMode
-                ? `Še ${visitsLeft} ${visitWord} do brezplačne ${(sorted[0]?.name || "kave").toLowerCase()}.`
-                : rewardReady
-                  ? "Lahko unovčiš nagrado pri osebju."
-                  : `Še ${left} točk do nagrade.`}
-          </div>
+        <div className="flex flex-col items-center text-center" style={{ gap: 8 }}>
+          <div style={{ fontWeight: 800, fontSize: 26, letterSpacing: "-0.01em" }}>{cardCompleted ? "Kartonček je poln!" : isStampMode ? `Žig št. ${displayStamps} je tvoj` : `+${awarded} točk`}</div>
+          <div style={{ maxWidth: 280, fontSize: 15, lineHeight: 1.5, color: MUTED }}>{successMsg}</div>
         </div>
 
-        {/* Google-ocene autopilot — 5-zvezdični gate: 4–5★ → Google, 1–3★ → zasebno */}
-        <div className="w-full rounded-2xl border border-[#EFE6D4] bg-[#FFFCF6] p-5 text-center">
+        {/* Google-ocene autopilot — 4–5★ → Google, 1–3★ → zasebno */}
+        <div style={{ width: "100%", borderRadius: 20, border: "1px solid #EFE6D6", background: "#fff", padding: 20, textAlign: "center" }}>
           {!reviewDone ? (
             <>
-              <div className="text-[15px] font-semibold">Kako ti je bilo danes?</div>
-              <div className="mt-3 flex justify-center gap-1.5">
+              <div style={{ fontSize: 15, fontWeight: 700 }}>Kako ti je bilo danes?</div>
+              <div className="flex justify-center" style={{ marginTop: 12, gap: 6 }}>
                 {[1, 2, 3, 4, 5].map((n) => (
-                  <button key={n} onClick={() => setStars(n)} aria-label={`${n} zvezdic`} className="text-[34px] leading-none transition-transform active:scale-90" style={{ color: n <= stars ? "#E8A23D" : "#E0D4BF" }}>★</button>
+                  <button key={n} onClick={() => setStars(n)} aria-label={`${n} zvezdic`} className="leading-none transition-transform active:scale-90" style={{ fontSize: 34, background: "none", border: "none", cursor: "pointer", color: n <= stars ? AMBER : "#E4D9C7" }}>★</button>
                 ))}
               </div>
               {stars >= 4 && (
-                <div className="mt-4 flex flex-col items-center gap-2.5">
-                  <div className="text-[14px] leading-snug text-[#5C4C3E]">Juhu! 🎉 Nam pomagaš z oceno na Googlu? Traja 10 sekund.</div>
-                  <a href={googleReviewUrl} target="_blank" rel="noreferrer" onClick={() => setReviewDone(true)} className="flex h-12 w-full items-center justify-center gap-2.5 rounded-full bg-white text-[15px] font-semibold text-[#2B1D17]" style={{ border: "1.5px solid #DDD2C0" }}>
+                <div className="flex flex-col items-center" style={{ marginTop: 16, gap: 10 }}>
+                  <div style={{ fontSize: 14, lineHeight: 1.4, color: MUTED }}>Juhu! 🎉 Nam pomagaš z oceno na Googlu? Traja 10 sekund.</div>
+                  <a href={googleReviewUrl} target="_blank" rel="noreferrer" onClick={() => setReviewDone(true)} className="flex items-center justify-center" style={{ height: 48, width: "100%", gap: 10, borderRadius: 14, background: "#fff", fontSize: 15, fontWeight: 700, color: INK, border: "1.5px solid #E4D9C7", textDecoration: "none" }}>
                     <GoogleG /> Oceni na Googlu
                   </a>
                 </div>
               )}
               {stars >= 1 && stars <= 3 && (
-                <div className="mt-4 flex flex-col gap-2.5">
-                  <div className="text-[14px] leading-snug text-[#5C4C3E]">Žal nam je. Kaj naj popravimo? <span className="text-[#A6967F]">(vidi samo lokal)</span></div>
-                  <textarea value={fb} onChange={(e) => setFb(e.target.value)} rows={3} placeholder="Tvoje mnenje…" className="w-full rounded-xl border border-[#D9CDBA] bg-white p-3 text-left text-[14px] outline-none focus:border-[#2B1D17]" />
-                  <button onClick={() => setReviewDone(true)} className="h-12 w-full rounded-full bg-[#2B1D17] text-[15px] font-semibold text-[#F5EFE6]">Pošlji lokalu</button>
+                <div className="flex flex-col" style={{ marginTop: 16, gap: 10 }}>
+                  <div style={{ fontSize: 14, lineHeight: 1.4, color: MUTED }}>Žal nam je. Kaj naj popravimo? <span style={{ color: "#A89B88" }}>(vidi samo lokal)</span></div>
+                  <textarea value={fb} onChange={(e) => setFb(e.target.value)} rows={3} placeholder="Tvoje mnenje…" style={{ width: "100%", borderRadius: 12, border: "1.5px solid #E4D9C7", background: CREAM, padding: 12, textAlign: "left", fontSize: 14, fontFamily: JAK, outline: "none", boxSizing: "border-box" }} />
+                  <button onClick={() => setReviewDone(true)} style={{ height: 48, width: "100%", borderRadius: 14, background: INK, color: PAPER, fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Pošlji lokalu</button>
                 </div>
               )}
             </>
           ) : (
-            <div className="flex flex-col items-center gap-1.5">
-              <div className="text-[28px]">🙏</div>
-              <div className="text-[15px] font-semibold">{stars >= 4 ? "Najlepša hvala!" : "Hvala za iskrenost!"}</div>
-              <div className="text-[13px] text-[#8A7A66]">{stars >= 4 ? "Tvoja ocena ogromno pomeni." : "Sporočili bomo lokalu, da izboljša."}</div>
+            <div className="flex flex-col items-center" style={{ gap: 6 }}>
+              <div style={{ fontSize: 28 }}>🙏</div>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>{stars >= 4 ? "Najlepša hvala!" : "Hvala za iskrenost!"}</div>
+              <div style={{ fontSize: 13, color: "#9A8F80" }}>{stars >= 4 ? "Tvoja ocena ogromno pomeni." : "Sporočili bomo lokalu, da izboljša."}</div>
             </div>
           )}
         </div>
 
-        <button onClick={() => { setView("home"); setStars(0); setFb(""); setReviewDone(false); setCardCompleted(false); }} className="h-14 w-full rounded-full bg-[#2B1D17] text-[16.5px] font-semibold text-[#F5EFE6]">Super, nazaj na kartonček</button>
+        <button onClick={() => { setView("home"); setStars(0); setFb(""); setReviewDone(false); setCardCompleted(false); }} style={{ height: 54, width: "100%", borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Super, nazaj na kartico</button>
       </main>
     );
   }
@@ -448,16 +455,16 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   // ERROR
   if (view === "error") {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-[18px] px-6 py-12 text-center">
-        <div className="flex h-[76px] w-[76px] items-center justify-center rounded-full border-[2.5px] border-[#C8512B]" style={{ background: "rgba(200,81,43,0.12)", transform: "rotate(-5deg)" }}>
-          <Icon name="x" color="#C8512B" size={30} strokeWidth={2.1} />
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center text-center" style={{ background: BG, fontFamily: JAK, color: INK, padding: "48px 24px", gap: 18 }}>
+        <div className="flex items-center justify-center" style={{ width: 76, height: 76, borderRadius: "50%", border: `2.5px solid ${CORAL}`, background: "rgba(196,98,61,0.12)", transform: "rotate(-5deg)" }}>
+          <Icon name="x" color={CORAL} size={30} strokeWidth={2.1} />
         </div>
-        <div className="font-display max-w-[300px] text-[24px] font-extrabold leading-tight">{errText.t}</div>
-        <div className="max-w-[280px] text-[15px] leading-relaxed text-[#5C4C3E]">{errText.h}</div>
-        <div className="text-[13.5px] text-[#8A7A66]">Tvoje točke ostajajo: <strong>{points}</strong></div>
-        <div className="mt-2 flex w-full flex-col gap-2.5">
-          <button onClick={() => { setView("home"); setScanning(true); }} className="h-14 rounded-full bg-[#2B1D17] text-[16px] font-semibold text-[#F5EFE6]">Skeniraj drug račun</button>
-          <button onClick={() => setView("home")} className="h-12 rounded-full text-[15px] font-semibold text-[#8A7A66]">Nazaj na kartonček</button>
+        <div style={{ maxWidth: 300, fontSize: 24, fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.01em" }}>{errText.t}</div>
+        <div style={{ maxWidth: 280, fontSize: 15, lineHeight: 1.5, color: MUTED }}>{errText.h}</div>
+        <div style={{ fontSize: 13.5, color: "#9A8F80" }}>Tvoje točke ostajajo: <strong>{points}</strong></div>
+        <div className="flex w-full flex-col" style={{ marginTop: 8, gap: 10 }}>
+          <button onClick={() => { setView("home"); setScanning(true); }} style={{ height: 54, borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Skeniraj drug račun</button>
+          <button onClick={() => setView("home")} style={{ height: 48, borderRadius: 16, background: "none", border: "none", fontSize: 15, fontWeight: 600, color: "#9A8F80", cursor: "pointer", fontFamily: JAK }}>Nazaj na kartico</button>
         </div>
       </main>
     );
@@ -472,112 +479,101 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
       ? "Imaš dovolj točk — unovči nagrado."
       : `Še ${left} točk do nagrade.`;
 
+  const city = (venue as { city?: string | null }).city || null;
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-14 pt-10 lg:max-w-[960px] lg:pt-14" style={{ background: "#EAE2D3" }}>
-      {/* header */}
-      <div className="mb-5 flex items-center gap-3">
-        <Logo bg={logoBg} name={venue.name} />
-        <div className="flex flex-col">
-          <div className="font-display text-[19px] font-bold leading-tight">{venue.name}</div>
-          <div className="text-[13px] text-[#8A7A66]">Zbiraj žige, prejmi nagrade</div>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start lg:gap-6">
-        {/* LEVO: napredek + skeniraj + kuponi */}
-        <div className="flex flex-col gap-4">
-          {/* napredek */}
-          <div className="rounded-3xl border border-[#EFE6D4] bg-[#FFFCF6] p-5 shadow-[0_2px_10px_rgba(43,29,23,0.05),0_14px_34px_rgba(43,29,23,0.08)]">
-            <div className="mb-1 text-[12px] font-bold uppercase tracking-[0.09em] text-[#8A7A66]">{isStampMode ? "Tvoj kartonček" : "Tvoje točke"}</div>
-            <div className="mb-[18px] flex items-baseline gap-2">
-              <span className="font-display text-[54px] font-extrabold leading-none">{isStampMode ? `${stamps}/${stampGoal}` : points}</span>
-              <span className="text-[16px] font-medium text-[#8A7A66]">{isStampMode ? "žigov" : "točk"}</span>
+    <main style={{ background: BG, fontFamily: JAK, color: INK, minHeight: "100dvh", overflowX: "hidden" }}>
+      <div className="mx-auto" style={{ maxWidth: 1040, padding: "clamp(20px,4vw,44px) clamp(16px,3vw,32px) 64px" }}>
+        {/* split: levo welcome+statistika, desno kartonček+skeniraj+kuponi */}
+        <div className="overflow-hidden lg:grid" style={{ gridTemplateColumns: "1fr 440px", borderRadius: 24, border: "1px solid #E4D9C7", boxShadow: "0 26px 60px rgba(34,28,22,0.16)", background: "#fff" }}>
+          {/* LEVO */}
+          <div className="relative flex flex-col justify-center" style={{ background: "linear-gradient(160deg,#FCEFD8 0%,#F6E3C5 100%)", padding: "clamp(28px,4vw,48px)", gap: 20, overflow: "hidden" }}>
+            <div aria-hidden style={{ position: "absolute", bottom: -50, right: -30, width: 200, height: 200, borderRadius: "50%", background: "rgba(226,160,74,0.22)" }} />
+            <div className="relative flex items-center" style={{ gap: 12 }}>
+              <div className="flex items-center justify-center" style={{ width: 52, height: 52, borderRadius: 17, background: INK, color: PAPER, fontWeight: 800, fontSize: 24 }}>{(venue.name.trim().charAt(0) || "M").toUpperCase()}</div>
+              <div><div style={{ fontWeight: 800, fontSize: 21 }}>{venue.name}</div>{city && <div style={{ fontSize: 13, color: "#9A7A3A" }}>{city}</div>}</div>
             </div>
-            {isStampMode && <StampGrid stamps={stamps} count={stampGoal} goalLabel={goalLabel} />}
-            <div className="mt-4 border-t border-dashed border-[#E2D7C2] pt-3.5 text-[14px] leading-snug text-[#5C4C3E]">{visitsNote}</div>
+            <h2 className="relative" style={{ margin: 0, fontWeight: 800, fontSize: "clamp(28px,3vw,36px)", lineHeight: 1.08, letterSpacing: "-0.02em" }}>{isStampMode ? <>Vsaka kava<br />te približa nagradi.</> : <>Zbiraj točke,<br />prejmi nagrade.</>}</h2>
+            <p className="relative" style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: MUTED, maxWidth: 340 }}>Skeniraj račun ob obisku in glej, kako se kartica polni. Preprosto, toplo, tvoje.</p>
+            <div className="relative flex" style={{ gap: 26, borderTop: "1px solid rgba(42,36,29,0.1)", paddingTop: 18 }}>
+              <div><div style={{ fontWeight: 800, fontSize: 24 }}>{points}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>točk</div></div>
+              {isStampMode && <div><div style={{ fontWeight: 800, fontSize: 24 }}>{stamps}/{stampGoal}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>žigov</div></div>}
+              <div><div style={{ fontWeight: 800, fontSize: 24, color: "#B4862F" }}>{coupons.length}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>kuponov</div></div>
+            </div>
           </div>
 
-          {/* nagrada-pripravljena (točke) */}
-          {!isStampMode && rewardReady && (
-            <div className="flex items-center gap-3.5 rounded-[20px] bg-[#5E7F52] px-[18px] py-4 text-[#F5EFE6]">
-              <div className="flex flex-1 flex-col gap-0.5">
-                <div className="font-display text-[17px] font-bold">{sorted[0].name} te čaka</div>
-                <div className="text-[13px] opacity-85">Aktiviraj in pokaži kodo osebju.</div>
+          {/* DESNO */}
+          <div className="flex flex-col justify-center" style={{ padding: "clamp(24px,3vw,36px)", gap: 16 }}>
+            {/* kartonček / točke */}
+            <div style={{ background: "#fff", borderRadius: 24, padding: "22px 22px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)", border: "1px solid #F1E8D9" }}>
+              <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#9A8F80" }}>{isStampMode ? "Tvoja kartica" : "Tvoje točke"}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: AMBER }}>{isStampMode ? `${stamps} / ${stampGoal}` : points}</span>
               </div>
-              <button onClick={() => openRedeem(sorted[0])} className="h-[42px] flex-shrink-0 rounded-full bg-[#F5EFE6] px-[18px] text-[14px] font-bold text-[#3E5536]">Unovči</button>
+              {isStampMode ? <StampGrid stamps={stamps} count={stampGoal} /> : <div style={{ fontWeight: 800, fontSize: 52, lineHeight: 1, letterSpacing: "-0.02em" }}>{points}<span style={{ fontSize: 16, fontWeight: 600, color: "#9A8F80", marginLeft: 8 }}>točk</span></div>}
+              <div style={{ marginTop: 16, background: CREAM, borderRadius: 16, padding: "13px 15px", fontSize: 13.5, lineHeight: 1.45, color: MUTED }}>{visitsNote}</div>
             </div>
-          )}
 
-          {/* skeniraj */}
-          <button onClick={() => setScanning(true)} disabled={busy} className="flex h-[58px] w-full items-center justify-center gap-2.5 rounded-full bg-[#2B1D17] text-[17px] font-semibold text-[#F5EFE6] shadow-[0_10px_24px_rgba(43,29,23,0.22)] disabled:opacity-50">
-            <Icon name="camera" color="#F5EFE6" size={21} strokeWidth={1.8} />
-            <span>Skeniraj račun</span>
-          </button>
+            {/* nagrada pripravljena (točke) */}
+            {!isStampMode && rewardReady && (
+              <div className="flex items-center" style={{ gap: 13, background: GREEN, borderRadius: 18, padding: "14px 16px", color: "#F4F0E4" }}>
+                <div className="flex-1"><div style={{ fontWeight: 800, fontSize: 15 }}>{sorted[0].name} te čaka</div><div style={{ fontSize: 12.5, opacity: 0.85 }}>Aktiviraj in pokaži kodo osebju.</div></div>
+                <button onClick={() => openRedeem(sorted[0])} style={{ height: 38, padding: "0 15px", borderRadius: 11, background: "#F4F0E4", color: "#3E5536", fontSize: 13, fontWeight: 700, fontFamily: JAK, border: "none", cursor: "pointer" }}>Unovči</button>
+              </div>
+            )}
 
-          {/* kuponi — vedno (z empty-state) */}
-          <div>
-            <div className="mb-3 flex items-center justify-between">
-              <div className="font-display text-[18px] font-bold">Tvoji kuponi 🎟️</div>
-              {coupons.length > 0 && <span className="rounded-full bg-[#F1E7D2] px-2.5 py-0.5 text-[12px] font-bold text-[#8A5B14]">{coupons.length}</span>}
-            </div>
+            {/* skeniraj */}
+            <button onClick={() => setScanning(true)} disabled={busy} className="flex items-center justify-center" style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: INK, color: PAPER, fontFamily: JAK, fontSize: 15.5, fontWeight: 700, gap: 10, cursor: "pointer", opacity: busy ? 0.5 : 1 }}>
+              <svg width="19" height="19" viewBox="0 0 24 24" style={{ fill: "none", stroke: PAPER, strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M4 8.6A2.6 2.6 0 0 1 6.6 6h1.5l1.5-2h4.8l1.5 2h1.5A2.6 2.6 0 0 1 20 8.6v7.8A2.6 2.6 0 0 1 17.4 19H6.6A2.6 2.6 0 0 1 4 16.4V8.6Z" /><circle cx="12" cy="12.7" r="3.4" /></svg>
+              Skeniraj račun
+            </button>
+
+            {/* kuponi */}
             {coupons.length > 0 ? (
-              <div className="flex flex-col gap-2.5">
-                {coupons.map((c) => (
-                  <div key={c.id} className="flex items-center gap-3.5 rounded-[18px] border-2 border-dashed border-[#E8A23D] p-3.5" style={{ background: "rgba(232,162,61,0.08)" }}>
-                    <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[14px] bg-[#F1E7D2]"><Icon name="ticket" color="#B97F1F" size={24} /></div>
-                    <div className="flex-1 text-[15px] font-semibold">{c.name}</div>
-                    <button onClick={() => activateCoupon(c)} className="flex-shrink-0 rounded-full bg-[#E8A23D] px-4 py-2 text-[13px] font-bold text-[#2B1D17]">Aktiviraj</button>
-                  </div>
-                ))}
-              </div>
+              coupons.map((c) => (
+                <div key={c.id} className="flex items-center" style={{ gap: 13, background: "linear-gradient(135deg,#FCEFD8,#F8E3C2)", borderRadius: 18, padding: 15 }}>
+                  <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#fff", flexShrink: 0 }}><Cup stroke={AMBER} size={22} /></div>
+                  <div className="min-w-0 flex-1"><div style={{ fontWeight: 800, fontSize: 14.5 }}>{c.name}</div><div style={{ fontSize: 12, fontWeight: 600, color: "#B4862F" }}>Velja še 12 dni</div></div>
+                  <button onClick={() => activateCoupon(c)} style={{ height: 38, padding: "0 15px", border: "none", borderRadius: 11, background: INK, color: PAPER, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Aktiviraj</button>
+                </div>
+              ))
             ) : (
-              <div className="flex items-center gap-3.5 rounded-[18px] border border-dashed border-[#E2D7C2] bg-[#FBF6EC] p-4">
-                <div className="flex h-[44px] w-[44px] flex-shrink-0 items-center justify-center rounded-[12px] bg-[#F1E7D2]"><Icon name="ticket" color="#B97F1F" size={22} /></div>
-                <div className="text-[13.5px] leading-snug text-[#8A7A66]">Nimaš še kuponov. Napolni kartonček ali zavrti kolo za nagrado.</div>
+              <div className="flex items-center" style={{ gap: 13, borderRadius: 18, border: "1px dashed #E0D2BC", background: CREAM, padding: 15 }}>
+                <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#FCEFD8", flexShrink: 0 }}><Cup stroke={AMBER} size={22} /></div>
+                <div style={{ fontSize: 13.5, lineHeight: 1.4, color: "#9A8F80" }}>Nimaš še kuponov. Napolni kartico za nagrado.</div>
               </div>
             )}
           </div>
         </div>
 
-        {/* DESNO: nagrade */}
-        <div>
-          <div className="mb-3 flex items-baseline justify-between">
-            <div className="font-display text-[20px] font-bold">{isStampMode ? "Nagrade v lokalu" : "Nagrade"}</div>
-            <div className="text-[13px] text-[#8A7A66]">{isStampMode ? "poln kartonček = nagrada" : `1 € = ${venue.points_per_euro} točk`}</div>
+        {/* MENI NAGRAD */}
+        <div style={{ marginTop: 28 }}>
+          <div className="flex items-baseline justify-between" style={{ marginBottom: 14 }}>
+            <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: "-0.01em" }}>{isStampMode ? "Nagrade v lokalu" : "Nagrade"}</div>
+            <div style={{ fontSize: 13, color: "#9A8F80" }}>{isStampMode ? "poln kartonček = nagrada" : `1 € = ${venue.points_per_euro} točk`}</div>
           </div>
-          <div className="flex flex-col gap-2.5">
+          <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))" }}>
             {sorted.map((r, idx) => {
               const primary = idx === 0;
               const ready = !isStampMode && points >= r.points_required;
               const pct = isStampMode ? (primary ? Math.round((stamps / stampGoal) * 100) : 0) : Math.min(100, Math.round((points / r.points_required) * 100));
               return (
-                <div key={r.id} className="flex items-center gap-3.5 rounded-[18px] border border-[#EFE6D4] bg-[#FFFCF6] p-3.5">
-                  <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[14px] bg-[#F1E7D2]">
-                    <Icon name={REWARD_ICONS[idx % REWARD_ICONS.length]} color="#2B1D17" size={24} />
-                  </div>
-                  <div className="flex min-w-0 flex-1 flex-col gap-[7px]">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="text-[15px] font-semibold">{r.name}</span>
+                <div key={r.id} className="flex items-center" style={{ gap: 14, borderRadius: 18, border: `1px solid ${"#EFE6D6"}`, background: "#fff", padding: 14 }}>
+                  <div className="flex items-center justify-center" style={{ width: 50, height: 50, borderRadius: 14, background: CREAM, flexShrink: 0 }}><Icon name={REWARD_ICONS[idx % REWARD_ICONS.length]} color={INK} size={24} /></div>
+                  <div className="flex min-w-0 flex-1 flex-col" style={{ gap: 7 }}>
+                    <div className="flex items-baseline justify-between" style={{ gap: 8 }}>
+                      <span style={{ fontSize: 15, fontWeight: 700 }}>{r.name}</span>
                       {isStampMode ? (
-                        primary ? (
-                          <span className="whitespace-nowrap rounded-full bg-[#F1E7D2] px-2 py-0.5 text-[11px] font-bold text-[#8A5B14]">kartonček</span>
-                        ) : (
-                          <span className="whitespace-nowrap text-[12px] text-[#A6967F]">v meniju</span>
-                        )
+                        primary ? <span style={{ whiteSpace: "nowrap", borderRadius: 999, background: "#FCEFD8", padding: "2px 9px", fontSize: 11, fontWeight: 800, color: "#B4781E" }}>kartonček</span> : <span style={{ whiteSpace: "nowrap", fontSize: 12, color: "#A89B88" }}>v meniju</span>
                       ) : ready ? (
-                        <button onClick={() => openRedeem(r)} className="whitespace-nowrap text-[12.5px] font-bold text-[#5E7F52]">unovči</button>
+                        <button onClick={() => openRedeem(r)} style={{ whiteSpace: "nowrap", fontSize: 12.5, fontWeight: 800, color: GREEN, background: "none", border: "none", cursor: "pointer", fontFamily: JAK }}>unovči</button>
                       ) : (
-                        <span className="whitespace-nowrap text-[12.5px] text-[#8A7A66]">{points} / {r.points_required} točk</span>
+                        <span style={{ whiteSpace: "nowrap", fontSize: 12.5, color: "#9A8F80" }}>{points} / {r.points_required} točk</span>
                       )}
                     </div>
                     {(!isStampMode || primary) && (
                       <>
-                        <div className="h-[7px] overflow-hidden rounded-full bg-[#EFE6D4]">
-                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: ready || (isStampMode && stamps >= stampGoal) ? "#5E7F52" : "#E8A23D" }} />
-                        </div>
-                        {isStampMode && primary && (
-                          <div className="text-[12px] text-[#8A7A66]">{stamps >= stampGoal ? "Pripravljeno — kupon v denarnici" : `${stamps}/${stampGoal} žigov`}</div>
-                        )}
+                        <div style={{ height: 7, overflow: "hidden", borderRadius: 999, background: "#EFE4D2" }}><div style={{ height: "100%", borderRadius: 999, width: `${pct}%`, background: ready || (isStampMode && stamps >= stampGoal) ? GREEN : AMBER }} /></div>
+                        {isStampMode && primary && <div style={{ fontSize: 12, color: "#9A8F80" }}>{stamps >= stampGoal ? "Pripravljeno — kupon v denarnici" : `${stamps}/${stampGoal} žigov`}</div>}
                       </>
                     )}
                   </div>

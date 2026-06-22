@@ -95,6 +95,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const tintLight = mix(brand, CREAM, 0.88);
   const tintMed = mix(brand, CREAM, 0.76);
   const accentDeep = mix(brand, INK, 0.42);
+  const reviewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [points, setPoints] = useState(0);
@@ -125,14 +126,22 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
     }).catch(() => {});
   }
 
-  // Google-review popup se odpre samodejno po vsakem uspešnem skenu (po animaciji žiga/kupona)
-  useEffect(() => {
-    if (view !== "success") { setReviewOpen(false); return; }
+  // Google-review popup se odpre po uspešnem skenu (sproži se v handleScan prek refa, da ga
+  // re-renderi ne počistijo). Pri POLNEM kartončku bolj zakasnjeno (proslava-animacija).
+  function scheduleReview(completed: boolean) {
     setStars(0);
     setFb("");
     setReviewDone(false);
-    const t = setTimeout(() => setReviewOpen(true), 750);
-    return () => clearTimeout(t);
+    setReviewOpen(false);
+    if (reviewTimer.current) clearTimeout(reviewTimer.current);
+    reviewTimer.current = setTimeout(() => setReviewOpen(true), completed ? 2300 : 750);
+  }
+  // zapri popup, ko zapustiš success zaslon
+  useEffect(() => {
+    if (view !== "success") {
+      setReviewOpen(false);
+      if (reviewTimer.current) { clearTimeout(reviewTimer.current); reviewTimer.current = null; }
+    }
   }, [view]);
 
   const couponsKey = `loyalty:${venue.public_code}:coupons`;
@@ -270,6 +279,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         setCoupons(nextCoupons);
         localStorage.setItem(couponsKey, JSON.stringify(nextCoupons));
         setView("success");
+        scheduleReview(afterStamps >= stampGoal);
       } catch (e) {
         fail(e instanceof FiscalQRError ? e.message : "Neveljaven QR.", "Poskusi znova.");
       }
@@ -300,6 +310,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         setCoupons(nextCoupons);
         localStorage.setItem(couponsKey, JSON.stringify(nextCoupons));
         setView("success");
+        scheduleReview(!!j.cardCompleted);
       } else fail(j.error, "Vsak račun prinese točke samo enkrat.");
     } catch {
       fail("Napaka pri skeniranju.", "Preveri povezavo in poskusi znova.");
@@ -446,7 +457,26 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         : rewardReady ? "Lahko unovčiš nagrado pri osebju." : `Še ${left} točk do nagrade.`;
     return (
       <main className="flex min-h-dvh w-full flex-col items-center justify-center" style={{ background: BG, fontFamily: JAK, color: INK, padding: 20 }}>
-        <div className="flex w-full max-w-md flex-col items-center px-6 py-8 lg:max-w-[440px] lg:rounded-[30px] lg:border lg:border-[#E8DCC8] lg:bg-[#FBF7F0] lg:px-9 lg:py-12 lg:shadow-[0_30px_70px_rgba(34,28,22,0.18)]" style={{ gap: 22 }}>
+        <div className="relative flex w-full max-w-md flex-col items-center overflow-hidden px-6 py-8 lg:max-w-[440px] lg:rounded-[30px] lg:border lg:border-[#E8DCC8] lg:bg-[#FBF7F0] lg:px-9 lg:py-12 lg:shadow-[0_30px_70px_rgba(34,28,22,0.18)]" style={{ gap: 22 }}>
+          {/* PROSLAVA ob polnem kartončku — konfeti burst + kupon "odleti" v denarnico (navzdol) */}
+          {cardCompleted && (
+            <div aria-hidden style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
+              {Array.from({ length: 14 }).map((_, i) => {
+                const ang = (i / 14) * Math.PI * 2;
+                const dist = 64 + (i % 4) * 26;
+                const cols = [brand, AMBER, GREEN, CORAL, "#8E5BA6"];
+                return (
+                  <span
+                    key={i}
+                    style={{ position: "absolute", top: 80, left: "50%", width: 8, height: 12, borderRadius: 2, background: cols[i % cols.length], "--cx": `${Math.round(Math.cos(ang) * dist)}px`, "--cy": `${Math.round(Math.sin(ang) * dist) - 24}px`, "--cr": `${(i * 57) % 360}deg`, animation: `confettiPop 1.05s ease-out ${0.1 + (i % 5) * 0.04}s both` } as React.CSSProperties}
+                  />
+                );
+              })}
+              <div className="flex items-center justify-center" style={{ position: "absolute", top: 92, left: "50%", marginLeft: -72, width: 144, height: 46, gap: 8, borderRadius: 13, background: "#fff", border: `1.5px solid ${brand}`, boxShadow: "0 12px 28px rgba(42,36,29,0.22)", fontFamily: JAK, fontWeight: 800, fontSize: 14, color: INK, animation: "flyToWallet 1.7s cubic-bezier(0.45,0,0.75,1) 0.55s both" }}>
+                <Cup stroke={brand} size={18} /> Kupon
+              </div>
+            </div>
+          )}
           {/* badge: logo lokala + »+1 žig« pill + pulse (telefon + desktop) */}
           <div style={{ position: "relative", animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
             {!cardCompleted && <span aria-hidden style={{ position: "absolute", inset: -8, borderRadius: "50%", border: `2px solid ${brand}`, animation: "ringPulse 1.3s ease-out 0.35s both" }} />}
@@ -458,7 +488,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
             )}
           </div>
         {hasCard && (
-          <div style={{ width: "100%", background: "#fff", borderRadius: 24, padding: "22px 20px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)" }}>
+          <div style={{ width: "100%", background: "#fff", borderRadius: 24, padding: "22px 20px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)", animation: cardCompleted ? "cardCelebrate 0.7s ease 0.15s both" : undefined }}>
             <StampGrid stamps={displayStamps} count={stampGoal} animateNew accent={brand} />
           </div>
         )}

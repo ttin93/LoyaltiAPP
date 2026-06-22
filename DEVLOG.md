@@ -49,6 +49,18 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 37 (NOV LANDING v2 — fokus na fičrih, Tally tema)
+- Iz handoff zipa »Landing v2.dc.html« (uporabnik prenovil landing). **`app/page.tsx` prepisan** v nov dizajn:
+  Tally tema (cream #FBF7F0, coral #C4623D, amber #E2A04A, Plus Jakarta), samostojen nav + footer.
+- Sekcije: hero (asset + plavajoči čipi +1 žig/nova ocena/kupon poslan + kartica), trust pills, stats band (4),
+  »En sken sproži tri stvari« (3 koraki), **OCENE** (temna — review engine: popup + ≤3/4-5 veji + rating graf),
+  **MARKETING** (compose + telefon mock + 4 kartice), **DASHBOARD** (temna — KPI + obiski/ure + retention donut),
+  **CENE** (Espresso **49,99€** / Doppio **79,99€** / Palača po dogovoru — nove cene!), FAQ (6), final CTA, footer.
+- **Opustil**: trilingv. preklopnik + promo banner + widget na landingu (v2 dizajn jih nima; SLO-only).
+  i18n (SiteHeader/Footer) ostane v rabi za /kontakt + pravne (te še stara topla tema — za prenovit).
+- Build čist (18/18); preverjeno na / (vse sekcije, cene, brez console napak, mobilni brez overflow, nav se zloži).
+- Cene se razlikujejo od lib/demo PRICING (29,99/69,99) — landing zdaj inline 49,99/79,99 po dizajnu.
+
 ### 2026-06-20 — seja 36 (osnova: NASTAVLJIV žig-cilj 4–12)
 - Odločitev uporabnika: žig-cilj naj bo nastavljiv (4–12). **Brez nove migracije** — št. žigov se izpelje:
   `stampGoal = round(reward.points_required / points_per_visit)`, vsak obisk = 1 žig (vreden `points_per_visit`).

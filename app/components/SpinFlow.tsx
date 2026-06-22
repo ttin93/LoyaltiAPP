@@ -93,6 +93,8 @@ export default function SpinFlow({
   const [spinning, setSpinning] = useState(false);
   const [wonIndex, setWonIndex] = useState(cfg && cfg.mode === "fixed" ? Math.max(0, Math.min(cfg.winner ?? 0, N - 1)) : 0);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [regErr, setRegErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [gErr, setGErr] = useState("");
   const [couponCode, setCouponCode] = useState("");
@@ -116,20 +118,21 @@ export default function SpinFlow({
     }, 4400);
   }
 
+  // welcome kupon je NA ČAKANJU — aktivira se šele ob prvem skeniranju pravega računa
   function grantWelcomeCoupon(label: string) {
     const ck = `loyalty:${code}:coupons`;
     const already = localStorage.getItem(`loyalty:${code}:welcomeClaimed`) === "1";
     if (!already) {
-      let coupons: { id: string; name: string }[] = [];
+      let coupons: { id: string; name: string; pending?: boolean }[] = [];
       try { coupons = JSON.parse(localStorage.getItem(ck) || "[]"); } catch {}
-      coupons.push({ id: "c" + coupons.length, name: label });
+      coupons.push({ id: "c" + coupons.length, name: label, pending: true });
       localStorage.setItem(ck, JSON.stringify(coupons));
       localStorage.setItem(`loyalty:${code}:welcomeClaimed`, "1");
     }
     setCouponCode(`${code.slice(0, 4).toUpperCase()}-${Math.random().toString(16).slice(2, 6).toUpperCase()}`);
   }
 
-  async function doRegister(payload: { email?: string }) {
+  async function doRegister(payload: { email?: string; password?: string }) {
     if (demo) {
       localStorage.setItem(`loyalty:${code}:customerId`, "demo");
       if (!enabled) { window.location.href = `/p/${code}`; return; }
@@ -138,6 +141,7 @@ export default function SpinFlow({
       return;
     }
     setBusy(true);
+    setRegErr("");
     try {
       const r = await fetch("/api/register", {
         method: "POST",
@@ -145,21 +149,23 @@ export default function SpinFlow({
         body: JSON.stringify({ venueCode: code, ...payload }),
       });
       const j = await r.json();
-      if (j.ok) localStorage.setItem(`loyalty:${code}:customerId`, j.customerId);
+      if (!j.ok) { setBusy(false); setRegErr(j.error || "Napaka pri prijavi."); return; }
+      localStorage.setItem(`loyalty:${code}:customerId`, j.customerId);
     } catch {
-      /* best-effort */
-    } finally {
-      setBusy(false);
-      if (!enabled) { window.location.href = `/p/${code}`; return; }
-      grantWelcomeCoupon(wonLabel);
-      setStep("coupon");
+      setBusy(false); setRegErr("Napaka povezave. Poskusi znova."); return;
     }
+    setBusy(false);
+    if (!enabled) { window.location.href = `/p/${code}`; return; }
+    grantWelcomeCoupon(wonLabel);
+    setStep("coupon");
   }
 
-  function submitEmail() {
+  function submitRegister() {
     const mail = email.trim();
-    if (!mail || !/.+@.+\..+/.test(mail)) return;
-    doRegister({ email: mail });
+    setRegErr("");
+    if (!mail || !/.+@.+\..+/.test(mail)) { setRegErr("Vpiši veljaven email."); return; }
+    if (password.length < 4) { setRegErr("Geslo naj ima vsaj 4 znake."); return; }
+    doRegister({ email: mail, password });
   }
 
   // Google: pravi OAuth prek Supabase (brezplačen). V demu samo nadaljuj.
@@ -321,7 +327,7 @@ export default function SpinFlow({
               </button>
               <div className="flex flex-col" style={{ gap: 6 }}>
                 <div style={{ fontWeight: 800, fontSize: 23, lineHeight: 1.1, letterSpacing: "-0.01em" }}>Skoraj tvoje</div>
-                <div style={{ fontSize: 14.5, color: MUTED, lineHeight: 1.5 }}>Vpiši email, da shranimo kupon in žige. Brez gesla, brez aplikacije.</div>
+                <div style={{ fontSize: 14.5, color: MUTED, lineHeight: 1.5 }}>Email in geslo — da shranimo kupon, žige in točke ter zaščitimo tvoj račun.</div>
               </div>
               <div className="flex flex-col" style={{ gap: 8 }}>
                 <label htmlFor="reg-email" style={{ fontSize: 13, fontWeight: 700, color: MUTED }}>Email</label>
@@ -329,15 +335,28 @@ export default function SpinFlow({
                   id="reg-email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") submitEmail(); }}
                   type="email"
                   inputMode="email"
                   autoComplete="email"
                   placeholder="tvoj@email.com"
-                  style={{ height: 56, border: "1.5px solid #E4D9C7", borderRadius: 16, background: CREAM, padding: "0 16px", fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 600, color: INK, outline: "none" }}
+                  style={{ height: 54, border: "1.5px solid #E4D9C7", borderRadius: 16, background: CREAM, padding: "0 16px", fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 600, color: INK, outline: "none" }}
                 />
               </div>
-              <button onClick={submitEmail} disabled={busy} style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: brandColor, color: INK, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 800, cursor: "pointer", opacity: busy ? 0.6 : 1 }}>{busy ? "…" : "Prevzemi nagrado"}</button>
+              <div className="flex flex-col" style={{ gap: 8 }}>
+                <label htmlFor="reg-pass" style={{ fontSize: 13, fontWeight: 700, color: MUTED }}>Geslo</label>
+                <input
+                  id="reg-pass"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") submitRegister(); }}
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="vsaj 4 znaki"
+                  style={{ height: 54, border: "1.5px solid #E4D9C7", borderRadius: 16, background: CREAM, padding: "0 16px", fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 600, color: INK, outline: "none" }}
+                />
+              </div>
+              {regErr && <div style={{ fontSize: 12.5, color: "#C8512B", fontWeight: 600 }}>{regErr}</div>}
+              <button onClick={submitRegister} disabled={busy} style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: brandColor, color: INK, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 800, cursor: "pointer", opacity: busy ? 0.6 : 1 }}>{busy ? "…" : "Prevzemi nagrado"}</button>
               <div className="flex items-center" style={{ gap: 12 }}>
                 <div style={{ flex: 1, height: 1, background: "#EBE1D1" }} />
                 <span style={{ fontSize: 12.5, color: "#9A8F80" }}>ali</span>
@@ -358,8 +377,8 @@ export default function SpinFlow({
                 <svg width="30" height="30" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#5E7F52", strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M5 12.5l4.2 4.2L18.5 7.5" /></svg>
               </div>
               <div className="flex flex-col" style={{ gap: 4 }}>
-                <div style={{ fontWeight: 800, fontSize: 23, letterSpacing: "-0.01em" }}>Kupon je tvoj!</div>
-                <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.5, maxWidth: 280 }}>Shranili smo ga v denarnico in poslali na email.</div>
+                <div style={{ fontWeight: 800, fontSize: 23, letterSpacing: "-0.01em" }}>Kupon te čaka!</div>
+                <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.5, maxWidth: 290 }}>Shranjen v tvoji denarnici. <strong style={{ color: INK }}>Aktivira se ob prvem skeniranju računa</strong> v lokalu — potem ga unovčiš.</div>
               </div>
               <div style={{ width: "100%", background: INK, borderRadius: 20, padding: "22px 20px", position: "relative", color: CREAM }}>
                 <div style={{ position: "absolute", top: "50%", left: -10, width: 20, height: 20, borderRadius: "50%", background: CREAM, transform: "translateY(-50%)" }} />
@@ -375,7 +394,7 @@ export default function SpinFlow({
                   <div className="flex flex-col" style={{ gap: 3, textAlign: "left" }}>
                     <div style={{ fontSize: 11, color: "#A89878" }}>Koda kupona</div>
                     <div style={{ fontWeight: 800, fontSize: 19, letterSpacing: "0.08em", whiteSpace: "nowrap" }}>{couponCode || "MORA-7C4D"}</div>
-                    <div style={{ fontSize: 12, color: "#A89878", marginTop: 2 }}>Velja 14 dni · ob prvem obisku</div>
+                    <div style={{ fontSize: 12, color: "#A89878", marginTop: 2 }}>Aktivira se ob 1. skeniranju računa</div>
                   </div>
                 </div>
               </div>

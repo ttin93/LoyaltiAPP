@@ -125,7 +125,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   }
 
   const couponsKey = `loyalty:${venue.public_code}:coupons`;
-  const [coupons, setCoupons] = useState<{ id: string; name: string }[]>([]);
+  const [coupons, setCoupons] = useState<{ id: string; name: string; pending?: boolean }[]>([]);
 
   const [redeemReward, setRedeemReward] = useState<Reward | null>(null);
   const [sheetStep, setSheetStep] = useState<1 | 2>(1);
@@ -211,7 +211,8 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
     return () => clearInterval(t);
   }, [activation]);
 
-  function activateCoupon(coupon: { id: string; name: string }) {
+  function activateCoupon(coupon: { id: string; name: string; pending?: boolean }) {
+    if (coupon.pending) return; // na čakanju — aktivira se šele ob prvem skeniranju računa
     const a: Activation = { redemptionId: null, rewardName: coupon.name, pointsSpent: 0, expiresAt: Date.now() + minutes * 60000 };
     setActivation(a);
     localStorage.setItem(activationKey, JSON.stringify(a));
@@ -242,12 +243,12 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         const afterStamps = stamps + 1;
         setAwarded(venue.points_per_visit);
         setPoints(afterPoints);
+        // 1. skeniran račun aktivira welcome kupon (ki je bil na čakanju)
+        let nextCoupons = coupons.map((c) => ({ ...c, pending: false }));
         if (afterStamps >= stampGoal) {
           // kartonček poln → kava kupon v denarnico + reset žigov (točke ostanejo)
           const rewardName = stampReward?.name || "Brezplačna kava";
-          const next = [...coupons, { id: "c" + Date.now(), name: rewardName }];
-          setCoupons(next);
-          localStorage.setItem(couponsKey, JSON.stringify(next));
+          nextCoupons = [...nextCoupons, { id: "c" + Date.now(), name: rewardName, pending: false }];
           setCompletedReward(rewardName);
           setCardCompleted(true);
           setStamps(afterStamps - stampGoal);
@@ -255,6 +256,8 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           setCardCompleted(false);
           setStamps(afterStamps);
         }
+        setCoupons(nextCoupons);
+        localStorage.setItem(couponsKey, JSON.stringify(nextCoupons));
         setView("success");
       } catch (e) {
         fail(e instanceof FiscalQRError ? e.message : "Neveljaven QR.", "Poskusi znova.");
@@ -273,16 +276,18 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         setPoints(j.totalPoints);
         setStamps(j.stamps ?? 0);
         setAwarded(j.pointsAwarded);
+        // 1. skeniran račun aktivira welcome kupon (ki je bil na čakanju)
+        let nextCoupons = coupons.map((c) => ({ ...c, pending: false }));
         if (j.cardCompleted) {
           const rewardName = j.cardReward || stampReward?.name || "Brezplačna kava";
-          const next = [...coupons, { id: "c" + Date.now(), name: rewardName }];
-          setCoupons(next);
-          localStorage.setItem(couponsKey, JSON.stringify(next));
+          nextCoupons = [...nextCoupons, { id: "c" + Date.now(), name: rewardName, pending: false }];
           setCompletedReward(rewardName);
           setCardCompleted(true);
         } else {
           setCardCompleted(false);
         }
+        setCoupons(nextCoupons);
+        localStorage.setItem(couponsKey, JSON.stringify(nextCoupons));
         setView("success");
       } else fail(j.error, "Vsak račun prinese točke samo enkrat.");
     } catch {
@@ -553,13 +558,21 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
 
             {/* kuponi */}
             {coupons.length > 0 ? (
-              coupons.map((c) => (
-                <div key={c.id} className="flex items-center" style={{ gap: 13, background: `linear-gradient(135deg,${tintLight},${tintMed})`, borderRadius: 18, padding: 15 }}>
-                  <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#fff", flexShrink: 0 }}><Cup stroke={brand} size={22} /></div>
-                  <div className="min-w-0 flex-1"><div style={{ fontWeight: 800, fontSize: 14.5 }}>{c.name}</div><div style={{ fontSize: 12, fontWeight: 600, color: accentDeep }}>Velja še 12 dni</div></div>
-                  <button onClick={() => activateCoupon(c)} style={{ height: 38, padding: "0 15px", border: "none", borderRadius: 11, background: INK, color: PAPER, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Aktiviraj</button>
-                </div>
-              ))
+              coupons.map((c) =>
+                c.pending ? (
+                  <div key={c.id} className="flex items-center" style={{ gap: 13, background: CREAM, border: "1.5px dashed #E0D2BC", borderRadius: 18, padding: 15 }}>
+                    <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#fff", flexShrink: 0, opacity: 0.7 }}><Cup stroke={brand} size={22} /></div>
+                    <div className="min-w-0 flex-1"><div style={{ fontWeight: 800, fontSize: 14.5 }}>{c.name}</div><div style={{ fontSize: 12, fontWeight: 600, color: accentDeep }}>Na čakanju · aktivira se ob 1. skeniranju računa</div></div>
+                    <span className="flex items-center" style={{ height: 26, padding: "0 11px", borderRadius: 999, background: "#FCEFD8", color: "#B4781E", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>ČAKA</span>
+                  </div>
+                ) : (
+                  <div key={c.id} className="flex items-center" style={{ gap: 13, background: `linear-gradient(135deg,${tintLight},${tintMed})`, borderRadius: 18, padding: 15 }}>
+                    <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#fff", flexShrink: 0 }}><Cup stroke={brand} size={22} /></div>
+                    <div className="min-w-0 flex-1"><div style={{ fontWeight: 800, fontSize: 14.5 }}>{c.name}</div><div style={{ fontSize: 12, fontWeight: 600, color: accentDeep }}>Velja še 12 dni</div></div>
+                    <button onClick={() => activateCoupon(c)} style={{ height: 38, padding: "0 15px", border: "none", borderRadius: 11, background: INK, color: PAPER, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Aktiviraj</button>
+                  </div>
+                ),
+              )
             ) : (
               <div className="flex items-center" style={{ gap: 13, borderRadius: 18, border: "1px dashed #E0D2BC", background: CREAM, padding: 15 }}>
                 <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: tintLight, flexShrink: 0 }}><Cup stroke={brand} size={22} /></div>

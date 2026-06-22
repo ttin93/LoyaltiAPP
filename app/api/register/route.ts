@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase/server";
 import { errMsg } from "@/lib/loyalty";
 
-// POST /api/register  { venueCode, phone?, email? }
+// POST /api/register  { venueCode, phone?, email?, password? }
 export async function POST(req: Request) {
   try {
-    const { venueCode, phone, email } = await req.json();
+    const { venueCode, phone, email, password } = await req.json();
     if (!venueCode || (!phone && !email)) {
       return NextResponse.json(
         { ok: false, error: "Vpiši telefon ali email." },
@@ -25,6 +25,24 @@ export async function POST(req: Request) {
 
     const normalizedPhone = phone ? String(phone).replace(/\s+/g, "") : null;
     const normalizedEmail = email ? String(email).trim().toLowerCase() : null;
+
+    // email + geslo → registracija/prijava prek guest_auth (geslo zaščiti račun)
+    if (normalizedEmail && password) {
+      if (String(password).length < 4) {
+        return NextResponse.json({ ok: false, error: "Geslo naj ima vsaj 4 znake." }, { status: 400 });
+      }
+      const { data: rows, error } = await db.rpc("guest_auth", {
+        p_venue_id: venue.id,
+        p_email: normalizedEmail,
+        p_password: String(password),
+      });
+      if (error) throw error;
+      const r = Array.isArray(rows) ? rows[0] : rows;
+      if (!r || !r.ok) {
+        return NextResponse.json({ ok: false, error: "Napačno geslo za ta email." }, { status: 401 });
+      }
+      return NextResponse.json({ ok: true, customerId: r.customer_id, isNew: r.is_new });
+    }
 
     // poišči obstoječo stranko: najprej po telefonu, sicer po emailu (Google)
     let customer = null;

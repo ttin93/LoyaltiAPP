@@ -49,6 +49,13 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-22 — seja 42 (anti-zloraba welcome nagrade + gostov password)
+- **Welcome kupon NE več zastonj za vsak random mail**: zadetek kolesa je zdaj **NA ČAKANJU** (`pending:true`) in se **aktivira šele ob 1. skeniranju pravega računa** lokala (ZOI unique + davčna + okno). To ubije zlorabo (brez resničnega računa = brez kave). Pokazano na: spin coupon zaslon (»Kupon te čaka… aktivira se ob prvem skeniranju«) + gostova domača stran (kupon z oznako »ČAKA«). GuestApp ob uspešnem skenu flipne vse pending kupone → aktivne.
+- **Gostov račun = email + GESLO (brez potrditvene kode)**: nov `customers.pass_hash` + RPC `guest_auth` (pgcrypto bcrypt; register ALI login v enem klicu). `/api/register` sprejme `password` → guest_auth. **Prepreči prevzem računa z znanim mailom** (za obstoječ email rabiš pravo geslo). SpinFlow register ima zdaj email+geslo polji + napake. Google pot ostane brez gesla (OAuth-trusted). Migracija 0010.
+- **Preverjeno v živo**: guest_auth (nov ok / napačno geslo zavrnjeno / pravo geslo login), cel spin→register(email+geslo)→pending kupon→home »ČAKA« tok, testni gostje počiščeni.
+- Odločitev (lastnik): welcome se veže na 1. skeniranje računa (ne email-verifikacija); registracija email+geslo brez kode.
+- Build čist, migracija 0010 v živo (201).
+
 ### 2026-06-22 — seja 41 (feedback 3: Kolo sreče konfiguracija, zgodovina kdo/kdaj, jezik, ročni dnevnik)
 - **Kolo sreče — nov dashboard zavihek + konfiguracija**: `venues.wheel_config` (jsonb), `saveWheel` action. Lastnik nastavi: vklop/izklop, način (**fixed** = vedno isti zadetek / **weighted** = naključno po utežeh %), segmente (napis + utež), zmagovalca (fixed), z živim mini-predogledom (`WheelMini`). **SpinFlow prebere config**: N segmentov, pickWinner (fixed/weighted), pristane na pravem segmentu, WON/kupon kažejo dejansko osvojeno nagrado (ne več fiksne »kave«). Če disabled → preskoči kolo, gre naravnost v registracijo. Wired v GuestApp + /embed + /p/[code]/spin. **Preverjeno v živo**: /p/prtinu/spin prikaže custom 4 segmente iz baze.
 - **Zgodovina kdo/kdaj/kaj**: skeni + redemptions zdaj kažejo **email** (prej »—« ker je telefon null). Ročno dodane točke (admin) se beležijo v novo tabelo `point_grants` in se kažejo v **Podarjene** z oznako »ročno«. (Migracija 0009.)

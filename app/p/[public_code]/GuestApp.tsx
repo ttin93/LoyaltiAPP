@@ -98,6 +98,15 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const googleReviewUrl =
     venue.google_review_url || `https://www.google.com/search?q=${encodeURIComponent(venue.name)}`;
 
+  function logReview(s: number, toGoogle: boolean, comment?: string) {
+    if (demo) return;
+    fetch("/api/review", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ venueCode: venue.public_code, customerId, stars: s, comment: comment || "", toGoogle }),
+    }).catch(() => {});
+  }
+
   const couponsKey = `loyalty:${venue.public_code}:coupons`;
   const [coupons, setCoupons] = useState<{ id: string; name: string }[]>([]);
 
@@ -429,7 +438,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
               {stars >= 4 && (
                 <div className="flex flex-col items-center" style={{ marginTop: 16, gap: 10 }}>
                   <div style={{ fontSize: 14, lineHeight: 1.4, color: MUTED }}>Juhu! 🎉 Nam pomagaš z oceno na Googlu? Traja 10 sekund.</div>
-                  <a href={googleReviewUrl} target="_blank" rel="noreferrer" onClick={() => setReviewDone(true)} className="flex items-center justify-center" style={{ height: 48, width: "100%", gap: 10, borderRadius: 14, background: "#fff", fontSize: 15, fontWeight: 700, color: INK, border: "1.5px solid #E4D9C7", textDecoration: "none" }}>
+                  <a href={googleReviewUrl} target="_blank" rel="noreferrer" onClick={() => { logReview(stars, true); setReviewDone(true); }} className="flex items-center justify-center" style={{ height: 48, width: "100%", gap: 10, borderRadius: 14, background: "#fff", fontSize: 15, fontWeight: 700, color: INK, border: "1.5px solid #E4D9C7", textDecoration: "none" }}>
                     <GoogleG /> Oceni na Googlu
                   </a>
                 </div>
@@ -438,7 +447,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
                 <div className="flex flex-col" style={{ marginTop: 16, gap: 10 }}>
                   <div style={{ fontSize: 14, lineHeight: 1.4, color: MUTED }}>Žal nam je. Kaj naj popravimo? <span style={{ color: "#A89B88" }}>(vidi samo lokal)</span></div>
                   <textarea value={fb} onChange={(e) => setFb(e.target.value)} rows={3} placeholder="Tvoje mnenje…" style={{ width: "100%", borderRadius: 12, border: "1.5px solid #E4D9C7", background: CREAM, padding: 12, textAlign: "left", fontSize: 14, fontFamily: JAK, outline: "none", boxSizing: "border-box" }} />
-                  <button onClick={() => setReviewDone(true)} style={{ height: 48, width: "100%", borderRadius: 14, background: INK, color: PAPER, fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Pošlji lokalu</button>
+                  <button onClick={() => { logReview(stars, false, fb); setReviewDone(true); }} style={{ height: 48, width: "100%", borderRadius: 14, background: INK, color: PAPER, fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Pošlji lokalu</button>
                 </div>
               )}
             </>

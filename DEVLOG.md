@@ -49,6 +49,19 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-22 — seja 40 (feedback po testu: onboarding + dashboard razširitve, Google-ocene statistika)
+- **Test login**: ustvarjen potrjen owner (`tin.suklje93@gmail.com` / `123456`) prek admin API (registracija prek UI je čakala na email-potrditev).
+- **Onboarding**: korak 1 = barvni picker (`<input type=color>` + hex polje) poleg presetov; korak 2 = točke na obisk lahko **0** (samo žigi); korak 3 = **pravo urejanje nagrad** (žig-nagrada + točkovne nagrade z imeni/točkami, add/remove) → `createVenue` bere `point_rewards` JSON + točke 0.
+- **Dashboard – Nastavitve**: nagrade **ločene** na "za žige" / "za točke" (`saveReward` dobi `kind`); barvni picker + hex + swatchi (ne le # koda); polji **Žigov za kartonček** (`stamp_goal`) in **Google povezava** (`google_review_url`).
+- **Nov zavihek Ocene**: Google-review statistika (skupaj, povprečje★, % poslano na Google, ≤3★ zasebni feedback s komentarji, razporeditev). Migracija **0008_reviews** + `POST /api/review` + GuestApp beleži oddajo ocene (4–5★→Google `to_google`, ≤3★ komentar).
+- **Analitika**: časovni filter (7/30/90/leto), več KPI (skeniranja/nove stranke/unovčene/povp. obiski/segmenti), graf po dnevih, heatmap ur dneva, top unovčene nagrade.
+- **Stranke**: iskalnik + klik na vrstico → modal s statistiko (točke/žigi/obiski + zadnji skeni + ročno dodaj točke).
+- **Marketing**: e-pošta fokus (brez SMS-stroška), predloge kampanj (Pogrešamo te/Nagrada/Rojstni dan/Vikend), segment + "Vsi gostje". SMS/WhatsApp odloženo (zavestno).
+- **Sistem**: "Testiraj račun" (nov `testReceipt` action — veljaven za lokal + unikaten, BREZ ur/datuma, ne dodeli točk) + **ročni vnos davčne** (alt. aktivacija) + predogled gostove strani.
+- **Naročnina**: nov zavihek (paketi Espresso/Doppio/Palača + placeholder upravljanje) + upgrade CTA v sidebar nad odjavo. Plačila (Stripe) odložena.
+- Odloženo (rabi providerja): dejansko pošiljanje e-pošte/SMS/WhatsApp, Stripe, urejanje pravil segmentov + ročni izbor prejemnikov, QR po meri, per-screen WYSIWYG editor gostovih zaslonov.
+- Build čist, migracija 0008 aplicirana v živo (201).
+
 ### 2026-06-20 — seja 39 (avtonomni sprint #2: hibridni model + multi-venue + real analitika + kampanje)
 - **Hibridni model nagrad**: kava = ŽIGI (kartonček), rogljiček 250t + torta 350t = TOČKE. Migracija 0007
   (customers.stamps, venues.stamp_goal, rewards.kind) + award_scan v2 (žige+točke ločeno, žige resetira pri goalu).

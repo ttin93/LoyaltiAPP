@@ -50,10 +50,24 @@ export async function createVenue(formData: FormData) {
   const city = String(formData.get("city") || "").trim() || null;
   const points_model = formData.get("points_model") === "per_euro" ? "per_euro" : "per_visit";
 
-  // nastavljiv žig-cilj (4–12) + točk na obisk; glavna nagrada = stampGoal × pointsPerVisit
-  const pointsPerVisit = Math.min(50, Math.max(1, Number(formData.get("points_per_visit")) || 10));
+  // nastavljiv žig-cilj (4–12) + točk na obisk (lahko 0 = samo žigi)
+  const rawPts = Number(formData.get("points_per_visit"));
+  const pointsPerVisit = Math.min(50, Math.max(0, Number.isFinite(rawPts) ? rawPts : 10));
   const stampGoal = Math.min(12, Math.max(4, Number(formData.get("stamp_goal")) || 10));
   const rewardName = String(formData.get("reward_name") || "").trim() || "Brezplačna kava";
+
+  // točkovne nagrade (urejene v onboardingu); prazne/0 odpademo
+  let extraRewards: { name: string; points: number }[] = [];
+  try {
+    const parsed = JSON.parse(String(formData.get("point_rewards") || "[]"));
+    if (Array.isArray(parsed)) extraRewards = parsed;
+  } catch {
+    /* ignore */
+  }
+  const pointRewardRows = extraRewards
+    .map((r) => ({ name: String(r?.name || "").trim(), points: Math.max(0, Number(r?.points) || 0) }))
+    .filter((r) => r.name && r.points > 0)
+    .map((r, i) => ({ name: r.name, points: r.points, sort: i + 2 }));
 
   // unikaten public_code
   const base = slugify(name);
@@ -78,8 +92,7 @@ export async function createVenue(formData: FormData) {
   // kava = ŽIGI (poln kartonček = stampGoal žigov); druge nagrade = TOČKE
   await db.from("rewards").insert([
     { venue_id: venue.id, name: rewardName, points_required: stampGoal, sort_order: 1, kind: "stamp" },
-    { venue_id: venue.id, name: "Domač rogljiček", points_required: 250, sort_order: 2, kind: "points" },
-    { venue_id: venue.id, name: "Kos torte", points_required: 350, sort_order: 3, kind: "points" },
+    ...pointRewardRows.map((r) => ({ venue_id: venue.id, name: r.name, points_required: r.points, sort_order: r.sort, kind: "points" })),
   ]);
 
   redirect("/dashboard");
@@ -92,9 +105,17 @@ export async function updateVenueSettings(formData: FormData) {
   if (formData.has("name")) patch.name = String(formData.get("name")).trim();
   if (formData.has("brand_color")) patch.brand_color = String(formData.get("brand_color"));
   if (formData.has("points_per_visit"))
-    patch.points_per_visit = Number(formData.get("points_per_visit"));
+    patch.points_per_visit = Math.max(0, Number(formData.get("points_per_visit")) || 0);
+  if (formData.has("stamp_goal"))
+    patch.stamp_goal = Math.min(12, Math.max(4, Number(formData.get("stamp_goal")) || 10));
   if (formData.has("scan_window_hours"))
     patch.scan_window_hours = Number(formData.get("scan_window_hours"));
+  if (formData.has("google_review_url"))
+    patch.google_review_url = String(formData.get("google_review_url")).trim() || null;
+  if (formData.has("davcna_stevilka")) {
+    const dav = String(formData.get("davcna_stevilka")).replace(/\D/g, "").slice(0, 8);
+    patch.davcna_stevilka = dav.length === 8 ? dav : null;
+  }
   await db.from("venues").update(patch).eq("id", venue.id);
   revalidatePath("/dashboard");
 }
@@ -115,7 +136,8 @@ export async function saveReward(formData: FormData) {
   const id = String(formData.get("id") || "");
   const name = String(formData.get("name") || "").trim();
   const points = Number(formData.get("points_required"));
-  if (!name || !points) throw new Error("Vpiši ime in točke.");
+  const kind = formData.get("kind") === "stamp" ? "stamp" : "points";
+  if (!name || !points) throw new Error("Vpiši ime in vrednost.");
   if (id) {
     await db
       .from("rewards")
@@ -125,9 +147,34 @@ export async function saveReward(formData: FormData) {
   } else {
     await db
       .from("rewards")
-      .insert({ venue_id: venue.id, name, points_required: points, sort_order: 99 });
+      .insert({ venue_id: venue.id, name, points_required: points, sort_order: 99, kind });
   }
   revalidatePath("/dashboard");
+}
+
+/**
+ * Testiraj fiskalni račun BREZ dodeljevanja točk: pove ali je veljaven za ta lokal
+ * in ali je unikaten. (Ne gleda ure/datuma — samo struktura, davčna in ZOI.)
+ */
+export async function testReceipt(payload: string): Promise<{ ok: boolean; msg: string }> {
+  const { db, venue } = await ownerVenue();
+  if (!venue) throw new Error("Nimaš lokala.");
+  let parsed;
+  try {
+    parsed = parseFiscalQR(payload);
+  } catch (e) {
+    return { ok: false, msg: e instanceof Error ? e.message : "QR ni veljaven fiskalni račun." };
+  }
+  if (venue.davcna_stevilka && parsed.davcna !== venue.davcna_stevilka) {
+    return { ok: false, msg: `Račun ni tega lokala (davčna ${parsed.davcna}).` };
+  }
+  const { data: dup } = await db
+    .from("scans")
+    .select("id")
+    .eq("zoi", parsed.zoiHex)
+    .maybeSingle();
+  if (dup) return { ok: false, msg: "Račun je že bil uporabljen — ni unikaten." };
+  return { ok: true, msg: `Veljaven račun · davčna ${parsed.davcna}` };
 }
 
 export async function deleteReward(id: string) {

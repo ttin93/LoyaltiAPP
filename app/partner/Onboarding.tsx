@@ -79,7 +79,11 @@ export default function Onboarding() {
   const [color, setColor] = useState("#E2A04A");
   const [stampGoal, setStampGoal] = useState(10);
   const [ptsPerVisit, setPtsPerVisit] = useState(15);
-  const [rewardName] = useState("Brezplačna kava");
+  const [rewardName, setRewardName] = useState("Brezplačna kava");
+  const [pointRewards, setPointRewards] = useState<{ name: string; points: number }[]>([
+    { name: "Domač rogljiček", points: 250 },
+    { name: "Kos torte", points: 350 },
+  ]);
   const [busy, setBusy] = useState(false);
   const sd = STEPS[step - 1];
 
@@ -100,6 +104,7 @@ export default function Onboarding() {
             <input type="hidden" name="points_per_visit" value={ptsPerVisit} />
             <input type="hidden" name="stamp_goal" value={stampGoal} />
             <input type="hidden" name="reward_name" value={rewardName} />
+            <input type="hidden" name="point_rewards" value={JSON.stringify(pointRewards)} />
 
             <div className="flex items-center" style={{ gap: 8, marginBottom: 24 }}>
               {[1, 2, 3, 4].map((n) => <div key={n} style={{ flex: 1, height: 5, borderRadius: 99, background: n <= step ? AMBER : "#EDE2CF" }} />)}
@@ -113,7 +118,20 @@ export default function Onboarding() {
                 <div className="flex flex-col" style={{ gap: 20, maxWidth: 440 }}>
                   <div className="flex flex-col" style={{ gap: 8 }}><label style={lbl}>Ime znamke</label><input value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="npr. Mora" style={inp} /></div>
                   <div className="flex flex-col" style={{ gap: 8 }}><label style={lbl}>Logo</label><div className="flex items-center" style={{ gap: 14 }}><div className="flex items-center justify-center" style={{ width: 60, height: 60, borderRadius: 17, background: INK, color: PAPER, fontWeight: 800, fontSize: 26, flexShrink: 0 }}>{(brandName.trim()[0] || "M").toUpperCase()}</div><div className="flex flex-1 items-center justify-center" style={{ height: 60, border: "2px dashed #E0D2BC", borderRadius: 14, fontSize: 13.5, color: "#9A8F80", fontWeight: 600 }}>Logo dodaš kasneje</div></div></div>
-                  <div className="flex flex-col" style={{ gap: 10 }}><label style={lbl}>Barva znamke</label><div className="flex" style={{ gap: 12 }}>{COLORS.map((c) => <button type="button" key={c} onClick={() => setColor(c)} aria-label="barva" style={{ width: 42, height: 42, borderRadius: "50%", border: "none", background: c, cursor: "pointer", boxShadow: c === color ? "0 0 0 2.5px #FBF7F0, 0 0 0 5px #2A241D" : "none" }} />)}</div></div>
+                  <div className="flex flex-col" style={{ gap: 10 }}>
+                    <label style={lbl}>Barva znamke</label>
+                    <div className="flex items-center" style={{ gap: 12, flexWrap: "wrap" }}>
+                      {COLORS.map((c) => <button type="button" key={c} onClick={() => setColor(c)} aria-label="barva" style={{ width: 42, height: 42, borderRadius: "50%", border: "none", background: c, cursor: "pointer", boxShadow: c === color ? "0 0 0 2.5px #FBF7F0, 0 0 0 5px #2A241D" : "none" }} />)}
+                      <label className="flex items-center justify-center" aria-label="izberi svojo barvo" style={{ width: 42, height: 42, borderRadius: "50%", cursor: "pointer", position: "relative", overflow: "hidden", border: COLORS.includes(color) ? "2px dashed #D8C9B2" : "none", background: COLORS.includes(color) ? "#fff" : color, boxShadow: COLORS.includes(color) ? "none" : "0 0 0 2.5px #FBF7F0, 0 0 0 5px #2A241D" }}>
+                        {COLORS.includes(color) && <span style={{ fontSize: 22, color: "#B5AB9C", lineHeight: 1 }}>+</span>}
+                        <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ position: "absolute", inset: 0, width: "150%", height: "150%", opacity: 0, cursor: "pointer", border: "none" }} />
+                      </label>
+                      <div className="flex items-center" style={{ gap: 8, border: "1.5px solid #E4D9C7", borderRadius: 12, height: 42, padding: "0 12px", background: "#fff" }}>
+                        <span style={{ width: 18, height: 18, borderRadius: 5, background: color, flexShrink: 0 }} />
+                        <input value={color.toUpperCase()} onChange={(e) => { let v = e.target.value.replace(/[^#0-9a-fA-F]/g, ""); if (!v.startsWith("#")) v = "#" + v; setColor(v.slice(0, 7)); }} style={{ width: 76, border: "none", outline: "none", fontFamily: JAK, fontSize: 14, fontWeight: 700, color: INK, background: "transparent" }} />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
               {step === 2 && (
@@ -121,15 +139,40 @@ export default function Onboarding() {
                   <div className="flex flex-col" style={{ background: "#fff", border: "1px solid #EFE4D2", borderRadius: 16, padding: 18, gap: 14 }}>
                     <div className="flex items-center justify-between"><span style={{ fontSize: 14.5, fontWeight: 700 }}>Žigov do nagrade</span><Stepper value={stampGoal} onMinus={() => setStampGoal((s) => Math.max(4, s - 1))} onPlus={() => setStampGoal((s) => Math.min(12, s + 1))} /></div>
                     <div style={{ height: 1, background: "#F1E8D9" }} />
-                    <div className="flex items-center justify-between"><span style={{ fontSize: 14.5, fontWeight: 700 }}>Točk na obisk</span><Stepper value={ptsPerVisit} onMinus={() => setPtsPerVisit((s) => Math.max(5, s - 5))} onPlus={() => setPtsPerVisit((s) => Math.min(50, s + 5))} /></div>
+                    <div className="flex items-center justify-between"><span style={{ fontSize: 14.5, fontWeight: 700 }}>Točk na obisk</span><Stepper value={ptsPerVisit} onMinus={() => setPtsPerVisit((s) => Math.max(0, s - 5))} onPlus={() => setPtsPerVisit((s) => Math.min(50, s + 5))} /></div>
+                    {ptsPerVisit === 0 && <div style={{ fontSize: 12.5, color: MUTED, marginTop: -4 }}>Brez točk — gostje zbirajo <strong>samo žige</strong>.</div>}
                   </div>
                   <div className="flex items-start" style={{ background: "#FCEFD8", borderRadius: 14, padding: "14px 16px", gap: 10 }}><svg width="18" height="18" viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: 1, fill: "none", stroke: "#B4862F", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" }}><circle cx="12" cy="12" r="9" /><path d="M12 8.2v0.01M12 11v5" /></svg><span style={{ fontSize: 13, lineHeight: 1.45, color: "#7A5E1E" }}>Gost zbere <strong>{stampGoal} žigov</strong> za {rewardName.toLowerCase()}. Pravila lahko kadarkoli spremeniš.</span></div>
                 </div>
               )}
               {step === 3 && (
-                <div className="flex flex-col" style={{ gap: 14, maxWidth: 440 }}>
-                  <div className="flex items-center" style={{ background: "#fff", border: `2px solid ${AMBER}`, borderRadius: 16, padding: 16, gap: 13 }}><div className="flex items-center justify-center" style={{ width: 46, height: 46, borderRadius: 13, background: "#FCEFD8", flexShrink: 0 }}><Cup stroke={AMBER} size={22} /></div><div className="flex-1"><div style={{ fontWeight: 700, fontSize: 15 }}>{rewardName}</div><div style={{ fontSize: 12.5, color: "#9A8F80" }}>pri {stampGoal} žigih · glavna nagrada</div></div><span style={{ height: 26, padding: "0 11px", borderRadius: 999, background: "#FCEFD8", color: "#B4781E", fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center" }}>AKTIVNO</span></div>
-                  <div className="flex items-center justify-center" style={{ height: 50, border: "1.5px dashed #E0D2BC", borderRadius: 14, color: "#9A8F80", fontSize: 14, fontWeight: 700, gap: 8 }}><svg width="17" height="17" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#9A8F80", strokeWidth: 2, strokeLinecap: "round" }}><path d="M12 6v12M6 12h12" /></svg>Dodatne nagrade dodaš v nastavitvah</div>
+                <div className="flex flex-col" style={{ gap: 18, maxWidth: 440 }}>
+                  {/* nagrada za žige */}
+                  <div className="flex flex-col" style={{ gap: 8 }}>
+                    <span style={lbl}>Nagrada za žige (kartonček)</span>
+                    <div className="flex items-center" style={{ background: "#fff", border: `2px solid ${AMBER}`, borderRadius: 16, padding: 14, gap: 12 }}>
+                      <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#FCEFD8", flexShrink: 0 }}><Cup stroke={AMBER} size={21} /></div>
+                      <div className="flex-1" style={{ minWidth: 0 }}>
+                        <input value={rewardName} onChange={(e) => setRewardName(e.target.value)} placeholder="npr. Brezplačna kava" style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontFamily: JAK, fontSize: 15, fontWeight: 700, color: INK }} />
+                        <div style={{ fontSize: 12.5, color: "#9A8F80" }}>pri {stampGoal} žigih · glavna nagrada</div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* nagrade za točke */}
+                  {ptsPerVisit > 0 && (
+                    <div className="flex flex-col" style={{ gap: 8 }}>
+                      <span style={lbl}>Nagrade za točke</span>
+                      {pointRewards.map((r, i) => (
+                        <div key={i} className="flex items-center" style={{ background: "#fff", border: "1px solid #EFE4D2", borderRadius: 14, padding: 10, gap: 8 }}>
+                          <input value={r.name} onChange={(e) => setPointRewards((a) => a.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} placeholder="ime nagrade" style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", fontFamily: JAK, fontSize: 14.5, fontWeight: 700, color: INK }} />
+                          <input value={r.points} onChange={(e) => setPointRewards((a) => a.map((x, j) => (j === i ? { ...x, points: Math.max(0, Number(e.target.value) || 0) } : x)))} type="number" style={{ width: 68, border: "1px solid #E4D9C7", borderRadius: 9, height: 36, padding: "0 8px", fontFamily: JAK, fontSize: 13.5, fontWeight: 700, color: INK, textAlign: "right", outline: "none" }} />
+                          <span style={{ fontSize: 12, color: "#9A8F80" }}>t</span>
+                          <button type="button" onClick={() => setPointRewards((a) => a.filter((_, j) => j !== i))} aria-label="odstrani" style={{ width: 32, height: 32, border: "1px solid #E4D9C7", borderRadius: 9, background: "#fff", color: "#C4623D", cursor: "pointer", fontFamily: JAK, flexShrink: 0 }}>✕</button>
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => setPointRewards((a) => [...a, { name: "", points: 100 }])} className="flex items-center justify-center" style={{ height: 46, border: "1.5px dashed #E0D2BC", borderRadius: 14, color: "#9A8F80", fontSize: 14, fontWeight: 700, gap: 8, background: "transparent", cursor: "pointer", fontFamily: JAK }}><svg width="16" height="16" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#9A8F80", strokeWidth: 2, strokeLinecap: "round" }}><path d="M12 6v12M6 12h12" /></svg>Dodaj nagrado</button>
+                    </div>
+                  )}
                 </div>
               )}
               {step === 4 && (

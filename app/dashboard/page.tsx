@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { isSupabaseConfigured, getServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/ssrServer";
-import Dashboard from "./Dashboard";
+import Dashboard, { type ReviewRow } from "./Dashboard";
 import DashboardDemo from "./DashboardDemo";
 import type { Venue, Reward, Customer, ScanRow, RedemptionRow } from "@/lib/types";
 
@@ -24,7 +24,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const venue = venues.find((v) => v.id === sp?.v) || venues[0];
 
-  const [{ data: rewards }, { data: customers }, { data: scans }, { data: redemptions }] =
+  const [{ data: rewards }, { data: customers }, { data: scans }, { data: redemptions }, { data: reviews }] =
     await Promise.all([
       db.from("rewards").select("*").eq("venue_id", venue.id).order("points_required"),
       db.from("customers").select("*").eq("venue_id", venue.id).order("points", { ascending: false }),
@@ -40,6 +40,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         .eq("venue_id", venue.id)
         .order("created_at", { ascending: false })
         .limit(200),
+      db
+        .from("reviews")
+        .select("id, stars, comment, to_google, created_at")
+        .eq("venue_id", venue.id)
+        .order("created_at", { ascending: false })
+        .limit(300),
     ]);
 
   return (
@@ -50,6 +56,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       customers={(customers ?? []) as Customer[]}
       scans={(scans ?? []) as unknown as ScanRow[]}
       redemptions={(redemptions ?? []) as unknown as RedemptionRow[]}
+      reviews={(reviews ?? []) as unknown as ReviewRow[]}
       ownerEmail={user.email ?? ""}
     />
   );

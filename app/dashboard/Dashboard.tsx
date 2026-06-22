@@ -32,7 +32,7 @@ function Ic({ name, color = INK, size = 20 }: { name: IcName; color?: string; si
   return <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", flexShrink: 0 }}>{p[name]}</svg>;
 }
 
-const NAV: [string, string, IcName][] = [["pregled", "Pregled", "grid"], ["zgodovina", "Zgodovina", "clock"], ["stranke", "Stranke", "users"], ["sistem", "Sistem", "qr"], ["nastavitve", "Nastavitve", "sliders"]];
+const NAV: [string, string, IcName][] = [["pregled", "Pregled", "grid"], ["analitika", "Analitika", "chart"], ["zgodovina", "Zgodovina", "clock"], ["stranke", "Stranke", "users"], ["marketing", "Marketing", "mega"], ["sistem", "Sistem", "qr"], ["nastavitve", "Nastavitve", "sliders"]];
 const card: React.CSSProperties = { background: "#fff", border: `1px solid ${BORD}`, borderRadius: 18, padding: 22 };
 const inp: React.CSSProperties = { height: 46, width: "100%", border: "1.5px solid #E4D9C7", borderRadius: 12, background: "#fff", padding: "0 14px", fontFamily: JAK, fontSize: 14.5, color: INK, outline: "none", boxSizing: "border-box" };
 function fmt(ts: string) { return new Date(ts).toLocaleString("sl-SI", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); }
@@ -58,6 +58,22 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   }, [scans, redemptions, customers]);
 
   const topCustomers = useMemo(() => [...customers].sort((a, b) => b.points - a.points).slice(0, 4), [customers]);
+
+  const seg = useMemo(() => {
+    const now = Date.now();
+    let active = 0, inactive = 0;
+    for (const c of customers) {
+      const v = stats.visits.get(c.id);
+      if (!v) { inactive++; continue; }
+      const days = (now - new Date(v.last).getTime()) / 864e5;
+      if (days <= 14) active++; else if (days >= 21) inactive++;
+    }
+    const best = customers.filter((c) => c.points >= 200).length;
+    return { active, inactive, best };
+  }, [customers, stats]);
+
+  const [segSel, setSegSel] = useState("Najboljši");
+  const segCount = segSel === "Najboljši" ? seg.best : segSel === "Neaktivni 21+ dni" ? seg.inactive : seg.active;
 
   function flash(t: string) { setMsg(t); setTimeout(() => setMsg(null), 3000); }
   async function run(fn: () => Promise<unknown>, ok?: string) { try { await fn(); if (ok) flash(ok); router.refresh(); } catch (e) { flash(e instanceof Error ? e.message : "Napaka."); } }
@@ -111,6 +127,40 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                     <div className="grid gap-3.5 lg:grid-cols-[1.6fr_1fr]">
                       <div style={card}><div style={{ fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Skeniranja (zadnjih 14 dni)</div><div className="flex items-end" style={{ gap: 5, height: 150 }}>{stats.days.map((d) => <div key={d.label} className="flex flex-1 flex-col items-center justify-end" style={{ gap: 5, height: "100%" }}><div style={{ width: "100%", height: `${Math.round((d.count / stats.maxDay) * 130)}px`, minHeight: d.count ? 4 : 0, borderRadius: "5px 5px 2px 2px", background: AMBER }} /><span style={{ fontSize: 9, color: "#B5AB9C" }}>{d.label}</span></div>)}</div></div>
                       <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}><span style={{ fontWeight: 700, fontSize: 15 }}>Najboljše stranke</span>{topCustomers.length === 0 && <span style={{ fontSize: 13.5, color: "#9A8F80" }}>Še ni strank.</span>}{topCustomers.map((c, i) => <div key={c.id} className="flex items-center" style={{ gap: 11 }}><div className="flex items-center justify-center" style={{ width: 30, height: 30, borderRadius: "50%", background: "#FCEFD8", color: "#B4781E", fontWeight: 800, fontSize: 12 }}>{i + 1}</div><span className="flex-1 truncate" style={{ fontSize: 13.5, fontWeight: 600 }}>{c.email || c.phone || "—"}</span><span style={{ fontSize: 13, fontWeight: 700, color: "#B4862F" }}>{c.points} t</span></div>)}</div>
+                    </div>
+                  </div>
+                )}
+
+                {sec === "analitika" && (
+                  <div className="flex flex-col" style={{ gap: 20 }}>
+                    <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))" }}>
+                      <Kpi l="Unovčene nagrade" v={redemptions.length} d={`${stats.pointsRedeemed} točk porabljenih`} dc={CORAL} />
+                      <Kpi l="Podarjene točke" v={stats.pointsAwarded} d={`${scans.length} skenov`} dc={GREEN} />
+                      <Kpi l="Najboljši gosti" v={seg.best} d="200+ točk" />
+                      <Kpi l="Neaktivni 21+ dni" v={seg.inactive} d="za reaktivacijo" dc={CORAL} />
+                    </div>
+                    <div className="grid gap-3.5 lg:grid-cols-[1.6fr_1fr]">
+                      <div style={card}><div style={{ fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Skeniranja (zadnjih 14 dni)</div><div className="flex items-end" style={{ gap: 5, height: 150 }}>{stats.days.map((d) => <div key={d.label} className="flex flex-1 flex-col items-center justify-end" style={{ gap: 5, height: "100%" }}><div style={{ width: "100%", height: `${Math.round((d.count / stats.maxDay) * 130)}px`, minHeight: d.count ? 4 : 0, borderRadius: "5px 5px 2px 2px", background: AMBER }} /><span style={{ fontSize: 9, color: "#B5AB9C" }}>{d.label}</span></div>)}</div></div>
+                      <div style={{ ...card, display: "flex", flexDirection: "column", gap: 12 }}><div style={{ fontWeight: 700, fontSize: 15 }}>Segmenti</div>{([["Najboljši (200+ t)", seg.best, GREEN], ["Aktivni (≤14 dni)", seg.active, INK], ["Neaktivni (21+ dni)", seg.inactive, CORAL]] as const).map(([l, n, c]) => <div key={l} className="flex items-center justify-between"><span style={{ fontSize: 13.5, color: MUTED }}>{l}</span><span style={{ fontWeight: 800, fontSize: 16, color: c }}>{n}</span></div>)}</div>
+                    </div>
+                    <div style={{ background: "#FCEFD8", borderRadius: 14, padding: "14px 16px", fontSize: 13, lineHeight: 1.5, color: "#7A5E1E" }}>Analitika kampanj (poslano · unovčeno · konverzija) se vklopi, ko aktiviraš pošiljanje sporočil v zavihku Marketing.</div>
+                  </div>
+                )}
+
+                {sec === "marketing" && (
+                  <div className="grid gap-3.5 lg:grid-cols-[1.4fr_1fr]">
+                    <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>
+                      <span style={{ fontWeight: 700, fontSize: 15 }}>Nova kampanja</span>
+                      <textarea rows={3} defaultValue="Pogrešamo te! Ta teden −20% na vse kave ☕" style={{ width: "100%", border: "1.5px solid #E4D9C7", borderRadius: 12, background: CREAM, padding: 12, fontFamily: JAK, fontSize: 14, color: INK, outline: "none", boxSizing: "border-box", resize: "vertical" }} />
+                      <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Segment</span><select value={segSel} onChange={(e) => setSegSel(e.target.value)} style={inp}>{["Najboljši", "Aktivni", "Neaktivni 21+ dni"].map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
+                      <div className="flex items-center justify-between" style={{ background: CREAM, borderRadius: 12, padding: "11px 14px" }}><span style={{ fontSize: 13, color: MUTED }}>Prejemniki</span><span style={{ fontSize: 14, fontWeight: 700 }}>{segCount} gostov</span></div>
+                      <div className="flex items-center justify-between" style={{ background: INK, borderRadius: 12, padding: "12px 14px", color: PAPER }}><span style={{ fontSize: 13, color: "rgba(251,243,230,0.7)" }}>Ocena stroška (SMS)</span><span style={{ fontSize: 16, fontWeight: 800, color: AMBER }}>{(segCount * 0.07).toFixed(2)} €</span></div>
+                      <button onClick={() => flash("Pošiljanje sporočil se vklopi kmalu (SMS/email provider).")} style={{ height: 48, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: "pointer" }}>Pošlji {segCount} gostom</button>
+                    </div>
+                    <div style={{ ...card, display: "flex", flexDirection: "column", gap: 12 }}>
+                      <span style={{ fontWeight: 700, fontSize: 15 }}>Tvoji segmenti</span>
+                      {([["Najboljši (200+ t)", seg.best], ["Aktivni (≤14 dni)", seg.active], ["Neaktivni (21+ dni)", seg.inactive]] as const).map(([l, n]) => <div key={l} className="flex items-center justify-between" style={{ borderBottom: "1px solid #F1E8D9", paddingBottom: 8 }}><span style={{ fontSize: 13.5, color: MUTED }}>{l}</span><span style={{ fontWeight: 800, fontSize: 15, color: "#B4862F" }}>{n}</span></div>)}
+                      <span style={{ fontSize: 12.5, color: "#9A8F80", lineHeight: 1.5, marginTop: 4 }}>Segmenti se računajo iz pravih obiskov tvojih gostov.</span>
                     </div>
                   </div>
                 )}

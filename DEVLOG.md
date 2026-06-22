@@ -49,6 +49,18 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 39 (avtonomni sprint #2: hibridni model + multi-venue + real analitika + kampanje)
+- **Hibridni model nagrad**: kava = ŽIGI (kartonček), rogljiček 250t + torta 350t = TOČKE. Migracija 0007
+  (customers.stamps, venues.stamp_goal, rewards.kind) + award_scan v2 (žige+točke ločeno, žige resetira pri goalu).
+  Wired: api/scan, api/customer, createVenue (default 3 nagrade), GuestApp (kartonček + točkovne nagrade z unovčenjem).
+  Demo venue posodobljen v bazi (25 t/obisk, stamp_goal 10).
+- **Več lokalov na lastnika**: odstranjen single-venue guard; `/dashboard?v=<id>` switcher v sidebar + `/partner?new=1` za nov lokal.
+- **Pravi Dashboard razširjen**: Analitika (prave KPI: unovčene/podarjene/segmenti + 14-dnevni graf) +
+  Marketing (composer kampanje: sporočilo + segment + prejemniki + ocena stroška SMS; segmenti iz pravih obiskov).
+- **Točke/unovčenje preverjeno**: `activate_reward` atomarno (FOR UPDATE) odšteje točke — odporno na več-account.
+- **Google ocena**: že po vsakem skenu (success zaslon, 4–5★→Google / 1–3★ zasebno).
+- ODLOŽENO (rabi providerja): dejansko pošiljanje SMS/email kampanj; logo upload; Google OAuth.
+
 ### 2026-06-20 — seja 38b (avtonomni Tally sprint — DOKONČANO: pravi dashboard + widget + ActivateSheet)
 - **ActivateSheet** (unovčenje bottom-sheet) → Tally. Guest del 100% Tally.
 - **Pravi `Dashboard.tsx`** (prijavljen lokal) → Tally sidebar (Pregled/Zgodovina/Stranke/Sistem/Nastavitve) s PRAVIMI

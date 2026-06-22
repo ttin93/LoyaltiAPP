@@ -61,16 +61,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Neveljaven datum računa." });
     }
 
-    // 4) Točke — per_visit za MVP
+    // 4) Točke na obisk + žig (žigi ločeno od točk)
     const points = venue.points_per_visit;
+    const stampGoal = venue.stamp_goal || 10;
 
-    // cilj kartončka (samo per_visit) = najmanjša nagrada; per_euro = 0 (brez reseta)
     const { data: rewards } = await db.from("rewards").select("*").eq("venue_id", venue.id);
-    const sortedRewards = (rewards ?? []).slice().sort((a, b) => a.points_required - b.points_required);
-    const cardGoal =
-      venue.points_model === "per_visit" && sortedRewards.length ? sortedRewards[0].points_required : 0;
+    const stampReward = (rewards ?? []).find((r) => r.kind === "stamp") || null;
+    const pointRewards = (rewards ?? []).filter((r) => r.kind !== "stamp");
 
-    // 5) Dodeli + dedup (unique zoi v award_scan) + žigi-cikel
+    // 5) Dodeli točke + žig (+ dedup po unique zoi); žige resetira pri stamp_goal → kava kupon
     const { data, error } = await db.rpc("award_scan", {
       p_venue_id: venue.id,
       p_customer_id: customerId,
@@ -79,7 +78,7 @@ export async function POST(req: Request) {
       p_issued_at: parsed.issuedAt.toISOString(),
       p_amount: null,
       p_points: points,
-      p_card_goal: cardGoal,
+      p_stamp_goal: stampGoal,
     });
     if (error) {
       if (error.code === "23505") {
@@ -87,18 +86,20 @@ export async function POST(req: Request) {
       }
       throw error;
     }
-    const row = (Array.isArray(data) ? data[0] : data) as { total: number; card_completed: boolean } | null;
+    const row = (Array.isArray(data) ? data[0] : data) as { total: number; stamps: number; card_completed: boolean } | null;
     const total = row?.total ?? 0;
+    const stamps = row?.stamps ?? 0;
     const cardCompleted = !!row?.card_completed;
 
-    // 6) Napredek do nagrade
     return NextResponse.json({
       ok: true,
       pointsAwarded: points,
       totalPoints: total,
+      stamps,
+      stampGoal,
       cardCompleted,
-      cardReward: cardCompleted ? sortedRewards[0]?.name ?? null : null,
-      nextReward: nextRewardProgress(Number(total), rewards ?? []),
+      cardReward: cardCompleted ? stampReward?.name ?? "Brezplačna kava" : null,
+      nextReward: nextRewardProgress(Number(total), pointRewards),
     });
   } catch (e) {
     return NextResponse.json({ ok: false, error: errMsg(e) }, { status: 500 });

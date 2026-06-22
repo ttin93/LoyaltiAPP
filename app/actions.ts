@@ -57,7 +57,6 @@ export async function createVenue(formData: FormData) {
   const pointsPerVisit = Math.min(50, Math.max(1, Number(formData.get("points_per_visit")) || 10));
   const stampGoal = Math.min(12, Math.max(4, Number(formData.get("stamp_goal")) || 10));
   const rewardName = String(formData.get("reward_name") || "").trim() || "Brezplačna kava";
-  const mainGoal = stampGoal * pointsPerVisit;
 
   // unikaten public_code
   const base = slugify(name);
@@ -74,14 +73,16 @@ export async function createVenue(formData: FormData) {
 
   const { data: venue, error } = await db
     .from("venues")
-    .insert({ owner_user_id: user.id, name, brand_color: brand, public_code: code, owner_name, phone, venue_type, city, points_model, points_per_visit: pointsPerVisit })
+    .insert({ owner_user_id: user.id, name, brand_color: brand, public_code: code, owner_name, phone, venue_type, city, points_model, points_per_visit: pointsPerVisit, stamp_goal: stampGoal })
     .select("*")
     .single();
   if (error) throw error;
 
-  // glavna nagrada se sproži pri polnem kartončku (stampGoal žigov)
+  // kava = ŽIGI (poln kartonček = stampGoal žigov); druge nagrade = TOČKE
   await db.from("rewards").insert([
-    { venue_id: venue.id, name: rewardName, points_required: mainGoal, sort_order: 1 },
+    { venue_id: venue.id, name: rewardName, points_required: stampGoal, sort_order: 1, kind: "stamp" },
+    { venue_id: venue.id, name: "Domač rogljiček", points_required: 250, sort_order: 2, kind: "points" },
+    { venue_id: venue.id, name: "Kos torte", points_required: 350, sort_order: 3, kind: "points" },
   ]);
 
   redirect("/dashboard");

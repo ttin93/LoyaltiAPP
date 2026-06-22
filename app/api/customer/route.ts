@@ -35,7 +35,8 @@ export async function GET(req: Request) {
     return NextResponse.json({
       ok: true,
       points: customer.points,
-      nextReward: nextRewardProgress(customer.points, rewards ?? []),
+      stamps: customer.stamps ?? 0,
+      nextReward: nextRewardProgress(customer.points, (rewards ?? []).filter((r) => r.kind !== "stamp")),
     });
   } catch (e) {
     return NextResponse.json({ ok: false, error: errMsg(e) }, { status: 500 });

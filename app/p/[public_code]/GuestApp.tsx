@@ -81,6 +81,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
 
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [points, setPoints] = useState(0);
+  const [stamps, setStamps] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState<"home" | "success" | "error">("home");
   const [scanning, setScanning] = useState(false);
@@ -106,23 +107,22 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const [redeemedName, setRedeemedName] = useState<string | null>(null);
   const [now, setNow] = useState(0);
 
-  const pv = venue.points_per_visit || 10;
-  const goal = sorted.length ? sorted[0].points_required : pv * 10;
-  const stampGoal = Math.max(1, Math.round(goal / pv)); // št. žigov do nagrade (nastavljivo)
-  const stamps = Math.min(stampGoal, Math.floor(points / pv));
-  const goalLabel = sorted.length ? shortLabel(sorted[0].name) : "KAVA";
-  const rewardReady = sorted.length > 0 && points >= goal;
-  const left = Math.max(0, goal - points);
+  // hibridni model: kava = ŽIGI (kartonček), druge nagrade = TOČKE
+  const stampGoal = (venue as { stamp_goal?: number }).stamp_goal || 10;
+  const stampReward = sorted.find((r) => (r as { kind?: string }).kind === "stamp") || null;
+  const pointRewards = sorted.filter((r) => (r as { kind?: string }).kind !== "stamp");
   const visitsLeft = Math.max(0, stampGoal - stamps);
   const visitWord = visitsLeft === 1 ? "obisk" : visitsLeft === 2 ? "obiska" : visitsLeft <= 4 ? "obiske" : "obiskov";
-  const isStampMode = venue.points_model === "per_visit";
+  const nextPR = pointRewards.find((r) => r.points_required > points) || null;
+  const left = nextPR ? nextPR.points_required - points : 0;
+  const rewardReady = pointRewards.some((r) => points >= r.points_required);
 
   const refresh = useCallback(
     async (id: string) => {
       try {
         const r = await fetch(`/api/customer?venueCode=${venue.public_code}&customerId=${id}`);
         const j = await r.json();
-        if (j.ok) setPoints(j.points);
+        if (j.ok) { setPoints(j.points); setStamps(j.stamps ?? 0); }
         else {
           localStorage.removeItem(storageKey);
           setCustomerId(null);
@@ -212,20 +212,22 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           if (demoZois.current.has(parsed.zoiHex)) return fail("Ta račun je bil že unovčen.", "Vsak račun prinese točke samo enkrat.");
           demoZois.current.add(parsed.zoiHex);
         }
-        const after = points + venue.points_per_visit;
+        const afterPoints = points + venue.points_per_visit;
+        const afterStamps = stamps + 1;
         setAwarded(venue.points_per_visit);
-        if (isStampMode && Math.floor(after / pv) >= stampGoal) {
-          // kartonček poln → kupon v denarnico (stackable) + reset z ostankom
-          const rewardName = sorted[0]?.name || "Brezplačna kava";
+        setPoints(afterPoints);
+        if (afterStamps >= stampGoal) {
+          // kartonček poln → kava kupon v denarnico + reset žigov (točke ostanejo)
+          const rewardName = stampReward?.name || "Brezplačna kava";
           const next = [...coupons, { id: "c" + Date.now(), name: rewardName }];
           setCoupons(next);
           localStorage.setItem(couponsKey, JSON.stringify(next));
           setCompletedReward(rewardName);
           setCardCompleted(true);
-          setPoints(after - goal);
+          setStamps(afterStamps - stampGoal);
         } else {
           setCardCompleted(false);
-          setPoints(after);
+          setStamps(afterStamps);
         }
         setView("success");
       } catch (e) {
@@ -243,9 +245,10 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
       const j = await r.json();
       if (j.ok) {
         setPoints(j.totalPoints);
+        setStamps(j.stamps ?? 0);
         setAwarded(j.pointsAwarded);
         if (j.cardCompleted) {
-          const rewardName = j.cardReward || sorted[0]?.name || "Brezplačna kava";
+          const rewardName = j.cardReward || stampReward?.name || "Brezplačna kava";
           const next = [...coupons, { id: "c" + Date.now(), name: rewardName }];
           setCoupons(next);
           localStorage.setItem(couponsKey, JSON.stringify(next));
@@ -392,23 +395,24 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   // SUCCESS (po skeniranju)
   if (view === "success") {
     const displayStamps = cardCompleted ? stampGoal : stamps;
+    const hasCard = !!stampReward;
     const successMsg = cardCompleted
       ? `Kupon za ${completedReward.toLowerCase()} je v tvoji denarnici 🎟️`
-      : isStampMode
-        ? `Še ${visitsLeft} ${visitWord} do brezplačne ${(sorted[0]?.name || "kave").toLowerCase()}.`
+      : hasCard
+        ? `Še ${visitsLeft} ${visitWord} do brezplačne ${(stampReward?.name || "kave").toLowerCase()}.`
         : rewardReady ? "Lahko unovčiš nagrado pri osebju." : `Še ${left} točk do nagrade.`;
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center" style={{ background: BG, fontFamily: JAK, color: INK, padding: "48px 24px", gap: 22 }}>
         <div className="flex items-center justify-center" style={{ minWidth: 92, height: 92, borderRadius: 26, padding: "0 18px", background: cardCompleted ? `linear-gradient(150deg,#EBB05F,${AMBER})` : "rgba(94,127,82,0.14)", border: cardCompleted ? "none" : `2.5px solid ${GREEN}`, animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
-          <span style={{ fontWeight: 800, fontSize: cardCompleted ? 40 : 24, color: cardCompleted ? "#fff" : GREEN }}>{cardCompleted ? "🎉" : isStampMode ? "+1 žig" : `+${awarded}`}</span>
+          <span style={{ fontWeight: 800, fontSize: cardCompleted ? 40 : 24, color: cardCompleted ? "#fff" : GREEN }}>{cardCompleted ? "🎉" : "+1 žig"}</span>
         </div>
-        {isStampMode && (
+        {hasCard && (
           <div style={{ width: "100%", background: "#fff", borderRadius: 24, padding: "22px 20px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)" }}>
             <StampGrid stamps={displayStamps} count={stampGoal} animateNew />
           </div>
         )}
         <div className="flex flex-col items-center text-center" style={{ gap: 8 }}>
-          <div style={{ fontWeight: 800, fontSize: 26, letterSpacing: "-0.01em" }}>{cardCompleted ? "Kartonček je poln!" : isStampMode ? `Žig št. ${displayStamps} je tvoj` : `+${awarded} točk`}</div>
+          <div style={{ fontWeight: 800, fontSize: 26, letterSpacing: "-0.01em" }}>{cardCompleted ? "Kartonček je poln!" : `Žig je tvoj · +${awarded} točk`}</div>
           <div style={{ maxWidth: 280, fontSize: 15, lineHeight: 1.5, color: MUTED }}>{successMsg}</div>
         </div>
 
@@ -470,11 +474,13 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
     );
   }
 
-  // HOME (kartonček / točke + nagrade + kuponi) — responsive 1-stolpec (telefon) / 2-stolpca (PC)
-  const visitsNote = isStampMode
+  // HOME — kava kartonček (žigi) + točkovne nagrade — responsive
+  const hasCard = !!stampReward;
+  const readyReward = pointRewards.find((r) => points >= r.points_required) || null;
+  const visitsNote = hasCard
     ? stamps >= stampGoal
-      ? "Kartonček je poln — aktiviraj kupon."
-      : `Še ${visitsLeft} ${visitWord} do brezplačne ${(sorted[0]?.name || "kave").toLowerCase()}.`
+      ? "Kartonček je poln — aktiviraj kupon spodaj."
+      : `Še ${visitsLeft} ${visitWord} do brezplačne ${(stampReward?.name || "kave").toLowerCase()}.`
     : rewardReady
       ? "Imaš dovolj točk — unovči nagrado."
       : `Še ${left} točk do nagrade.`;
@@ -492,11 +498,11 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
               <div className="flex items-center justify-center" style={{ width: 52, height: 52, borderRadius: 17, background: INK, color: PAPER, fontWeight: 800, fontSize: 24 }}>{(venue.name.trim().charAt(0) || "M").toUpperCase()}</div>
               <div><div style={{ fontWeight: 800, fontSize: 21 }}>{venue.name}</div>{city && <div style={{ fontSize: 13, color: "#9A7A3A" }}>{city}</div>}</div>
             </div>
-            <h2 className="relative" style={{ margin: 0, fontWeight: 800, fontSize: "clamp(28px,3vw,36px)", lineHeight: 1.08, letterSpacing: "-0.02em" }}>{isStampMode ? <>Vsaka kava<br />te približa nagradi.</> : <>Zbiraj točke,<br />prejmi nagrade.</>}</h2>
-            <p className="relative" style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: MUTED, maxWidth: 340 }}>Skeniraj račun ob obisku in glej, kako se kartica polni. Preprosto, toplo, tvoje.</p>
+            <h2 className="relative" style={{ margin: 0, fontWeight: 800, fontSize: "clamp(28px,3vw,36px)", lineHeight: 1.08, letterSpacing: "-0.02em" }}>Vsaka kava<br />te približa nagradi.</h2>
+            <p className="relative" style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: MUTED, maxWidth: 340 }}>Skeniraj račun ob obisku — vsak prinese žig in točke. Preprosto, toplo, tvoje.</p>
             <div className="relative flex" style={{ gap: 26, borderTop: "1px solid rgba(42,36,29,0.1)", paddingTop: 18 }}>
               <div><div style={{ fontWeight: 800, fontSize: 24 }}>{points}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>točk</div></div>
-              {isStampMode && <div><div style={{ fontWeight: 800, fontSize: 24 }}>{stamps}/{stampGoal}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>žigov</div></div>}
+              {hasCard && <div><div style={{ fontWeight: 800, fontSize: 24 }}>{stamps}/{stampGoal}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>žigov</div></div>}
               <div><div style={{ fontWeight: 800, fontSize: 24, color: "#B4862F" }}>{coupons.length}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>kuponov</div></div>
             </div>
           </div>
@@ -506,18 +512,18 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
             {/* kartonček / točke */}
             <div style={{ background: "#fff", borderRadius: 24, padding: "22px 22px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)", border: "1px solid #F1E8D9" }}>
               <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#9A8F80" }}>{isStampMode ? "Tvoja kartica" : "Tvoje točke"}</span>
-                <span style={{ fontSize: 13, fontWeight: 800, color: AMBER }}>{isStampMode ? `${stamps} / ${stampGoal}` : points}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#9A8F80" }}>{hasCard ? "Tvoja kartica" : "Tvoje točke"}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: AMBER }}>{hasCard ? `${stamps} / ${stampGoal}` : `${points} točk`}</span>
               </div>
-              {isStampMode ? <StampGrid stamps={stamps} count={stampGoal} /> : <div style={{ fontWeight: 800, fontSize: 52, lineHeight: 1, letterSpacing: "-0.02em" }}>{points}<span style={{ fontSize: 16, fontWeight: 600, color: "#9A8F80", marginLeft: 8 }}>točk</span></div>}
+              {hasCard ? <StampGrid stamps={stamps} count={stampGoal} /> : <div style={{ fontWeight: 800, fontSize: 52, lineHeight: 1, letterSpacing: "-0.02em" }}>{points}<span style={{ fontSize: 16, fontWeight: 600, color: "#9A8F80", marginLeft: 8 }}>točk</span></div>}
               <div style={{ marginTop: 16, background: CREAM, borderRadius: 16, padding: "13px 15px", fontSize: 13.5, lineHeight: 1.45, color: MUTED }}>{visitsNote}</div>
             </div>
 
-            {/* nagrada pripravljena (točke) */}
-            {!isStampMode && rewardReady && (
+            {/* točkovna nagrada pripravljena */}
+            {readyReward && (
               <div className="flex items-center" style={{ gap: 13, background: GREEN, borderRadius: 18, padding: "14px 16px", color: "#F4F0E4" }}>
-                <div className="flex-1"><div style={{ fontWeight: 800, fontSize: 15 }}>{sorted[0].name} te čaka</div><div style={{ fontSize: 12.5, opacity: 0.85 }}>Aktiviraj in pokaži kodo osebju.</div></div>
-                <button onClick={() => openRedeem(sorted[0])} style={{ height: 38, padding: "0 15px", borderRadius: 11, background: "#F4F0E4", color: "#3E5536", fontSize: 13, fontWeight: 700, fontFamily: JAK, border: "none", cursor: "pointer" }}>Unovči</button>
+                <div className="flex-1"><div style={{ fontWeight: 800, fontSize: 15 }}>{readyReward.name} te čaka</div><div style={{ fontSize: 12.5, opacity: 0.85 }}>Za {readyReward.points_required} točk · aktiviraj pri osebju.</div></div>
+                <button onClick={() => openRedeem(readyReward)} style={{ height: 38, padding: "0 15px", borderRadius: 11, background: "#F4F0E4", color: "#3E5536", fontSize: 13, fontWeight: 700, fontFamily: JAK, border: "none", cursor: "pointer" }}>Unovči</button>
               </div>
             )}
 
@@ -545,43 +551,37 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           </div>
         </div>
 
-        {/* MENI NAGRAD */}
-        <div className="px-4 lg:px-0" style={{ marginTop: 28 }}>
-          <div className="flex items-baseline justify-between" style={{ marginBottom: 14 }}>
-            <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: "-0.01em" }}>{isStampMode ? "Nagrade v lokalu" : "Nagrade"}</div>
-            <div style={{ fontSize: 13, color: "#9A8F80" }}>{isStampMode ? "poln kartonček = nagrada" : `1 € = ${venue.points_per_euro} točk`}</div>
-          </div>
-          <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))" }}>
-            {sorted.map((r, idx) => {
-              const primary = idx === 0;
-              const ready = !isStampMode && points >= r.points_required;
-              const pct = isStampMode ? (primary ? Math.round((stamps / stampGoal) * 100) : 0) : Math.min(100, Math.round((points / r.points_required) * 100));
-              return (
-                <div key={r.id} className="flex items-center" style={{ gap: 14, borderRadius: 18, border: `1px solid ${"#EFE6D6"}`, background: "#fff", padding: 14 }}>
-                  <div className="flex items-center justify-center" style={{ width: 50, height: 50, borderRadius: 14, background: CREAM, flexShrink: 0 }}><Icon name={REWARD_ICONS[idx % REWARD_ICONS.length]} color={INK} size={24} /></div>
-                  <div className="flex min-w-0 flex-1 flex-col" style={{ gap: 7 }}>
-                    <div className="flex items-baseline justify-between" style={{ gap: 8 }}>
-                      <span style={{ fontSize: 15, fontWeight: 700 }}>{r.name}</span>
-                      {isStampMode ? (
-                        primary ? <span style={{ whiteSpace: "nowrap", borderRadius: 999, background: "#FCEFD8", padding: "2px 9px", fontSize: 11, fontWeight: 800, color: "#B4781E" }}>kartonček</span> : <span style={{ whiteSpace: "nowrap", fontSize: 12, color: "#A89B88" }}>v meniju</span>
-                      ) : ready ? (
-                        <button onClick={() => openRedeem(r)} style={{ whiteSpace: "nowrap", fontSize: 12.5, fontWeight: 800, color: GREEN, background: "none", border: "none", cursor: "pointer", fontFamily: JAK }}>unovči</button>
-                      ) : (
-                        <span style={{ whiteSpace: "nowrap", fontSize: 12.5, color: "#9A8F80" }}>{points} / {r.points_required} točk</span>
-                      )}
+        {/* MENI NAGRAD (za točke) */}
+        {pointRewards.length > 0 && (
+          <div className="px-4 lg:px-0" style={{ marginTop: 28 }}>
+            <div className="flex items-baseline justify-between" style={{ marginBottom: 14 }}>
+              <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: "-0.01em" }}>Nagrade za točke</div>
+              <div style={{ fontSize: 13, color: "#9A8F80" }}>{points} točk · +{venue.points_per_visit} na obisk</div>
+            </div>
+            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))" }}>
+              {pointRewards.map((r, idx) => {
+                const ready = points >= r.points_required;
+                const pct = Math.min(100, Math.round((points / r.points_required) * 100));
+                return (
+                  <div key={r.id} className="flex items-center" style={{ gap: 14, borderRadius: 18, border: "1px solid #EFE6D6", background: "#fff", padding: 14 }}>
+                    <div className="flex items-center justify-center" style={{ width: 50, height: 50, borderRadius: 14, background: CREAM, flexShrink: 0 }}><Icon name={REWARD_ICONS[idx % REWARD_ICONS.length]} color={INK} size={24} /></div>
+                    <div className="flex min-w-0 flex-1 flex-col" style={{ gap: 7 }}>
+                      <div className="flex items-baseline justify-between" style={{ gap: 8 }}>
+                        <span style={{ fontSize: 15, fontWeight: 700 }}>{r.name}</span>
+                        {ready ? (
+                          <button onClick={() => openRedeem(r)} style={{ whiteSpace: "nowrap", fontSize: 12.5, fontWeight: 800, color: GREEN, background: "none", border: "none", cursor: "pointer", fontFamily: JAK }}>unovči</button>
+                        ) : (
+                          <span style={{ whiteSpace: "nowrap", fontSize: 12.5, color: "#9A8F80" }}>{points} / {r.points_required} točk</span>
+                        )}
+                      </div>
+                      <div style={{ height: 7, overflow: "hidden", borderRadius: 999, background: "#EFE4D2" }}><div style={{ height: "100%", borderRadius: 999, width: `${pct}%`, background: ready ? GREEN : AMBER }} /></div>
                     </div>
-                    {(!isStampMode || primary) && (
-                      <>
-                        <div style={{ height: 7, overflow: "hidden", borderRadius: 999, background: "#EFE4D2" }}><div style={{ height: "100%", borderRadius: 999, width: `${pct}%`, background: ready || (isStampMode && stamps >= stampGoal) ? GREEN : AMBER }} /></div>
-                        {isStampMode && primary && <div style={{ fontSize: 12, color: "#9A8F80" }}>{stamps >= stampGoal ? "Pripravljeno — kupon v denarnici" : `${stamps}/${stampGoal} žigov`}</div>}
-                      </>
-                    )}
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {scanning && <Scanner demo={demo} onResult={handleScan} onClose={() => setScanning(false)} />}

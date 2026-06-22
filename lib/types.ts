@@ -11,6 +11,8 @@ export interface Venue {
   points_model: PointsModel;
   points_per_visit: number;
   points_per_euro: number;
+  stamp_goal?: number; // št. žigov za kartonček-nagrado (kava)
+  city?: string | null;
   scan_window_hours: number;
   redemption_minutes: number;
   daily_scan_cap: number | null;
@@ -32,6 +34,7 @@ export interface Reward {
   image_url: string | null;
   points_required: number;
   sort_order: number;
+  kind?: "stamp" | "points";
 }
 
 export interface Customer {
@@ -40,6 +43,7 @@ export interface Customer {
   phone: string | null;
   email: string | null;
   points: number;
+  stamps?: number;
   created_at: string;
 }
 

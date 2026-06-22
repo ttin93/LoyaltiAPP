@@ -259,7 +259,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         if (afterStamps >= stampGoal) {
           // kartonček poln → kava kupon v denarnico + reset žigov (točke ostanejo)
           const rewardName = stampReward?.name || "Brezplačna kava";
-          nextCoupons = [...nextCoupons, { id: "c" + Date.now(), name: rewardName, pending: false }];
+          nextCoupons = [...nextCoupons, { id: "s" + Date.now() + Math.random().toString(36).slice(2, 7), name: rewardName, pending: false }];
           setCompletedReward(rewardName);
           setCardCompleted(true);
           setStamps(afterStamps - stampGoal);
@@ -291,7 +291,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         let nextCoupons = coupons.map((c) => ({ ...c, pending: false }));
         if (j.cardCompleted) {
           const rewardName = j.cardReward || stampReward?.name || "Brezplačna kava";
-          nextCoupons = [...nextCoupons, { id: "c" + Date.now(), name: rewardName, pending: false }];
+          nextCoupons = [...nextCoupons, { id: "s" + Date.now() + Math.random().toString(36).slice(2, 7), name: rewardName, pending: false }];
           setCompletedReward(rewardName);
           setCardCompleted(true);
         } else {

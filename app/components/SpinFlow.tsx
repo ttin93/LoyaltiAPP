@@ -125,7 +125,7 @@ export default function SpinFlow({
     if (!already) {
       let coupons: { id: string; name: string; pending?: boolean }[] = [];
       try { coupons = JSON.parse(localStorage.getItem(ck) || "[]"); } catch {}
-      coupons.push({ id: "c" + coupons.length, name: label, pending: true });
+      coupons.push({ id: "w" + Date.now() + Math.random().toString(36).slice(2, 7), name: label, pending: true });
       localStorage.setItem(ck, JSON.stringify(coupons));
       localStorage.setItem(`loyalty:${code}:welcomeClaimed`, "1");
     }

@@ -49,6 +49,19 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 32 (RED: SPEC.md = vir resnice + audit + čiščenje smeti)
+- Uporabnik: projekt se zdi razpršen, ne ve kaj je v uporabi/kaj smeti. Odločitev: **NE restart**,
+  ampak zakleni koncept + počisti. Dizajn dela svež v Claude designu; koncept ostane.
+- **`SPEC.md`** (NOV) — edini vir resnice o konceptu (gostova pot, model, anti-fraud, cenik, FIX-list).
+  Ključna odločitev: **model = lastnik izbere žigi / točke / OBOJE** (»oboje« je še TODO v kodi).
+- **Pobrisana mrtva/opuščena koda** (preverjeno z grep uvozov):
+  - `app/embed/[public_code]/EmbedWheel.tsx` — mrtev (embed uporablja `SpinFlow`).
+  - `app/p/[public_code]/Scanner.tsx` — mrtev (povsod se uvaža `app/components/Scanner`).
+  - **POS/eBlagajna opuščen**: `lib/pos/*`, `app/api/pos/route.ts`, `app/dashboard/PosConnectCard.tsx`
+    + odstranjen uvoz/uporaba v `Dashboard.tsx`.
+- **Tech-debt zabeležen v SPEC §9** (ne brisano): dve kolesi (SpinFlow vs Wheel), demo vs real dashboard.
+- Build čist po čiščenju.
+
 ### 2026-06-20 — seja 31 (gostov DOM prenovljen: responsive + nagrade + kuponi vidni)
 - Prijavljeni gostov dom (`/p/[code]`) je bil pretemeljen (samo kartonček + skeniraj). Zdaj:
   - **Responsive**: telefon = 1 stolpec, **PC = 2 stolpca** (`lg:grid`, levo napredek+skeniraj+kuponi,

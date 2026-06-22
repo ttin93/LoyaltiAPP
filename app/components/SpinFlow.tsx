@@ -1,15 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Icon, FakeQr } from "@/app/components/icons";
 import { createBrowserSupabase } from "@/lib/supabase/ssrClient";
 
-const SEGS = ["Brezplačna kava", "−10 %", "+30 točk", "Piškot gratis", "−15 %", "Sirup gratis"];
+// Nova design paleta (Plus Jakarta Sans)
+const INK = "#2A241D";
+const CREAM = "#FBF7F0";
+const MUTED = "#6E6253";
+const SEGS = ["Brezplačna kava", "−10 %", "+30 točk", "Piškot", "−15 %", "Sirup"];
 const r2 = (n: number) => Math.round(n * 100) / 100;
+
+function CoffeeIcon({ size = 44, stroke = "#fff", w = 1.7 }: { size?: number; stroke?: string; w?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={{ fill: "none", stroke, strokeWidth: w, strokeLinecap: "round", strokeLinejoin: "round" }}>
+      <path d="M5 9h10v5.5A4.5 4.5 0 0 1 10.5 19h-1A4.5 4.5 0 0 1 5 14.5V9Z" />
+      <path d="M15 10.5h1.6a2.4 2.4 0 0 1 0 4.8H15" />
+      <path d="M7.6 6c0-1 .9-1 .9-2M11 6c0-1 .9-1 .9-2" />
+    </svg>
+  );
+}
 
 function GoogleLogo() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24">
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
       <path d="M21.6 12.2c0-.7-.06-1.3-.18-1.9H12v3.6h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.2Z" fill="#4285F4" />
       <path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22Z" fill="#34A853" />
       <path d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1A10 10 0 0 0 2 12c0 1.6.4 3.2 1.1 4.6L6.4 14Z" fill="#FBBC05" />
@@ -18,33 +31,54 @@ function GoogleLogo() {
   );
 }
 
+function FakeQr({ px = 70, seed = 7 }: { px?: number; seed?: number }) {
+  const n = 19;
+  let s = seed;
+  const rnd = () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; };
+  const cells: React.ReactNode[] = [];
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      const inF = (r < 6 && c < 6) || (r < 6 && c >= n - 6) || (r >= n - 6 && c < 6);
+      let on: boolean;
+      if (inF) {
+        const rr = r >= n - 6 ? r - (n - 6) : r;
+        const cc = c >= n - 6 ? c - (n - 6) : c;
+        on = rr === 0 || rr === 5 || cc === 0 || cc === 5 || (rr >= 2 && rr <= 3 && cc >= 2 && cc <= 3);
+      } else on = rnd() > 0.5;
+      cells.push(<div key={r + "-" + c} style={{ background: on ? INK : "transparent" }} />);
+    }
+  }
+  return <div style={{ width: px, height: px, display: "grid", gridTemplateColumns: "repeat(19,1fr)", gridTemplateRows: "repeat(19,1fr)" }}>{cells}</div>;
+}
+
 export default function SpinFlow({
   code,
   venueName,
   venueInitial,
-  brandColor = "#E8A23D",
-  tagline = "Zavrti kolo in osvoji nagrado za prvi obisk",
+  brandColor = "#E2A04A",
+  tagline = "Tvoj prvi obisk si zasluži nagrado",
+  demo = false,
 }: {
   code: string;
   venueName: string;
   venueInitial: string;
   brandColor?: string;
   tagline?: string;
+  demo?: boolean;
 }) {
   const [step, setStep] = useState<"wheel" | "won" | "register" | "coupon">("wheel");
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
-  const [phone, setPhone] = useState("");
-  const [method, setMethod] = useState<"phone" | "google">("phone");
-  const [couponCode, setCouponCode] = useState("");
+  const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [gErr, setGErr] = useState("");
+  const [couponCode, setCouponCode] = useState("");
 
   function spin() {
     if (spinning || step !== "wheel") return;
     setSpinning(true);
     const cur = ((rotation % 360) + 360) % 360;
-    const jitter = Math.round(Math.random() * 30 - 15);
+    const jitter = Math.round(Math.random() * 26 - 13);
     const delta = (330 - cur + 360) % 360;
     setRotation(rotation + 360 * 5 + delta + jitter);
     setTimeout(() => {
@@ -53,7 +87,26 @@ export default function SpinFlow({
     }, 4400);
   }
 
-  async function doRegister(payload: { phone?: string; email?: string }) {
+  function grantWelcomeCoupon() {
+    const ck = `loyalty:${code}:coupons`;
+    const already = localStorage.getItem(`loyalty:${code}:welcomeClaimed`) === "1";
+    if (!already) {
+      let coupons: { id: string; name: string }[] = [];
+      try { coupons = JSON.parse(localStorage.getItem(ck) || "[]"); } catch {}
+      coupons.push({ id: "c" + coupons.length, name: "Brezplačna kava" });
+      localStorage.setItem(ck, JSON.stringify(coupons));
+      localStorage.setItem(`loyalty:${code}:welcomeClaimed`, "1");
+    }
+    setCouponCode(`${code.slice(0, 4).toUpperCase()}-${Math.random().toString(16).slice(2, 6).toUpperCase()}`);
+  }
+
+  async function doRegister(payload: { email?: string }) {
+    if (demo) {
+      localStorage.setItem(`loyalty:${code}:customerId`, "demo");
+      grantWelcomeCoupon();
+      setStep("coupon");
+      return;
+    }
     setBusy(true);
     try {
       const r = await fetch("/api/register", {
@@ -66,26 +119,21 @@ export default function SpinFlow({
     } catch {
       /* best-effort */
     } finally {
-      // kupon dobrodošlice v denarnico — samo 1× na napravo (strežnik dedupe po telefonu/emailu)
-      const ck = `loyalty:${code}:coupons`;
-      const already = localStorage.getItem(`loyalty:${code}:welcomeClaimed`) === "1";
-      if (!already) {
-        let coupons: { id: string; name: string }[] = [];
-        try {
-          coupons = JSON.parse(localStorage.getItem(ck) || "[]");
-        } catch {}
-        coupons.push({ id: "c" + coupons.length, name: "Brezplačna kava" });
-        localStorage.setItem(ck, JSON.stringify(coupons));
-        localStorage.setItem(`loyalty:${code}:welcomeClaimed`, "1");
-      }
-      setCouponCode(`${code.slice(0, 4).toUpperCase()}-${Math.random().toString(16).slice(2, 6).toUpperCase()}`);
+      grantWelcomeCoupon();
       setBusy(false);
       setStep("coupon");
     }
   }
 
-  // Google: pravi OAuth prek Supabase (brezplačen, neomejen). Preusmeri na Google in nazaj.
+  function submitEmail() {
+    const mail = email.trim();
+    if (!mail || !/.+@.+\..+/.test(mail)) return;
+    doRegister({ email: mail });
+  }
+
+  // Google: pravi OAuth prek Supabase (brezplačen). V demu samo nadaljuj.
   async function googleSignIn() {
+    if (demo) { doRegister({}); return; }
     setGErr("");
     setBusy(true);
     try {
@@ -96,15 +144,14 @@ export default function SpinFlow({
         options: { redirectTo: `${window.location.origin}/p/${code}/spin?gwin=1` },
       });
       if (error) throw error;
-      // sicer brskalnik preusmeri na Google → vrne na /spin?gwin=1
     } catch {
       localStorage.removeItem(`loyalty:${code}:pendingGoogle`);
       setBusy(false);
-      setGErr("Google prijava še ni nastavljena. Uporabi telefonsko.");
+      setGErr("Google prijava še ni nastavljena. Uporabi email.");
     }
   }
 
-  // vrnitev z Googla: vzpostavi sejo → registriraj po emailu → kupon
+  // vrnitev z Googla
   useEffect(() => {
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
@@ -114,14 +161,13 @@ export default function SpinFlow({
       try {
         const sb = createBrowserSupabase();
         const { data } = await sb.auth.getSession();
-        const email = data.session?.user?.email;
-        if (!email) return;
+        const mail = data.session?.user?.email;
+        if (!mail) return;
         localStorage.removeItem(`loyalty:${code}:pendingGoogle`);
         url.searchParams.delete("gwin");
         window.history.replaceState({}, "", url.pathname + (url.search || ""));
-        setMethod("google");
         setStep("won");
-        await doRegister({ email });
+        await doRegister({ email: mail });
       } catch {
         localStorage.removeItem(`loyalty:${code}:pendingGoogle`);
       }
@@ -129,171 +175,190 @@ export default function SpinFlow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ---- WHEEL SVG (rotacija na ovojnem divu — CSS prehod) ----
   const wheel = (() => {
     const cx = 100, cy = 100, r = 92;
-    const polar = (deg: number) => {
-      const a = ((deg - 90) * Math.PI) / 180;
-      return [r2(cx + r * Math.cos(a)), r2(cy + r * Math.sin(a))];
-    };
-    const fills = [brandColor, "#FBF4E8", "#F3E9D6", "#FBF4E8", "#F3E9D6", "#FBF4E8"];
-    const paths = [];
-    const labels = [];
+    const polar = (deg: number) => { const a = ((deg - 90) * Math.PI) / 180; return [r2(cx + r * Math.cos(a)), r2(cy + r * Math.sin(a))]; };
+    const fills = [brandColor, "#FFFFFF", "#F6EAD6", "#FFFFFF", "#F6EAD6", "#FFFFFF"];
+    const paths: React.ReactNode[] = [];
+    const labels: React.ReactNode[] = [];
     for (let i = 0; i < 6; i++) {
       const [x0, y0] = polar(i * 60);
       const [x1, y1] = polar((i + 1) * 60);
-      paths.push(<path key={"p" + i} d={`M${cx} ${cy} L${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1} Z`} fill={fills[i]} stroke="#E7D6BA" strokeWidth={1} />);
+      paths.push(<path key={"p" + i} d={`M${cx} ${cy} L${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1} Z`} fill={fills[i]} stroke="#EAD9BC" strokeWidth={1} />);
       const mid = i * 60 + 30;
       const a = ((mid - 90) * Math.PI) / 180;
       const lx = r2(cx + r * 0.62 * Math.cos(a));
       const ly = r2(cy + r * 0.62 * Math.sin(a));
       const win = i === 0;
       labels.push(
-        <text key={"t" + i} x={lx} y={ly} transform={`rotate(${mid} ${lx} ${ly})`} textAnchor="middle" dominantBaseline="middle" style={{ fontFamily: '"Bricolage Grotesque",sans-serif', fontWeight: win ? 800 : 600, fontSize: win ? 9.5 : 8.5, fill: win ? "#2B1D17" : "#6B5546", letterSpacing: "0.01em" }}>
+        <text key={"t" + i} x={lx} y={ly} transform={`rotate(${mid} ${lx} ${ly})`} textAnchor="middle" dominantBaseline="middle" style={{ fontFamily: "var(--font-jakarta), sans-serif", fontWeight: win ? 800 : 700, fontSize: win ? 9 : 8.5, fill: win ? "#FFFFFF" : "#7A6A50" }}>
           {SEGS[i]}
         </text>,
       );
     }
     return (
-      <div
-        style={{
-          transform: `rotate(${rotation}deg)`,
-          transition: "transform 4.4s cubic-bezier(0.16,0.7,0.18,1)",
-          willChange: "transform",
-        }}
-      >
-        <svg width="286" height="286" viewBox="0 0 200 200" style={{ display: "block", filter: "drop-shadow(0 10px 24px rgba(43,29,23,0.16))" }}>
-          <g>
-            {paths}
-            {labels}
-          </g>
-          <circle cx={cx} cy={cy} r={r + 2} fill="none" stroke="#2B1D17" strokeWidth={4} />
-          <circle cx={cx} cy={cy} r={27} fill="#2B1D17" stroke="#FFFCF6" strokeWidth={3} />
+      <div style={{ transform: `rotate(${rotation}deg)`, transition: "transform 4.4s cubic-bezier(0.16,0.7,0.18,1)", willChange: "transform" }}>
+        <svg width="288" height="288" viewBox="0 0 200 200" style={{ display: "block", filter: "drop-shadow(0 12px 26px rgba(42,36,29,0.16))" }}>
+          <g>{paths}{labels}</g>
+          <circle cx={cx} cy={cy} r={r + 2} fill="none" stroke={INK} strokeWidth={4} />
+          <circle cx={cx} cy={cy} r={28} fill={INK} stroke="#FFFFFF" strokeWidth={3} />
         </svg>
       </div>
     );
   })();
 
+  const kicker = { wheel: "Kolo sreče", won: "Tvoja nagrada", register: "Registracija", coupon: "Kupon" }[step];
+
   return (
-    <div style={{ ["--brand" as string]: brandColor, width: "100%", color: "#2B1D17", display: "flex", justifyContent: "center" }}>
-      <div className="flex w-full max-w-[392px] flex-col overflow-hidden rounded-[28px] border border-[#EFE6D4] bg-[#FFFCF6]" style={{ boxShadow: "0 2px 10px rgba(43,29,23,0.05), 0 22px 50px rgba(43,29,23,0.12)" }}>
-        {/* brand header */}
-        <div className="flex items-center gap-[11px] px-6 pt-[22px]">
-          <div className="font-display flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-[12px] bg-[#2B1D17] text-[20px] font-bold text-[#F5EFE6]">{venueInitial}</div>
-          <div className="flex min-w-0 flex-col leading-[1.2]">
-            <span className="font-display text-[17px] font-bold">{venueName}</span>
-            <span className="text-[12px] text-[#8A7A66]">samo za nove goste</span>
-          </div>
-          <div className="ml-auto flex h-[26px] items-center rounded-full px-2.5 text-[11px] font-extrabold tracking-[0.02em] text-[#2B1D17]" style={{ background: "var(--brand)" }}>1 VRTLJAJ</div>
+    <main
+      style={{
+        minHeight: "100dvh",
+        fontFamily: "var(--font-jakarta), sans-serif",
+        color: INK,
+        background: "linear-gradient(170deg,#FCEFD8 0%,#F6E0BE 42%,#FBF7F0 42%,#FBF7F0 100%)",
+        boxSizing: "border-box",
+        padding: "44px 18px 32px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
+      {/* brand header */}
+      <div className="flex flex-col items-center gap-2.5" style={{ marginBottom: 16 }}>
+        <div className="flex items-center justify-center" style={{ width: 58, height: 58, borderRadius: 18, background: INK, color: CREAM, fontWeight: 800, fontSize: 26, boxShadow: "0 10px 24px rgba(42,36,29,0.18)" }}>{venueInitial}</div>
+        <div className="text-center">
+          <div style={{ fontWeight: 800, fontSize: 21, letterSpacing: "-0.01em" }}>Dobrodošel v {venueName}</div>
+          <div style={{ fontSize: 13.5, color: "#9A7A3A", marginTop: 2 }}>{tagline}</div>
+        </div>
+      </div>
+
+      {/* card */}
+      <div style={{ width: "100%", maxWidth: 404, background: "#FFFFFF", borderRadius: 28, boxShadow: "0 2px 8px rgba(42,36,29,0.05),0 24px 50px rgba(42,36,29,0.12)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div className="flex items-center justify-between" style={{ padding: "22px 22px 0" }}>
+          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "#9A8F80" }}>{kicker}</span>
+          <span className="flex items-center" style={{ height: 26, padding: "0 11px", borderRadius: 999, background: "#FCEFD8", color: "#B4781E", fontSize: 11, fontWeight: 800 }}>1 VRTLJAJ</span>
         </div>
 
-        <div className="px-6 pb-6 pt-[18px]">
+        <div style={{ padding: "14px 22px 24px" }}>
           {/* WHEEL */}
           {step === "wheel" && (
-            <div className="flex flex-col items-center gap-1.5">
-              <div className="font-display text-center text-[25px] font-extrabold leading-[1.1]">Zavrti in osvoji</div>
-              <div className="max-w-[280px] text-center text-[14.5px] leading-snug text-[#5C4C3E]">{tagline}</div>
-              <div className="relative mt-3 h-[286px] w-[286px]">
-                <div className="absolute left-1/2 top-[-7px] z-[3] -translate-x-1/2" style={{ filter: "drop-shadow(0 3px 4px rgba(43,29,23,0.25))" }}>
-                  <svg width="30" height="26" viewBox="0 0 30 26"><path d="M15 24 L4 4 Q15 10 26 4 Z" fill="#2B1D17" /></svg>
+            <div className="flex flex-col items-center" style={{ gap: 8 }}>
+              <div style={{ fontWeight: 800, fontSize: 24, lineHeight: 1.1, textAlign: "center", letterSpacing: "-0.01em" }}>Zavrti in osvoji</div>
+              <div style={{ fontSize: 14, color: MUTED, textAlign: "center", lineHeight: 1.45, maxWidth: 270 }}>Vsak nov gost dobi zajamčeno nagrado za prvi obisk.</div>
+              <div style={{ position: "relative", width: 288, height: 288, marginTop: 10 }}>
+                <div style={{ position: "absolute", top: -6, left: "50%", transform: "translateX(-50%)", zIndex: 3, filter: "drop-shadow(0 3px 4px rgba(42,36,29,0.3))" }}>
+                  <svg width="30" height="26" viewBox="0 0 30 26"><path d="M15 24 L4 4 Q15 10 26 4 Z" fill={INK} /></svg>
                 </div>
                 {wheel}
-                <button onClick={spin} aria-label="Zavrti kolo" className="font-display absolute left-1/2 top-1/2 flex h-[70px] w-[70px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-none bg-transparent text-[13px] font-extrabold tracking-[0.04em] text-[#F5EFE6]">
-                  {spinning ? "···" : "ZAVRTI"}
-                </button>
+                <button onClick={spin} aria-label="Zavrti" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 72, height: 72, borderRadius: "50%", border: "none", background: "transparent", color: CREAM, fontFamily: "var(--font-jakarta), sans-serif", fontWeight: 800, fontSize: 13, letterSpacing: "0.04em", cursor: "pointer" }}>{spinning ? "···" : "ZAVRTI"}</button>
               </div>
-              <div className="mt-0.5 text-[13px] text-[#A6967F]">Zadetek prevzameš ob prijavi</div>
+              <div style={{ fontSize: 12.5, color: "#9A8F80", marginTop: 4 }}>Zadetek prevzameš ob registraciji</div>
             </div>
           )}
 
           {/* WON */}
           {step === "won" && (
-            <div className="flex flex-col items-center gap-4 pb-1 pt-2 text-center">
-              <div style={{ animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
-                <div className="flex h-[92px] w-[92px] items-center justify-center rounded-full" style={{ background: "var(--brand)", boxShadow: "0 12px 30px rgba(232,162,61,0.4)" }}>
-                  <Icon name="cup" color="#2B1D17" size={44} strokeWidth={1.7} />
+            <div className="flex flex-col items-center text-center" style={{ gap: 16, padding: "6px 0" }}>
+              <div className="flex items-center justify-center" style={{ width: 92, height: 92, borderRadius: 28, background: `linear-gradient(150deg,#EBB05F,${brandColor})`, boxShadow: "0 14px 30px rgba(226,160,74,0.4)", animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
+                <CoffeeIcon size={44} />
+              </div>
+              <div className="flex flex-col" style={{ gap: 6 }}>
+                <div style={{ fontWeight: 800, fontSize: 27, letterSpacing: "-0.01em" }}>Zadetek!</div>
+                <div style={{ fontSize: 15, color: MUTED, lineHeight: 1.5, maxWidth: 270 }}>Osvojil si <strong style={{ color: INK }}>brezplačno kavo</strong> za prvi obisk.</div>
+              </div>
+              <div className="flex items-center" style={{ width: "100%", background: "linear-gradient(135deg,#FCEFD8,#F8E3C2)", borderRadius: 16, padding: 14, gap: 12 }}>
+                <div className="flex items-center justify-center" style={{ width: 42, height: 42, borderRadius: 12, background: "#FFFFFF", flexShrink: 0 }}><CoffeeIcon size={22} stroke={brandColor} w={1.8} /></div>
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ fontWeight: 800, fontSize: 15 }}>Brezplačna kava</div>
+                  <div style={{ fontSize: 12, color: "#B4862F", fontWeight: 600 }}>vrednost 2,20 € · velja 14 dni</div>
                 </div>
               </div>
-              <div className="flex flex-col gap-1.5">
-                <div className="font-display text-[28px] font-extrabold">Zadetek! 🎉</div>
-                <div className="max-w-[280px] text-[15.5px] leading-snug text-[#5C4C3E]">Osvojil si <strong>brezplačno kavo</strong> za svoj prvi obisk.</div>
-              </div>
-              <div className="flex w-full items-center gap-3 rounded-[16px] border-[1.5px] border-dashed p-3.5" style={{ background: "#FBF4E8", borderColor: "var(--brand)" }}>
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[11px]" style={{ background: "var(--brand)" }}><Icon name="cup" color="#2B1D17" size={22} strokeWidth={1.8} /></div>
-                <div className="text-left leading-tight">
-                  <div className="font-display text-[16px] font-bold">Brezplačna kava</div>
-                  <div className="text-[12.5px] text-[#8A7A66]">vrednost 2,20 € · velja 14 dni</div>
-                </div>
-              </div>
-              <button onClick={() => setStep("register")} className="flex h-[54px] w-full items-center justify-center gap-2 rounded-full bg-[#2B1D17] text-[16px] font-semibold text-[#F5EFE6]">
-                Prevzemi nagrado <Icon name="arrowR" color="#F5EFE6" size={17} strokeWidth={2} />
+              <button onClick={() => setStep("register")} className="flex items-center justify-center" style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: INK, color: CREAM, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 700, cursor: "pointer", gap: 8 }}>
+                Prevzemi nagrado
+                <svg width="17" height="17" viewBox="0 0 24 24" style={{ fill: "none", stroke: CREAM, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </button>
             </div>
           )}
 
-          {/* REGISTER */}
+          {/* REGISTER (email) */}
           {step === "register" && (
-            <div className="flex flex-col gap-4">
-              <button onClick={() => setStep("won")} aria-label="Nazaj" className="flex h-9 w-9 items-center justify-center self-start rounded-full" style={{ background: "rgba(43,29,23,0.06)" }}><Icon name="chevronL" color="#2B1D17" size={16} strokeWidth={2} /></button>
-              <div className="flex flex-col gap-1.5">
-                <div className="font-display text-[24px] font-extrabold leading-[1.1]">Skoraj tvoje ☕</div>
-                <div className="text-[14.5px] leading-snug text-[#5C4C3E]">Prijavi se, da shranimo tvoj kupon in ti pošljemo nagrado.</div>
+            <div className="flex flex-col" style={{ gap: 16 }}>
+              <button onClick={() => setStep("won")} aria-label="Nazaj" className="flex items-center justify-center" style={{ alignSelf: "flex-start", width: 38, height: 38, borderRadius: 12, border: "none", background: CREAM, cursor: "pointer" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" style={{ fill: "none", stroke: INK, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M14.5 5.5 8 12l6.5 6.5" /></svg>
+              </button>
+              <div className="flex flex-col" style={{ gap: 6 }}>
+                <div style={{ fontWeight: 800, fontSize: 23, lineHeight: 1.1, letterSpacing: "-0.01em" }}>Skoraj tvoje</div>
+                <div style={{ fontSize: 14.5, color: MUTED, lineHeight: 1.5 }}>Vpiši email, da shranimo kupon in žige. Brez gesla, brez aplikacije.</div>
               </div>
-              <button onClick={googleSignIn} disabled={busy} className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-[14px] border-[1.5px] border-[#DDD2C0] bg-white text-[15px] font-semibold text-[#2B1D17] disabled:opacity-50">
+              <div className="flex flex-col" style={{ gap: 8 }}>
+                <label htmlFor="reg-email" style={{ fontSize: 13, fontWeight: 700, color: MUTED }}>Email</label>
+                <input
+                  id="reg-email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") submitEmail(); }}
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="tvoj@email.com"
+                  style={{ height: 56, border: "1.5px solid #E4D9C7", borderRadius: 16, background: CREAM, padding: "0 16px", fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 600, color: INK, outline: "none" }}
+                />
+              </div>
+              <button onClick={submitEmail} disabled={busy} style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: brandColor, color: INK, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 800, cursor: "pointer", opacity: busy ? 0.6 : 1 }}>{busy ? "…" : "Prevzemi nagrado"}</button>
+              <div className="flex items-center" style={{ gap: 12 }}>
+                <div style={{ flex: 1, height: 1, background: "#EBE1D1" }} />
+                <span style={{ fontSize: 12.5, color: "#9A8F80" }}>ali</span>
+                <div style={{ flex: 1, height: 1, background: "#EBE1D1" }} />
+              </div>
+              <button onClick={googleSignIn} disabled={busy} className="flex items-center justify-center" style={{ width: "100%", height: 52, border: "1.5px solid #E4D9C7", borderRadius: 16, background: "#FFFFFF", color: INK, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 15, fontWeight: 700, cursor: "pointer", gap: 10, opacity: busy ? 0.6 : 1 }}>
                 <GoogleLogo /> Nadaljuj z Googlom
               </button>
-              {gErr && <div className="-mt-1.5 text-center text-[12.5px] font-medium text-[#C8512B]">{gErr}</div>}
-              <div className="flex items-center gap-3"><div className="h-px flex-1 bg-[#E6DCC9]" /><span className="text-[12.5px] text-[#A6967F]">ali s telefonsko</span><div className="h-px flex-1 bg-[#E6DCC9]" /></div>
-              <div className="flex flex-col gap-2.5">
-                <div className="flex h-[52px] items-center overflow-hidden rounded-[14px] border-[1.5px] border-[#2B1D17] bg-white">
-                  <div className="flex h-full items-center bg-[#F1E7D2] px-3.5 text-[15px] font-semibold text-[#5C4C3E]">🇸🇮 +386</div>
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="31 204 412" className="h-full min-w-0 flex-1 bg-transparent px-3.5 text-[17px] font-semibold text-[#2B1D17] outline-none" />
-                </div>
-                <button onClick={() => { if (phone.trim()) { setMethod("phone"); doRegister({ phone: "+386 " + phone.trim() }); } }} disabled={busy} className="h-[52px] w-full rounded-[14px] text-[15px] font-bold text-[#2B1D17] disabled:opacity-60" style={{ background: "var(--brand)" }}>Prevzemi nagrado</button>
-              </div>
-              <div className="text-center text-[12px] leading-snug text-[#A6967F]">S prijavo se strinjaš s pogoji. Brez gesla, brez spama.</div>
+              {gErr && <div style={{ fontSize: 12.5, color: "#C8512B", fontWeight: 600, textAlign: "center" }}>{gErr}</div>}
+              <div style={{ fontSize: 12, color: "#9A8F80", lineHeight: 1.45, textAlign: "center" }}>Z registracijo se strinjaš s pogoji. Brez spama.</div>
             </div>
           )}
 
           {/* COUPON */}
           {step === "coupon" && (
-            <div className="flex flex-col items-center gap-4 text-center">
-              <div className="flex h-[62px] w-[62px] items-center justify-center rounded-full border-[2.5px] border-[#5E7F52]" style={{ background: "rgba(94,127,82,0.14)", animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}><Icon name="check" color="#5E7F52" size={28} strokeWidth={2.4} /></div>
-              <div className="flex flex-col gap-1">
-                <div className="font-display text-[24px] font-extrabold">Kupon je tvoj!</div>
-                <div className="max-w-[280px] text-[14px] leading-snug text-[#5C4C3E]">{method === "google" ? "Shranili smo ga na tvoj račun in poslali na e-pošto." : "Shranili smo ga na tvojo stran zvestobe."}</div>
+            <div className="flex flex-col items-center text-center" style={{ gap: 16 }}>
+              <div className="flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(94,127,82,0.14)", border: "2.5px solid #5E7F52", animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
+                <svg width="30" height="30" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#5E7F52", strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M5 12.5l4.2 4.2L18.5 7.5" /></svg>
               </div>
-              <div className="relative w-full rounded-[20px] bg-[#2B1D17] px-5 py-[22px] text-[#F5EFE6]">
-                <div className="absolute left-[-10px] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-[#FFFCF6]" />
-                <div className="absolute right-[-10px] top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-[#FFFCF6]" />
-                <div className="mb-1 flex items-center justify-center gap-2.5">
-                  <span className="h-[7px] w-[7px] rounded-full" style={{ background: "var(--brand)" }} />
-                  <span className="text-[11.5px] font-bold tracking-[0.16em]" style={{ color: "var(--brand)" }}>{venueName}</span>
+              <div className="flex flex-col" style={{ gap: 4 }}>
+                <div style={{ fontWeight: 800, fontSize: 23, letterSpacing: "-0.01em" }}>Kupon je tvoj!</div>
+                <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.5, maxWidth: 280 }}>Shranili smo ga v denarnico in poslali na email.</div>
+              </div>
+              <div style={{ width: "100%", background: INK, borderRadius: 20, padding: "22px 20px", position: "relative", color: CREAM }}>
+                <div style={{ position: "absolute", top: "50%", left: -10, width: 20, height: 20, borderRadius: "50%", background: CREAM, transform: "translateY(-50%)" }} />
+                <div style={{ position: "absolute", top: "50%", right: -10, width: 20, height: 20, borderRadius: "50%", background: CREAM, transform: "translateY(-50%)" }} />
+                <div className="flex items-center justify-center" style={{ gap: 8, marginBottom: 4 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: brandColor }} />
+                  <span style={{ fontSize: 11, letterSpacing: "0.16em", fontWeight: 800, color: brandColor }}>{venueName.toUpperCase()}</span>
                 </div>
-                <div className="font-display text-center text-[24px] font-extrabold">Brezplačna kava</div>
-                <div className="my-3.5 border-t-[1.5px] border-dashed" style={{ borderColor: "rgba(245,239,230,0.28)" }} />
-                <div className="flex items-center gap-4">
-                  <div className="rounded-[10px] bg-white p-2"><FakeQr px={70} seed={7} /></div>
-                  <div className="flex flex-col gap-[3px] text-left">
-                    <div className="text-[11px] text-[#B7A488]">Koda kupona</div>
-                    <div className="font-display whitespace-nowrap text-[20px] font-extrabold tracking-[0.08em]">{couponCode || "MOKA-7C4D"}</div>
-                    <div className="mt-0.5 text-[12px] text-[#B7A488]">Velja 14 dni · ob prvem obisku</div>
+                <div style={{ fontWeight: 800, fontSize: 23, textAlign: "center", letterSpacing: "-0.01em" }}>Brezplačna kava</div>
+                <div style={{ margin: "14px 0", borderTop: "1.5px dashed rgba(251,243,230,0.26)" }} />
+                <div className="flex items-center" style={{ gap: 16 }}>
+                  <div style={{ background: "#FFFFFF", borderRadius: 10, padding: 8 }}><FakeQr px={70} seed={7} /></div>
+                  <div className="flex flex-col" style={{ gap: 3, textAlign: "left" }}>
+                    <div style={{ fontSize: 11, color: "#A89878" }}>Koda kupona</div>
+                    <div style={{ fontWeight: 800, fontSize: 19, letterSpacing: "0.08em", whiteSpace: "nowrap" }}>{couponCode || "MORA-7C4D"}</div>
+                    <div style={{ fontSize: 12, color: "#A89878", marginTop: 2 }}>Velja 14 dni · ob prvem obisku</div>
                   </div>
                 </div>
               </div>
-              <div className="text-[13px] leading-snug text-[#5C4C3E]">Pokaži kodo osebju ob naročilu.</div>
-              <a href={`/p/${code}`} className="flex h-12 w-full items-center justify-center rounded-full bg-[#2B1D17] text-[15px] font-semibold text-[#F5EFE6]">Na mojo stran zvestobe →</a>
+              <a href={`/p/${code}`} className="flex items-center justify-center" style={{ width: "100%", height: 54, borderRadius: 16, background: INK, color: CREAM, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 15, fontWeight: 700, textDecoration: "none" }}>Na mojo stran zvestobe</a>
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-center gap-1.5 border-t border-[#F1E7D2] px-6 pb-4 pt-2.5">
-          <span className="text-[11px] text-[#B6A78F]">powered by</span>
-          <span className="flex items-center gap-1">
-            <span className="h-[14px] w-[14px] rounded-full border-[1.6px] border-[#C8512B]" style={{ background: "rgba(200,81,43,0.07)" }} />
-            <span className="font-display text-[12.5px] font-extrabold text-[#2B1D17]">Žig</span>
-          </span>
+        <div className="flex items-center justify-center" style={{ padding: "12px 22px 16px", borderTop: "1px solid #F1E8D9", gap: 6 }}>
+          <span style={{ fontSize: 11, color: "#B7AB97" }}>powered by</span>
+          <span style={{ fontWeight: 800, fontSize: 12, color: INK }}>Žig</span>
         </div>
       </div>
-    </div>
+
+      <div style={{ marginTop: 14, textAlign: "center", fontSize: 12, color: "#9A8F80" }}>Brez prenosa aplikacije · velja samo v tem lokalu</div>
+    </main>
   );
 }

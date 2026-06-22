@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
+import { Bricolage_Grotesque, Instrument_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { LangProvider } from "@/app/components/LangContext";
 
@@ -11,6 +11,12 @@ const display = Bricolage_Grotesque({
 
 const sans = Instrument_Sans({
   variable: "--font-sans",
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin", "latin-ext"],
   display: "swap",
 });
@@ -34,7 +40,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="sl" className={`${display.variable} ${sans.variable} h-full antialiased`}>
+    <html lang="sl" className={`${display.variable} ${sans.variable} ${jakarta.variable} h-full antialiased`}>
       <body className="min-h-full">
         <LangProvider>{children}</LangProvider>
       </body>

@@ -49,6 +49,21 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 33 (NOV DIZAJN gostovega flowa iz Claude Design: kolo + registracija)
+- Vir: handoff zip (»Gost - nov (kolo + registracija).dc.html«). MCP connector ni bilo mogoče
+  avtorizirati (API-key seja, `/design-login` ni v tem okolju) → uporabnik je prinesel zip, prebral z diska.
+- **Nov vizualni sistem**: pisava **Plus Jakarta Sans** (`--font-jakarta` v layoutu), paleta
+  `#E9E2D6`/`#2A241D`/zlata `#E2A04A`, beli card, gradient ozadje, popIn animacije.
+- **`SpinFlow.tsx` prepisan** v ta dizajn: kolo → zadetek → registracija (**email**) → kupon.
+  Ohranjena logika (register `/api/register`, Google OAuth + return, kupon v localStorage) + dodan `demo` prop.
+- **Nove goste na `/p/[koda]` zdaj poganja SpinFlow** (GuestApp render veji za kolo+registracijo
+  zamenjani z `<SpinFlow demo .../>`); odstranjena mrtva onboarding koda (Wheel, WHEEL_SLOTS,
+  INTRO_CHIPS, spun/pendingPrize/grantPending/register/email, `?prize` carry). **Poenotenje koles (SPEC §9) ✓.**
+- **OTP/koda IZPUŠČENA**: dizajn je imel »Pošlji potrditveno kodo« → 4-mestna koda. Izpustil (rabi
+  email-pošiljanje + doda trenje; dogovor je email-zajem brez kode). Gumb preimenovan »Prevzemi nagrado«.
+- »powered by« še vedno **Žig** (dizajn je rabil »Tally« — odprto: ali je novo ime Tally?).
+- Potrjeno v predogledu /p/demo: cel flow kolo→zadetek→registracija→kupon, brez console napak. Build čist (18/18).
+
 ### 2026-06-20 — seja 32 (RED: SPEC.md = vir resnice + audit + čiščenje smeti)
 - Uporabnik: projekt se zdi razpršen, ne ve kaj je v uporabi/kaj smeti. Odločitev: **NE restart**,
   ampak zakleni koncept + počisti. Dizajn dela svež v Claude designu; koncept ostane.

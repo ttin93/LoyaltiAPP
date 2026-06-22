@@ -61,5 +61,11 @@ export function parseFiscalQR(payload: string): ParsedFiscalQR {
     .reduce((a, c) => a + Number(c), 0);
   const controlValid = sum % 10 === Number(control);
 
-  return { zoiDec, zoiHex: zoiDecToHex(zoiDec), davcna, issuedAt, controlValid };
+  // dedup ključ: za veljaven MD5 (≤2^128) uporabi hex (= natisnjena ZOI), sicer surovi decimalni
+  // niz (nekateri POS-i imajo nestandarden ZOI del). Vedno unikaten in stabilen za isti račun.
+  const big = BigInt(zoiDec);
+  const max = BigInt("340282366920938463463374607431768211456"); // 2^128
+  const zoiHex = big < max ? big.toString(16).padStart(32, "0") : zoiDec;
+
+  return { zoiDec, zoiHex, davcna, issuedAt, controlValid };
 }

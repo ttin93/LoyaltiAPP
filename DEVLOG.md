@@ -49,6 +49,17 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 36 (osnova: NASTAVLJIV žig-cilj 4–12)
+- Odločitev uporabnika: žig-cilj naj bo nastavljiv (4–12). **Brez nove migracije** — št. žigov se izpelje:
+  `stampGoal = round(reward.points_required / points_per_visit)`, vsak obisk = 1 žig (vreden `points_per_visit`).
+- **GuestApp**: `StampGrid` parametriziran (`count`, 5/6 stolpcev), izračun žigov + vsi prikazi (`x/stampGoal`,
+  visitsLeft, pct, completion) uporabljajo `stampGoal` namesto fiksne 10. Demo scan posodobljen.
+- **`createVenue`**: sprejme `stamp_goal` (4–12) + `points_per_visit` + `reward_name`; shrani points_per_visit,
+  glavna nagrada `points_required = stampGoal × pointsPerVisit`. (Onboarding wizard bo pošiljal te vrednosti.)
+- `/api/scan` že pravilen (cardGoal = nagrada.points_required → award_scan reset). Preverjeno: /p/demo še /10 (brez regresije).
+- **NASLEDNJE**: onboarding wizard UI (4 koraki + živi predogled, Tally dizajn) → na publish kliče createVenue.
+  (Gated za prijavo — test prek registracije.)
+
 ### 2026-06-20 — seja 35 (ime → TALLY + prenovljena prijava lastnika)
 - **Preimenovanje: `BRAND` = "Tally"** (vsi novi dizajni ga uporabljajo; Žig je bil začasen).
   Posodobi se povsod prek `lib/brand.ts` (header, footer, pravno, kontakt, SpinFlow »powered by«).

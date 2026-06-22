@@ -20,13 +20,14 @@ function mmss(ms: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-function StampGrid({ stamps, animateNew, goalLabel }: { stamps: number; animateNew?: boolean; goalLabel: string }) {
+function StampGrid({ stamps, count = 10, animateNew, goalLabel }: { stamps: number; count?: number; animateNew?: boolean; goalLabel: string }) {
+  const cols = count <= 10 ? 5 : 6;
   return (
-    <div className="grid grid-cols-5 gap-3">
-      {Array.from({ length: 10 }).map((_, i) => {
+    <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${cols},1fr)` }}>
+      {Array.from({ length: count }).map((_, i) => {
         const filled = i < stamps;
         const isNew = animateNew && filled && i === stamps - 1;
-        const isReward = i === 9;
+        const isReward = i === count - 1;
         return (
           <div
             key={i}
@@ -36,7 +37,7 @@ function StampGrid({ stamps, animateNew, goalLabel }: { stamps: number; animateN
             {filled ? (
               <div style={{ position: "absolute", inset: 0, animation: isNew ? "stampIn 0.55s cubic-bezier(0.2,1.4,0.5,1) both 0.3s" : "none" }}>
                 <div
-                  style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "2.5px solid #C8512B", background: "rgba(200,81,43,0.07)", display: "flex", alignItems: "center", justifyContent: "center", transform: `rotate(${ROTS[i]}deg)` }}
+                  style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "2.5px solid #C8512B", background: "rgba(200,81,43,0.07)", display: "flex", alignItems: "center", justifyContent: "center", transform: `rotate(${ROTS[i % ROTS.length]}deg)` }}
                 >
                   <Icon name="cup" color="#C8512B" size={24} />
                 </div>
@@ -89,13 +90,14 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const [redeemedName, setRedeemedName] = useState<string | null>(null);
   const [now, setNow] = useState(0);
 
-  const goal = sorted.length ? sorted[0].points_required : venue.points_per_visit * 10;
-  const stampValue = goal / 10;
-  const stamps = Math.min(10, Math.floor(points / stampValue));
+  const pv = venue.points_per_visit || 10;
+  const goal = sorted.length ? sorted[0].points_required : pv * 10;
+  const stampGoal = Math.max(1, Math.round(goal / pv)); // št. žigov do nagrade (nastavljivo)
+  const stamps = Math.min(stampGoal, Math.floor(points / pv));
   const goalLabel = sorted.length ? shortLabel(sorted[0].name) : "KAVA";
   const rewardReady = sorted.length > 0 && points >= goal;
   const left = Math.max(0, goal - points);
-  const visitsLeft = Math.max(0, 10 - stamps);
+  const visitsLeft = Math.max(0, stampGoal - stamps);
   const visitWord = visitsLeft === 1 ? "obisk" : visitsLeft === 2 ? "obiska" : visitsLeft <= 4 ? "obiske" : "obiskov";
   const isStampMode = venue.points_model === "per_visit";
 
@@ -196,7 +198,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         }
         const after = points + venue.points_per_visit;
         setAwarded(venue.points_per_visit);
-        if (isStampMode && Math.floor(after / stampValue) >= 10) {
+        if (isStampMode && Math.floor(after / pv) >= stampGoal) {
           // kartonček poln → kupon v denarnico (stackable) + reset z ostankom
           const rewardName = sorted[0]?.name || "Brezplačna kava";
           const next = [...coupons, { id: "c" + Date.now(), name: rewardName }];
@@ -377,7 +379,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
 
   // SUCCESS (po skeniranju)
   if (view === "success") {
-    const displayStamps = cardCompleted ? 10 : stamps;
+    const displayStamps = cardCompleted ? stampGoal : stamps;
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-6 px-6 py-12">
         <div className="font-display text-[42px] font-extrabold text-[#5E7F52]" style={{ animation: "popIn 0.5s cubic-bezier(0.2,1.4,0.5,1) both" }}>
@@ -385,7 +387,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         </div>
         {isStampMode && (
           <div className="w-full rounded-3xl border border-[#EFE6D4] bg-[#FFFCF6] p-5 shadow-[0_2px_10px_rgba(43,29,23,0.05),0_14px_34px_rgba(43,29,23,0.08)]">
-            <StampGrid stamps={displayStamps} animateNew goalLabel={goalLabel} />
+            <StampGrid stamps={displayStamps} count={stampGoal} animateNew goalLabel={goalLabel} />
           </div>
         )}
         <div className="flex flex-col items-center gap-2 text-center">
@@ -463,7 +465,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
 
   // HOME (kartonček / točke + nagrade + kuponi) — responsive 1-stolpec (telefon) / 2-stolpca (PC)
   const visitsNote = isStampMode
-    ? stamps >= 10
+    ? stamps >= stampGoal
       ? "Kartonček je poln — aktiviraj kupon."
       : `Še ${visitsLeft} ${visitWord} do brezplačne ${(sorted[0]?.name || "kave").toLowerCase()}.`
     : rewardReady
@@ -488,10 +490,10 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           <div className="rounded-3xl border border-[#EFE6D4] bg-[#FFFCF6] p-5 shadow-[0_2px_10px_rgba(43,29,23,0.05),0_14px_34px_rgba(43,29,23,0.08)]">
             <div className="mb-1 text-[12px] font-bold uppercase tracking-[0.09em] text-[#8A7A66]">{isStampMode ? "Tvoj kartonček" : "Tvoje točke"}</div>
             <div className="mb-[18px] flex items-baseline gap-2">
-              <span className="font-display text-[54px] font-extrabold leading-none">{isStampMode ? `${stamps}/10` : points}</span>
+              <span className="font-display text-[54px] font-extrabold leading-none">{isStampMode ? `${stamps}/${stampGoal}` : points}</span>
               <span className="text-[16px] font-medium text-[#8A7A66]">{isStampMode ? "žigov" : "točk"}</span>
             </div>
-            {isStampMode && <StampGrid stamps={stamps} goalLabel={goalLabel} />}
+            {isStampMode && <StampGrid stamps={stamps} count={stampGoal} goalLabel={goalLabel} />}
             <div className="mt-4 border-t border-dashed border-[#E2D7C2] pt-3.5 text-[14px] leading-snug text-[#5C4C3E]">{visitsNote}</div>
           </div>
 
@@ -547,7 +549,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
             {sorted.map((r, idx) => {
               const primary = idx === 0;
               const ready = !isStampMode && points >= r.points_required;
-              const pct = isStampMode ? (primary ? stamps * 10 : 0) : Math.min(100, Math.round((points / r.points_required) * 100));
+              const pct = isStampMode ? (primary ? Math.round((stamps / stampGoal) * 100) : 0) : Math.min(100, Math.round((points / r.points_required) * 100));
               return (
                 <div key={r.id} className="flex items-center gap-3.5 rounded-[18px] border border-[#EFE6D4] bg-[#FFFCF6] p-3.5">
                   <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[14px] bg-[#F1E7D2]">
@@ -571,10 +573,10 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
                     {(!isStampMode || primary) && (
                       <>
                         <div className="h-[7px] overflow-hidden rounded-full bg-[#EFE6D4]">
-                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: ready || (isStampMode && stamps >= 10) ? "#5E7F52" : "#E8A23D" }} />
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: ready || (isStampMode && stamps >= stampGoal) ? "#5E7F52" : "#E8A23D" }} />
                         </div>
                         {isStampMode && primary && (
-                          <div className="text-[12px] text-[#8A7A66]">{stamps >= 10 ? "Pripravljeno — kupon v denarnici" : `${stamps}/10 žigov`}</div>
+                          <div className="text-[12px] text-[#8A7A66]">{stamps >= stampGoal ? "Pripravljeno — kupon v denarnici" : `${stamps}/${stampGoal} žigov`}</div>
                         )}
                       </>
                     )}

@@ -22,6 +22,9 @@ export default function Scanner({
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // ROČNI VNOS — začasno za testiranje (kasneje fiksno odstranimo)
+  const [showManual, setShowManual] = useState(false);
+  const [manual, setManual] = useState("");
 
   useEffect(() => {
     if (demo) return;
@@ -102,7 +105,32 @@ export default function Scanner({
         </div>
       </div>
 
-      {/* spodaj — samo demo simulacija (ročni vnos odstranjen, da se ne fejka) */}
+      {/* ROČNI VNOS — začasno za testiranje (kasneje fiksno odstranimo) */}
+      <div style={{ marginBottom: demo ? 12 : 0 }}>
+        {!showManual ? (
+          <button onClick={() => setShowManual(true)} style={{ width: "100%", height: 44, border: "1px solid rgba(251,243,230,0.16)", borderRadius: 13, background: "rgba(251,243,230,0.05)", color: "rgba(251,243,230,0.82)", fontFamily: JAK, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>
+            Vnesi kodo računa ročno (test)
+          </button>
+        ) : (
+          <div className="flex flex-col" style={{ gap: 8 }}>
+            <input
+              value={manual}
+              onChange={(e) => setManual(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && manual.trim()) onResult(manual.trim()); }}
+              inputMode="numeric"
+              autoFocus
+              placeholder="Prilepi številko iz QR (npr. 60 števk)"
+              style={{ height: 48, border: "1px solid rgba(251,243,230,0.2)", borderRadius: 13, background: "rgba(251,243,230,0.06)", color: PAPER, fontFamily: JAK, fontSize: 14, padding: "0 14px", outline: "none" }}
+            />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 8 }}>
+              <button onClick={() => { setShowManual(false); setManual(""); }} style={{ height: 46, border: "1px solid rgba(251,243,230,0.16)", borderRadius: 13, background: "rgba(251,243,230,0.05)", color: "rgba(251,243,230,0.82)", fontFamily: JAK, fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>Prekliči</button>
+              <button onClick={() => { const v = manual.trim(); if (v) onResult(v); }} style={{ height: 46, border: "none", borderRadius: 13, background: AMBER, color: "#2A241D", fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Potrdi kodo</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* spodaj — demo simulacija */}
       {demo && (
         <div style={{ background: "rgba(251,243,230,0.05)", border: "1px solid rgba(251,243,230,0.14)", borderRadius: 18, padding: 14 }}>
           <div style={{ fontSize: 10.5, letterSpacing: "0.12em", fontWeight: 800, color: AMBER, marginBottom: 10 }}>DEMO · SIMULIRAJ REZULTAT</div>

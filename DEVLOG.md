@@ -49,6 +49,18 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 34 (skener računa prenovljen v novi dizajn)
+- Uporabnik: skeniranje računa je grdo. **`Scanner.tsx` prepisan** v novi dizajn (iz
+  »Gost - klikabilen flow.dc.html«): temno ozadje `#1C160F`, Plus Jakarta, zlati vogalni okvirji
+  250×250 (`#E2A04A`), scanline, »Poravnaj QR z dna računa…«.
+- **Ročni vnos zložljiv** (prej vedno odprt grd box) → »Kamera ne dela? Vnesi kodo ročno«.
+  Ob napaki kamere se odpre samodejno.
+- **Demo prop**: v demo-mode skener pokaže panel »SIMULIRAJ REZULTAT« (Veljaven/Že skeniran/Tuj/Prestar);
+  `handleScan` v GuestApp prepozna `DEMO_OK/DUP/FOREIGN/OLD` sentinele.
+  (Opomba: `/p/demo` je lokalno/prod **pravi venue** iz baze → skener zažene kamero; demo-panel le v pravi demo-mode brez baze.)
+- Build čist (18/18); v predogledu potrjeno: nova tema, zlati vogali, Jakarta, ročni fallback, brez napak.
+- Še staro (za prenovit naslednje): uspeh/napaka po skenu + Google-ocena gate + dom gosta.
+
 ### 2026-06-20 — seja 33 (NOV DIZAJN gostovega flowa iz Claude Design: kolo + registracija)
 - Vir: handoff zip (»Gost - nov (kolo + registracija).dc.html«). MCP connector ni bilo mogoče
   avtorizirati (API-key seja, `/design-login` ni v tem okolju) → uporabnik je prinesel zip, prebral z diska.

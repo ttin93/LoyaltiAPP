@@ -184,11 +184,16 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   async function handleScan(payload: string) {
     setScanning(false);
     if (demo) {
+      if (payload === "DEMO_DUP") return fail("Ta račun je že skeniran.", "Vsak račun prinese žig samo enkrat.");
+      if (payload === "DEMO_FOREIGN") return fail("Ta račun ni iz tega lokala.", "Žig dobiš za račune, izdane v tem lokalu.");
+      if (payload === "DEMO_OLD") return fail("Račun je prestar.", "Računi se lahko unovčijo v 24 urah po izdaji.");
       try {
-        const parsed = parseFiscalQR(payload);
-        if (parsed.davcna !== venue.davcna_stevilka) return fail("Ta račun ni iz tega lokala.", "Točke dobiš za račune, izdane v tem lokalu.");
-        if (demoZois.current.has(parsed.zoiHex)) return fail("Ta račun je bil že unovčen.", "Vsak račun prinese točke samo enkrat.");
-        demoZois.current.add(parsed.zoiHex);
+        if (payload !== "DEMO_OK") {
+          const parsed = parseFiscalQR(payload);
+          if (parsed.davcna !== venue.davcna_stevilka) return fail("Ta račun ni iz tega lokala.", "Točke dobiš za račune, izdane v tem lokalu.");
+          if (demoZois.current.has(parsed.zoiHex)) return fail("Ta račun je bil že unovčen.", "Vsak račun prinese točke samo enkrat.");
+          demoZois.current.add(parsed.zoiHex);
+        }
         const after = points + venue.points_per_visit;
         setAwarded(venue.points_per_visit);
         if (isStampMode && Math.floor(after / stampValue) >= 10) {
@@ -581,7 +586,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         </div>
       </div>
 
-      {scanning && <Scanner onResult={handleScan} onClose={() => setScanning(false)} />}
+      {scanning && <Scanner demo={demo} onResult={handleScan} onClose={() => setScanning(false)} />}
       {redeemReward && (
         <ActivateSheet
           reward={redeemReward}

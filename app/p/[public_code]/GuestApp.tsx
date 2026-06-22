@@ -40,7 +40,19 @@ function mmss(ms: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-function StampGrid({ stamps, count = 10, animateNew }: { stamps: number; count?: number; animateNew?: boolean; goalLabel?: string }) {
+// barvni helperji — lastnikova barva tematizira cel gostov site
+function mix(a: string, b: string, t: number) {
+  const p = (h: string) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const [r1, g1, b1] = p(a), [r2, g2, b2] = p(b);
+  const m = [r1 + (r2 - r1) * t, g1 + (g2 - g1) * t, b1 + (b2 - b1) * t].map((x) => Math.round(x).toString(16).padStart(2, "0"));
+  return `#${m.join("")}`;
+}
+function hexA(hex: string, a: number) {
+  const h = hex.replace("#", "");
+  return `rgba(${parseInt(h.slice(0, 2), 16)},${parseInt(h.slice(2, 4), 16)},${parseInt(h.slice(4, 6), 16)},${a})`;
+}
+
+function StampGrid({ stamps, count = 10, animateNew, accent = CORAL }: { stamps: number; count?: number; animateNew?: boolean; goalLabel?: string; accent?: string }) {
   const cols = count <= 10 ? 5 : 6;
   return (
     <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${cols},1fr)` }}>
@@ -56,13 +68,13 @@ function StampGrid({ stamps, count = 10, animateNew }: { stamps: number; count?:
               aspectRatio: "1",
               borderRadius: "50%",
               boxSizing: "border-box",
-              border: filled ? `2px solid ${CORAL}` : isReward ? "none" : "2px solid #EFE4D2",
-              background: filled ? "rgba(196,98,61,0.09)" : isReward ? "#FCEFD8" : CREAM,
+              border: filled ? `2px solid ${accent}` : isReward ? "none" : "2px solid #EFE4D2",
+              background: filled ? hexA(accent, 0.1) : isReward ? hexA(accent, 0.16) : CREAM,
               transform: filled ? `rotate(${ROTS[i % ROTS.length]}deg)` : undefined,
               animation: isNew ? "stampIn 0.55s cubic-bezier(0.2,1.4,0.5,1) both 0.3s" : undefined,
             }}
           >
-            {filled ? <Cup stroke={CORAL} size={count <= 10 ? 15 : 13} /> : isReward ? <Cup stroke={AMBER} size={count <= 10 ? 15 : 13} /> : null}
+            {filled ? <Cup stroke={accent} size={count <= 10 ? 15 : 13} /> : isReward ? <Cup stroke={accent} size={count <= 10 ? 15 : 13} /> : null}
           </div>
         );
       })}
@@ -78,6 +90,11 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const minutes = venue.redemption_minutes || 5;
   const sorted = [...rewards].sort((a, b) => a.points_required - b.points_required);
   const logoBg = venue.brand_color && venue.brand_color !== "#16a34a" ? venue.brand_color : "#2B1D17";
+  // lastnikova barva → akcent + svetli odtenki, ki obarvajo cel gostov site
+  const brand = venue.brand_color && /^#[0-9a-fA-F]{6}$/.test(venue.brand_color) && venue.brand_color.toLowerCase() !== "#16a34a" ? venue.brand_color : AMBER;
+  const tintLight = mix(brand, CREAM, 0.88);
+  const tintMed = mix(brand, CREAM, 0.76);
+  const accentDeep = mix(brand, INK, 0.42);
 
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [points, setPoints] = useState(0);
@@ -412,12 +429,12 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         : rewardReady ? "Lahko unovčiš nagrado pri osebju." : `Še ${left} točk do nagrade.`;
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center" style={{ background: BG, fontFamily: JAK, color: INK, padding: "48px 24px", gap: 22 }}>
-        <div className="flex items-center justify-center" style={{ minWidth: 92, height: 92, borderRadius: 26, padding: "0 18px", background: cardCompleted ? `linear-gradient(150deg,#EBB05F,${AMBER})` : "rgba(94,127,82,0.14)", border: cardCompleted ? "none" : `2.5px solid ${GREEN}`, animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
+        <div className="flex items-center justify-center" style={{ minWidth: 92, height: 92, borderRadius: 26, padding: "0 18px", background: cardCompleted ? `linear-gradient(150deg,${mix(brand, CREAM, 0.3)},${brand})` : "rgba(94,127,82,0.14)", border: cardCompleted ? "none" : `2.5px solid ${GREEN}`, animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
           <span style={{ fontWeight: 800, fontSize: cardCompleted ? 40 : 24, color: cardCompleted ? "#fff" : GREEN }}>{cardCompleted ? "🎉" : "+1 žig"}</span>
         </div>
         {hasCard && (
           <div style={{ width: "100%", background: "#fff", borderRadius: 24, padding: "22px 20px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)" }}>
-            <StampGrid stamps={displayStamps} count={stampGoal} animateNew />
+            <StampGrid stamps={displayStamps} count={stampGoal} animateNew accent={brand} />
           </div>
         )}
         <div className="flex flex-col items-center text-center" style={{ gap: 8 }}>
@@ -485,7 +502,6 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
 
   // HOME — kava kartonček (žigi) + točkovne nagrade — responsive
   const hasCard = !!stampReward;
-  const readyReward = pointRewards.find((r) => points >= r.points_required) || null;
   const visitsNote = hasCard
     ? stamps >= stampGoal
       ? "Kartonček je poln — aktiviraj kupon spodaj."
@@ -501,18 +517,18 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         {/* split: levo welcome+statistika, desno kartonček+skeniraj+kuponi — full-bleed na telefonu */}
         <div className="overflow-hidden lg:grid lg:rounded-[24px] lg:border lg:border-[#E4D9C7] lg:shadow-[0_26px_60px_rgba(34,28,22,0.16)]" style={{ gridTemplateColumns: "1fr 440px", background: "#fff" }}>
           {/* LEVO */}
-          <div className="relative flex flex-col justify-center" style={{ background: "linear-gradient(160deg,#FCEFD8 0%,#F6E3C5 100%)", padding: "clamp(28px,4vw,48px)", gap: 20, overflow: "hidden" }}>
-            <div aria-hidden style={{ position: "absolute", bottom: -50, right: -30, width: 200, height: 200, borderRadius: "50%", background: "rgba(226,160,74,0.22)" }} />
+          <div className="relative flex flex-col justify-center" style={{ background: `linear-gradient(160deg,${tintLight} 0%,${tintMed} 100%)`, padding: "clamp(28px,4vw,48px)", gap: 20, overflow: "hidden" }}>
+            <div aria-hidden style={{ position: "absolute", bottom: -50, right: -30, width: 200, height: 200, borderRadius: "50%", background: hexA(brand, 0.22) }} />
             <div className="relative flex items-center" style={{ gap: 12 }}>
-              <div className="flex items-center justify-center" style={{ width: 52, height: 52, borderRadius: 17, background: INK, color: PAPER, fontWeight: 800, fontSize: 24 }}>{(venue.name.trim().charAt(0) || "M").toUpperCase()}</div>
-              <div><div style={{ fontWeight: 800, fontSize: 21 }}>{venue.name}</div>{city && <div style={{ fontSize: 13, color: "#9A7A3A" }}>{city}</div>}</div>
+              <div className="flex items-center justify-center" style={{ width: 52, height: 52, borderRadius: 17, background: logoBg, color: PAPER, fontWeight: 800, fontSize: 24 }}>{(venue.name.trim().charAt(0) || "M").toUpperCase()}</div>
+              <div><div style={{ fontWeight: 800, fontSize: 21 }}>{venue.name}</div>{city && <div style={{ fontSize: 13, color: accentDeep }}>{city}</div>}</div>
             </div>
             <h2 className="relative" style={{ margin: 0, fontWeight: 800, fontSize: "clamp(28px,3vw,36px)", lineHeight: 1.08, letterSpacing: "-0.02em" }}>Vsaka kava<br />te približa nagradi.</h2>
             <p className="relative" style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: MUTED, maxWidth: 340 }}>Skeniraj račun ob obisku — vsak prinese žig in točke. Preprosto, toplo, tvoje.</p>
             <div className="relative flex" style={{ gap: 26, borderTop: "1px solid rgba(42,36,29,0.1)", paddingTop: 18 }}>
               <div><div style={{ fontWeight: 800, fontSize: 24 }}>{points}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>točk</div></div>
               {hasCard && <div><div style={{ fontWeight: 800, fontSize: 24 }}>{stamps}/{stampGoal}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>žigov</div></div>}
-              <div><div style={{ fontWeight: 800, fontSize: 24, color: "#B4862F" }}>{coupons.length}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>kuponov</div></div>
+              <div><div style={{ fontWeight: 800, fontSize: 24, color: accentDeep }}>{coupons.length}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>kuponov</div></div>
             </div>
           </div>
 
@@ -522,19 +538,11 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
             <div style={{ background: "#fff", borderRadius: 24, padding: "22px 22px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)", border: "1px solid #F1E8D9" }}>
               <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: "#9A8F80" }}>{hasCard ? "Tvoja kartica" : "Tvoje točke"}</span>
-                <span style={{ fontSize: 13, fontWeight: 800, color: AMBER }}>{hasCard ? `${stamps} / ${stampGoal}` : `${points} točk`}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: accentDeep }}>{hasCard ? `${stamps} / ${stampGoal}` : `${points} točk`}</span>
               </div>
-              {hasCard ? <StampGrid stamps={stamps} count={stampGoal} /> : <div style={{ fontWeight: 800, fontSize: 52, lineHeight: 1, letterSpacing: "-0.02em" }}>{points}<span style={{ fontSize: 16, fontWeight: 600, color: "#9A8F80", marginLeft: 8 }}>točk</span></div>}
+              {hasCard ? <StampGrid stamps={stamps} count={stampGoal} accent={brand} /> : <div style={{ fontWeight: 800, fontSize: 52, lineHeight: 1, letterSpacing: "-0.02em" }}>{points}<span style={{ fontSize: 16, fontWeight: 600, color: "#9A8F80", marginLeft: 8 }}>točk</span></div>}
               <div style={{ marginTop: 16, background: CREAM, borderRadius: 16, padding: "13px 15px", fontSize: 13.5, lineHeight: 1.45, color: MUTED }}>{visitsNote}</div>
             </div>
-
-            {/* točkovna nagrada pripravljena */}
-            {readyReward && (
-              <div className="flex items-center" style={{ gap: 13, background: GREEN, borderRadius: 18, padding: "14px 16px", color: "#F4F0E4" }}>
-                <div className="flex-1"><div style={{ fontWeight: 800, fontSize: 15 }}>{readyReward.name} te čaka</div><div style={{ fontSize: 12.5, opacity: 0.85 }}>Za {readyReward.points_required} točk · aktiviraj pri osebju.</div></div>
-                <button onClick={() => openRedeem(readyReward)} style={{ height: 38, padding: "0 15px", borderRadius: 11, background: "#F4F0E4", color: "#3E5536", fontSize: 13, fontWeight: 700, fontFamily: JAK, border: "none", cursor: "pointer" }}>Unovči</button>
-              </div>
-            )}
 
             {/* skeniraj */}
             <button onClick={() => setScanning(true)} disabled={busy} className="flex items-center justify-center" style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: INK, color: PAPER, fontFamily: JAK, fontSize: 15.5, fontWeight: 700, gap: 10, cursor: "pointer", opacity: busy ? 0.5 : 1 }}>
@@ -545,15 +553,15 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
             {/* kuponi */}
             {coupons.length > 0 ? (
               coupons.map((c) => (
-                <div key={c.id} className="flex items-center" style={{ gap: 13, background: "linear-gradient(135deg,#FCEFD8,#F8E3C2)", borderRadius: 18, padding: 15 }}>
-                  <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#fff", flexShrink: 0 }}><Cup stroke={AMBER} size={22} /></div>
-                  <div className="min-w-0 flex-1"><div style={{ fontWeight: 800, fontSize: 14.5 }}>{c.name}</div><div style={{ fontSize: 12, fontWeight: 600, color: "#B4862F" }}>Velja še 12 dni</div></div>
+                <div key={c.id} className="flex items-center" style={{ gap: 13, background: `linear-gradient(135deg,${tintLight},${tintMed})`, borderRadius: 18, padding: 15 }}>
+                  <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#fff", flexShrink: 0 }}><Cup stroke={brand} size={22} /></div>
+                  <div className="min-w-0 flex-1"><div style={{ fontWeight: 800, fontSize: 14.5 }}>{c.name}</div><div style={{ fontSize: 12, fontWeight: 600, color: accentDeep }}>Velja še 12 dni</div></div>
                   <button onClick={() => activateCoupon(c)} style={{ height: 38, padding: "0 15px", border: "none", borderRadius: 11, background: INK, color: PAPER, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Aktiviraj</button>
                 </div>
               ))
             ) : (
               <div className="flex items-center" style={{ gap: 13, borderRadius: 18, border: "1px dashed #E0D2BC", background: CREAM, padding: 15 }}>
-                <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#FCEFD8", flexShrink: 0 }}><Cup stroke={AMBER} size={22} /></div>
+                <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: tintLight, flexShrink: 0 }}><Cup stroke={brand} size={22} /></div>
                 <div style={{ fontSize: 13.5, lineHeight: 1.4, color: "#9A8F80" }}>Nimaš še kuponov. Napolni kartico za nagrado.</div>
               </div>
             )}
@@ -572,18 +580,18 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
                 const ready = points >= r.points_required;
                 const pct = Math.min(100, Math.round((points / r.points_required) * 100));
                 return (
-                  <div key={r.id} className="flex items-center" style={{ gap: 14, borderRadius: 18, border: "1px solid #EFE6D6", background: "#fff", padding: 14 }}>
-                    <div className="flex items-center justify-center" style={{ width: 50, height: 50, borderRadius: 14, background: CREAM, flexShrink: 0 }}><Icon name={REWARD_ICONS[idx % REWARD_ICONS.length]} color={INK} size={24} /></div>
+                  <div key={r.id} className="flex items-center" style={{ gap: 14, borderRadius: 18, border: ready ? `1.5px solid ${GREEN}` : "1px solid #EFE6D6", background: ready ? "rgba(94,127,82,0.07)" : "#fff", padding: 14 }}>
+                    <div className="flex items-center justify-center" style={{ width: 50, height: 50, borderRadius: 14, background: ready ? "rgba(94,127,82,0.14)" : tintLight, flexShrink: 0 }}><Icon name={REWARD_ICONS[idx % REWARD_ICONS.length]} color={ready ? GREEN : accentDeep} size={24} /></div>
                     <div className="flex min-w-0 flex-1 flex-col" style={{ gap: 7 }}>
-                      <div className="flex items-baseline justify-between" style={{ gap: 8 }}>
+                      <div className="flex items-center justify-between" style={{ gap: 8 }}>
                         <span style={{ fontSize: 15, fontWeight: 700 }}>{r.name}</span>
                         {ready ? (
-                          <button onClick={() => openRedeem(r)} style={{ whiteSpace: "nowrap", fontSize: 12.5, fontWeight: 800, color: GREEN, background: "none", border: "none", cursor: "pointer", fontFamily: JAK }}>unovči</button>
+                          <button onClick={() => openRedeem(r)} style={{ whiteSpace: "nowrap", height: 32, padding: "0 14px", fontSize: 12.5, fontWeight: 800, color: "#fff", background: GREEN, border: "none", borderRadius: 10, cursor: "pointer", fontFamily: JAK }}>Unovči</button>
                         ) : (
                           <span style={{ whiteSpace: "nowrap", fontSize: 12.5, color: "#9A8F80" }}>{points} / {r.points_required} točk</span>
                         )}
                       </div>
-                      <div style={{ height: 7, overflow: "hidden", borderRadius: 999, background: "#EFE4D2" }}><div style={{ height: "100%", borderRadius: 999, width: `${pct}%`, background: ready ? GREEN : AMBER }} /></div>
+                      <div style={{ height: 7, overflow: "hidden", borderRadius: 999, background: "#EFE4D2" }}><div style={{ height: "100%", borderRadius: 999, width: `${pct}%`, background: ready ? GREEN : brand }} /></div>
                     </div>
                   </div>
                 );
@@ -600,6 +608,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           step={sheetStep}
           minutes={minutes}
           busy={busy}
+          accent={brand}
           onNext={() => setSheetStep(2)}
           onActivate={() => activate(redeemReward)}
           onClose={() => setRedeemReward(null)}
@@ -633,6 +642,7 @@ function ActivateSheet({
   step,
   minutes,
   busy,
+  accent = CORAL,
   onNext,
   onActivate,
   onClose,
@@ -641,6 +651,7 @@ function ActivateSheet({
   step: 1 | 2;
   minutes: number;
   busy: boolean;
+  accent?: string;
   onNext: () => void;
   onActivate: () => void;
   onClose: () => void;
@@ -653,7 +664,7 @@ function ActivateSheet({
         {step === 1 ? (
           <>
             <div className="flex flex-col items-center text-center" style={{ gap: 8 }}>
-              <div className="flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: 18, background: "#FCEFD8" }}><Cup stroke={CORAL} size={28} /></div>
+              <div className="flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: 18, background: hexA(accent, 0.16) }}><Cup stroke={accent} size={28} /></div>
               <div style={{ fontWeight: 800, fontSize: 24, letterSpacing: "-0.01em" }}>{reward.name}</div>
               <div style={{ fontSize: 14.5, color: "#9A8F80" }}>Za {reward.points_required} točk</div>
             </div>
@@ -663,7 +674,7 @@ function ActivateSheet({
         ) : (
           <>
             <div className="flex flex-col items-center text-center" style={{ gap: 8 }}>
-              <div className="flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: "50%", border: `2.5px solid ${AMBER}`, background: "rgba(226,160,74,0.14)" }}><Icon name="clock" color="#B4862F" size={28} strokeWidth={2} /></div>
+              <div className="flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: "50%", border: `2.5px solid ${accent}`, background: hexA(accent, 0.14) }}><Icon name="clock" color={mix(accent, INK, 0.42)} size={28} strokeWidth={2} /></div>
               <div style={{ fontWeight: 800, fontSize: 22, lineHeight: 1.1 }}>Aktiviraj zdaj?</div>
               <div style={{ maxWidth: 300, fontSize: 14.5, lineHeight: 1.5, color: MUTED }}>Točke ({reward.points_required}) se <strong>takoj porabijo</strong> in imaš <strong>{minutes} min</strong>, da kodo pokažeš natakarju. Časovnik teče, tudi če zapreš aplikacijo.</div>
             </div>

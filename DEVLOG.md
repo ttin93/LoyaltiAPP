@@ -61,6 +61,7 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 - **Naročnina**: nov zavihek (paketi Espresso/Doppio/Palača + placeholder upravljanje) + upgrade CTA v sidebar nad odjavo. Plačila (Stripe) odložena.
 - Odloženo (rabi providerja): dejansko pošiljanje e-pošte/SMS/WhatsApp, Stripe, urejanje pravil segmentov + ročni izbor prejemnikov, QR po meri, per-screen WYSIWYG editor gostovih zaslonov.
 - Build čist, migracija 0008 aplicirana v živo (201).
+- **Feedback round 2 (gostova stran)**: (a) odstranjen odvečni zeleni »X te čaka · aktiviraj pri osebju« banner — unovčljive nagrade so zdaj jasno označene **v meniju** (zelen okvir + gumb »Unovči«). (b) **Lastnikova barva tematizira CEL gostov site** (GuestApp): nov `brand`+tinti (`mix`/`hexA`), speljano skozi welcome gradient, žige (StampGrid `accent`), kartico, kupone, progress, časovnik, ActivateSheet. Preverjeno v živo na PrTinu (vijolična #8E5BA6 → gradient + žigi vijolični, ne več forsiran jantar). SpinFlow je barvo že imel.
 
 ### 2026-06-20 — seja 39 (avtonomni sprint #2: hibridni model + multi-venue + real analitika + kampanje)
 - **Hibridni model nagrad**: kava = ŽIGI (kartonček), rogljiček 250t + torta 350t = TOČKE. Migracija 0007

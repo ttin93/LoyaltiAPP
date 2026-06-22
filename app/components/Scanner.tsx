@@ -22,8 +22,6 @@ export default function Scanner({
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [manual, setManual] = useState("");
-  const [showManual, setShowManual] = useState(false);
 
   useEffect(() => {
     if (demo) return;
@@ -99,13 +97,13 @@ export default function Scanner({
             <div style={{ position: "absolute", left: "9%", right: "9%", height: 2.5, borderRadius: 3, top: "12%", background: `linear-gradient(90deg, rgba(226,160,74,0), ${AMBER}, rgba(226,160,74,0))`, boxShadow: "0 0 16px rgba(226,160,74,0.9)", animation: "scanSweep 2.4s ease-in-out infinite alternate" }} />
           )}
         </div>
-        <div style={{ maxWidth: 260, textAlign: "center", fontSize: 14.5, lineHeight: 1.5, color: "rgba(251,243,230,0.68)" }}>
-          {error ? "Kamera ni na voljo — vnesi kodo z računa ročno." : "Poravnaj QR z dna računa v okvir. Žig se doda samodejno."}
+        <div style={{ maxWidth: 270, textAlign: "center", fontSize: 14.5, lineHeight: 1.5, color: "rgba(251,243,230,0.68)" }}>
+          {error ? "Kamera ni na voljo. Za skeniranje računa uporabi telefon s kamero." : "Poravnaj QR z dna računa v okvir. Žig se doda samodejno."}
         </div>
       </div>
 
-      {/* spodaj */}
-      {demo ? (
+      {/* spodaj — samo demo simulacija (ročni vnos odstranjen, da se ne fejka) */}
+      {demo && (
         <div style={{ background: "rgba(251,243,230,0.05)", border: "1px solid rgba(251,243,230,0.14)", borderRadius: 18, padding: 14 }}>
           <div style={{ fontSize: 10.5, letterSpacing: "0.12em", fontWeight: 800, color: AMBER, marginBottom: 10 }}>DEMO · SIMULIRAJ REZULTAT</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -115,18 +113,6 @@ export default function Scanner({
             {simBtn("Prestar račun", "DEMO_OLD")}
           </div>
         </div>
-      ) : showManual || error ? (
-        <div style={{ background: "rgba(251,243,230,0.05)", border: "1px solid rgba(251,243,230,0.14)", borderRadius: 18, padding: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(251,243,230,0.6)", marginBottom: 9 }}>Vnesi številko iz QR kode</div>
-          <div className="flex" style={{ gap: 8 }}>
-            <input value={manual} onChange={(e) => setManual(e.target.value)} inputMode="numeric" placeholder="3312493755740614…" className="min-w-0 flex-1" style={{ height: 46, borderRadius: 13, padding: "0 14px", fontSize: 14, outline: "none", border: "1px solid rgba(251,243,230,0.16)", background: "rgba(251,243,230,0.08)", color: PAPER, fontFamily: JAK }} />
-            <button onClick={() => manual.trim() && onResult(manual.trim())} style={{ height: 46, borderRadius: 13, padding: "0 18px", fontSize: 14, fontWeight: 700, border: "none", background: AMBER, color: "#2A241D", cursor: "pointer", fontFamily: JAK }}>Potrdi</button>
-          </div>
-        </div>
-      ) : (
-        <button onClick={() => setShowManual(true)} style={{ alignSelf: "center", background: "transparent", border: "none", color: "rgba(251,243,230,0.55)", fontFamily: JAK, fontSize: 13.5, fontWeight: 600, textDecoration: "underline", cursor: "pointer", padding: 10 }}>
-          Kamera ne dela? Vnesi kodo ročno
-        </button>
       )}
     </div>
   );

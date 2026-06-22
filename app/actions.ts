@@ -39,10 +39,7 @@ export async function createVenue(formData: FormData) {
   if (!user) throw new Error("Nisi prijavljen.");
   const db = getServiceClient();
 
-  // če lokal že obstaja, ne ustvarjaj drugega — pelji na dashboard
-  const { data: already } = await db.from("venues").select("id").eq("owner_user_id", user.id).limit(1);
-  if (already && already.length) redirect("/dashboard");
-
+  // lastnik ima lahko VEČ lokalov (vsak svoj loyalty + naročnina)
   const name = String(formData.get("name") || "").trim();
   const brand = String(formData.get("brand_color") || "#16a34a");
   if (!name) throw new Error("Vpiši ime lokala.");

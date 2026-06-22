@@ -7,11 +7,15 @@ import Onboarding from "./Onboarding";
 
 export const dynamic = "force-dynamic";
 
-export default async function Partner() {
+export default async function Partner({ searchParams }: { searchParams: Promise<{ new?: string }> }) {
   if (!isSupabaseConfigured()) return <SetupNotice />;
 
   const user = await getCurrentUser();
   if (!user) return <AuthForm />;
+
+  // ?new=1 → dodaj nov lokal (lastnik ima lahko več lokalov)
+  const sp = await searchParams;
+  if (sp?.new === "1") return <Onboarding />;
 
   const db = getServiceClient();
   const { data: venues } = await db

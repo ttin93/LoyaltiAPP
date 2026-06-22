@@ -7,21 +7,22 @@ import type { Venue, Reward, Customer, ScanRow, RedemptionRow } from "@/lib/type
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ v?: string }> }) {
   if (!isSupabaseConfigured()) return <DashboardDemo />;
 
   const user = await getCurrentUser();
   if (!user) redirect("/partner");
 
   const db = getServiceClient();
+  // lastnik ima lahko VEČ lokalov — naloži vse, izberi trenutnega po ?v=
   const { data: venues } = await db
     .from("venues")
     .select("*")
     .eq("owner_user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1);
-  const venue = venues?.[0];
-  if (!venue) redirect("/partner");
+    .order("created_at", { ascending: true });
+  if (!venues || !venues.length) redirect("/partner");
+  const sp = await searchParams;
+  const venue = venues.find((v) => v.id === sp?.v) || venues[0];
 
   const [{ data: rewards }, { data: customers }, { data: scans }, { data: redemptions }] =
     await Promise.all([
@@ -44,6 +45,7 @@ export default async function DashboardPage() {
   return (
     <Dashboard
       venue={venue as Venue}
+      venues={venues.map((v) => ({ id: v.id as string, name: v.name as string }))}
       rewards={(rewards ?? []) as Reward[]}
       customers={(customers ?? []) as Customer[]}
       scans={(scans ?? []) as unknown as ScanRow[]}

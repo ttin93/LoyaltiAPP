@@ -37,9 +37,10 @@ const card: React.CSSProperties = { background: "#fff", border: `1px solid ${BOR
 const inp: React.CSSProperties = { height: 46, width: "100%", border: "1.5px solid #E4D9C7", borderRadius: 12, background: "#fff", padding: "0 14px", fontFamily: JAK, fontSize: 14.5, color: INK, outline: "none", boxSizing: "border-box" };
 function fmt(ts: string) { return new Date(ts).toLocaleString("sl-SI", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); }
 
-export default function Dashboard({ venue, rewards, customers, scans, redemptions, ownerEmail }: { venue: Venue; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; ownerEmail: string }) {
+export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, ownerEmail }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; ownerEmail: string }) {
   const router = useRouter();
   const [sec, setSec] = useState("pregled");
+  const [switchOpen, setSwitchOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [histTab, setHistTab] = useState<"given" | "redeemed">("given");
   const [msg, setMsg] = useState<string | null>(null);
@@ -71,9 +72,18 @@ export default function Dashboard({ venue, rewards, customers, scans, redemption
           <div className="flex" style={{ minHeight: "100dvh" }}>
             {/* SIDEBAR */}
             <div className="hidden flex-col lg:flex" style={{ width: 248, flexShrink: 0, background: "#fff", borderRight: `1px solid ${BORD}`, padding: "22px 16px" }}>
-              <div className="flex items-center" style={{ gap: 10, padding: "0 8px 18px", borderBottom: "1px solid #F1E8D9", marginBottom: 16 }}>
-                <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 13, background: INK, color: PAPER, fontWeight: 800, fontSize: 18 }}>{venue.name.charAt(0).toUpperCase()}</div>
-                <div className="flex flex-col" style={{ lineHeight: 1.25, flex: 1, minWidth: 0 }}><span className="truncate" style={{ fontWeight: 800, fontSize: 15 }}>{venue.name}</span><span className="truncate" style={{ fontSize: 12, color: "#9A8F80" }}>{(venue as { city?: string }).city || "tally.app"}</span></div>
+              <div className="relative" style={{ padding: "0 0 18px", borderBottom: "1px solid #F1E8D9", marginBottom: 16 }}>
+                <button onClick={() => setSwitchOpen((o) => !o)} className="flex w-full items-center" style={{ gap: 10, padding: "0 8px", background: "none", border: "none", cursor: "pointer", fontFamily: JAK, textAlign: "left" }}>
+                  <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 13, background: INK, color: PAPER, fontWeight: 800, fontSize: 18, flexShrink: 0 }}>{venue.name.charAt(0).toUpperCase()}</div>
+                  <div className="flex flex-col" style={{ lineHeight: 1.25, flex: 1, minWidth: 0 }}><span className="truncate" style={{ fontWeight: 800, fontSize: 15 }}>{venue.name}</span><span className="truncate" style={{ fontSize: 12, color: "#9A8F80" }}>{(venue as { city?: string }).city || `${venues.length} ${venues.length === 1 ? "lokal" : "lokali"}`}</span></div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#B5AB9C", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0 }}><path d="M8 9l4-4 4 4M8 15l4 4 4-4" /></svg>
+                </button>
+                {switchOpen && (
+                  <div className="absolute" style={{ top: "calc(100% - 8px)", left: 4, right: 4, background: "#fff", border: "1px solid #E4D9C7", borderRadius: 12, boxShadow: "0 14px 34px rgba(42,36,29,0.16)", zIndex: 30, padding: 6 }}>
+                    {venues.map((v) => <a key={v.id} href={`/dashboard?v=${v.id}`} className="flex items-center truncate" style={{ height: 38, padding: "0 10px", borderRadius: 9, fontSize: 13.5, fontWeight: v.id === venue.id ? 700 : 600, color: INK, textDecoration: "none", background: v.id === venue.id ? "#FCEFD8" : "transparent" }}>{v.name}</a>)}
+                    <a href="/partner?new=1" className="flex items-center" style={{ height: 38, padding: "0 10px", borderRadius: 9, fontSize: 13.5, fontWeight: 700, color: "#B4781E", textDecoration: "none", borderTop: "1px solid #F1E8D9", marginTop: 4 }}>+ Nov lokal</a>
+                  </div>
+                )}
               </div>
               <div className="flex flex-col" style={{ gap: 3 }}>{NAV.map(([id, label, icon]) => { const on = id === sec; return <button key={id} onClick={() => setSec(id)} className="flex items-center" style={{ gap: 12, height: 44, padding: "0 12px", border: "none", borderRadius: 12, background: on ? "#FCEFD8" : "transparent", color: on ? INK : MUTED, fontFamily: JAK, fontSize: 14.5, fontWeight: on ? 700 : 600, cursor: "pointer", textAlign: "left" }}><Ic name={icon} color={on ? INK : "#A89B88"} size={20} /><span>{label}</span></button>; })}</div>
               <form action={signOut} className="flex items-center" style={{ marginTop: "auto", gap: 10, padding: "12px 8px 0", borderTop: "1px solid #F1E8D9" }}><button style={{ fontSize: 13, fontWeight: 600, color: "#9A8F80", background: "none", border: "none", cursor: "pointer", fontFamily: JAK }}>Odjava · {ownerEmail}</button></form>

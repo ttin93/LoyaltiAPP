@@ -49,6 +49,13 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-23 — seja 45 (TZ fix, anti-fraud spoznanje, review popup)
+- **TZ bug (kritičen)**: datum računa je SLO lokalni čas (CET/CEST), parser ga je bral kot UTC → svež račun videti ~2h v prihodnosti → `api/scan` zavrnil »Neveljaven datum«. Star račun je ušel. Fix: interpretiraj kot Europe/Ljubljana (Intl longOffset) + range-validacija polj. Brez tega bi tudi pravi sveži računi padli.
+- **Anti-fraud spoznanje (POMEMBNO za pitch)**: app NE preverja pristnosti pri FURS — le strukturo + davčno + svežino + dedup(ZOI). Empirično dokazano: izmišljen QR s pravo davčno + svežim datumom GRE SKOZI (`ok, +50, žig`). ZOI-ja iz QR ni mogoče preveriti (QR nima zneska/št. računa). Prava rešitev = FURS verifikacija ali POS integracija. Za pilot: davčna+svežina+dedup+osebje potrdi unovčenje.
+- **Ročni vnos**: dodan (debug) → na zahtevo spet odstranjen (real računi delajo, manual = fraud surface). Testira se na pravih računih.
+- **Google-review = POPUP**: prej inline na success zaslonu → zdaj modal, ki se odpre ~750ms po VSAKEM skenu (po animaciji žiga/kupona). 4–5★→Google / 1–3★→zasebno, preskočljiv. Reset ocene per-sken prek effecta na `view`.
+- Opomba: PrTinu davčna=97384933, okno začasno 876000h (za test starih); v produkciji nazaj na ~24h.
+
 ### 2026-06-23 — seja 44 (KRITIČNO: award_scan bug — skeniranje ni nikoli delalo)
 - **Root cause**: `award_scan` (migr. 0007) je vrgel `column reference "stamps" is ambiguous` — OUT stolpec `stamps` (iz `returns table(...stamps...)`) se je zaletel s `customers.stamps` v `update ... set stamps = stamps + 1`. Posledica: vsak realen sken → 500 »Prišlo je do napake«. Latentno od seje 39 (prej zadeli parse-error ali testirali samo aktivacijo/unovčenje, ne dejanskega skena).
 - **Fix** (migr. 0011): alias `customers c` + kvalificirani `c.points` / `c.stamps`. Preverjeno **end-to-end v živo**: register→scan = `+50 točk, žig 1/10, nextReward rogljiček (200)`; ponovni isti račun = »že unovčen« (dedup ok).

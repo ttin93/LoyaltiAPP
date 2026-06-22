@@ -108,6 +108,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const [stars, setStars] = useState(0);
   const [fb, setFb] = useState("");
   const [reviewDone, setReviewDone] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const [cardCompleted, setCardCompleted] = useState(false);
   const [completedReward, setCompletedReward] = useState("");
   const demoZois = useRef<Set<string>>(new Set());
@@ -123,6 +124,16 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
       body: JSON.stringify({ venueCode: venue.public_code, customerId, stars: s, comment: comment || "", toGoogle }),
     }).catch(() => {});
   }
+
+  // Google-review popup se odpre samodejno po vsakem uspešnem skenu (po animaciji žiga/kupona)
+  useEffect(() => {
+    if (view !== "success") { setReviewOpen(false); return; }
+    setStars(0);
+    setFb("");
+    setReviewDone(false);
+    const t = setTimeout(() => setReviewOpen(true), 750);
+    return () => clearTimeout(t);
+  }, [view]);
 
   const couponsKey = `loyalty:${venue.public_code}:coupons`;
   const [coupons, setCoupons] = useState<{ id: string; name: string; pending?: boolean }[]>([]);
@@ -448,42 +459,51 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           <div style={{ maxWidth: 280, fontSize: 15, lineHeight: 1.5, color: MUTED }}>{successMsg}</div>
         </div>
 
-        {/* Google-ocene autopilot — 4–5★ → Google, 1–3★ → zasebno */}
-        <div style={{ width: "100%", borderRadius: 20, border: "1px solid #EFE6D6", background: "#fff", padding: 20, textAlign: "center" }}>
-          {!reviewDone ? (
-            <>
-              <div style={{ fontSize: 15, fontWeight: 700 }}>Kako ti je bilo danes?</div>
-              <div className="flex justify-center" style={{ marginTop: 12, gap: 6 }}>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <button key={n} onClick={() => setStars(n)} aria-label={`${n} zvezdic`} className="leading-none transition-transform active:scale-90" style={{ fontSize: 34, background: "none", border: "none", cursor: "pointer", color: n <= stars ? AMBER : "#E4D9C7" }}>★</button>
-                ))}
-              </div>
-              {stars >= 4 && (
-                <div className="flex flex-col items-center" style={{ marginTop: 16, gap: 10 }}>
-                  <div style={{ fontSize: 14, lineHeight: 1.4, color: MUTED }}>Juhu! 🎉 Nam pomagaš z oceno na Googlu? Traja 10 sekund.</div>
-                  <a href={googleReviewUrl} target="_blank" rel="noreferrer" onClick={() => { logReview(stars, true); setReviewDone(true); }} className="flex items-center justify-center" style={{ height: 48, width: "100%", gap: 10, borderRadius: 14, background: "#fff", fontSize: 15, fontWeight: 700, color: INK, border: "1.5px solid #E4D9C7", textDecoration: "none" }}>
-                    <GoogleG /> Oceni na Googlu
-                  </a>
-                </div>
-              )}
-              {stars >= 1 && stars <= 3 && (
-                <div className="flex flex-col" style={{ marginTop: 16, gap: 10 }}>
-                  <div style={{ fontSize: 14, lineHeight: 1.4, color: MUTED }}>Žal nam je. Kaj naj popravimo? <span style={{ color: "#A89B88" }}>(vidi samo lokal)</span></div>
-                  <textarea value={fb} onChange={(e) => setFb(e.target.value)} rows={3} placeholder="Tvoje mnenje…" style={{ width: "100%", borderRadius: 12, border: "1.5px solid #E4D9C7", background: CREAM, padding: 12, textAlign: "left", fontSize: 14, fontFamily: JAK, outline: "none", boxSizing: "border-box" }} />
-                  <button onClick={() => { logReview(stars, false, fb); setReviewDone(true); }} style={{ height: 48, width: "100%", borderRadius: 14, background: INK, color: PAPER, fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Pošlji lokalu</button>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="flex flex-col items-center" style={{ gap: 6 }}>
-              <div style={{ fontSize: 28 }}>🙏</div>
-              <div style={{ fontSize: 15, fontWeight: 700 }}>{stars >= 4 ? "Najlepša hvala!" : "Hvala za iskrenost!"}</div>
-              <div style={{ fontSize: 13, color: "#9A8F80" }}>{stars >= 4 ? "Tvoja ocena ogromno pomeni." : "Sporočili bomo lokalu, da izboljša."}</div>
-            </div>
-          )}
-        </div>
+        <button onClick={() => { setView("home"); setCardCompleted(false); }} style={{ height: 54, width: "100%", borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Super, nazaj na kartico</button>
 
-        <button onClick={() => { setView("home"); setStars(0); setFb(""); setReviewDone(false); setCardCompleted(false); }} style={{ height: 54, width: "100%", borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Super, nazaj na kartico</button>
+        {/* Google-ocene POPUP — odpre se takoj po vsakem skenu (4–5★ → Google, 1–3★ → zasebno lokalu) */}
+        {reviewOpen && (
+          <div onClick={() => setReviewOpen(false)} className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center" style={{ background: "rgba(26,18,13,0.55)", padding: 16 }}>
+            <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 380, background: CREAM, borderRadius: 26, padding: "26px 22px 22px", textAlign: "center", boxShadow: "0 18px 50px rgba(26,18,13,0.4)", animation: "popIn 0.4s cubic-bezier(0.2,1.3,0.4,1) both" }}>
+              {!reviewDone ? (
+                <>
+                  <div style={{ fontWeight: 800, fontSize: 19, letterSpacing: "-0.01em" }}>Kako ti je bilo danes?</div>
+                  <div style={{ fontSize: 13.5, color: MUTED, marginTop: 4 }}>Ena ocena ogromno pomaga {venue.name}. 🙏</div>
+                  <div className="flex justify-center" style={{ marginTop: 18, gap: 8 }}>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <button key={n} onClick={() => setStars(n)} aria-label={`${n} zvezdic`} className="leading-none transition-transform active:scale-90" style={{ fontSize: 42, background: "none", border: "none", cursor: "pointer", color: n <= stars ? AMBER : "#E4D9C7" }}>★</button>
+                    ))}
+                  </div>
+                  {stars >= 4 && (
+                    <div className="flex flex-col items-center" style={{ marginTop: 18, gap: 10 }}>
+                      <div style={{ fontSize: 14, lineHeight: 1.4, color: MUTED }}>Juhu! 🎉 Nam pomagaš z oceno na Googlu? Traja 10 sekund.</div>
+                      <a href={googleReviewUrl} target="_blank" rel="noreferrer" onClick={() => { logReview(stars, true); setReviewDone(true); }} className="flex items-center justify-center" style={{ height: 50, width: "100%", gap: 10, borderRadius: 14, background: "#fff", fontSize: 15, fontWeight: 700, color: INK, border: "1.5px solid #E4D9C7", textDecoration: "none" }}>
+                        <GoogleG /> Oceni na Googlu
+                      </a>
+                    </div>
+                  )}
+                  {stars >= 1 && stars <= 3 && (
+                    <div className="flex flex-col" style={{ marginTop: 18, gap: 10 }}>
+                      <div style={{ fontSize: 14, lineHeight: 1.4, color: MUTED }}>Žal nam je. Kaj naj popravimo? <span style={{ color: "#A89B88" }}>(vidi samo lokal)</span></div>
+                      <textarea value={fb} onChange={(e) => setFb(e.target.value)} rows={3} placeholder="Tvoje mnenje…" style={{ width: "100%", borderRadius: 12, border: "1.5px solid #E4D9C7", background: "#fff", padding: 12, textAlign: "left", fontSize: 14, fontFamily: JAK, outline: "none", boxSizing: "border-box" }} />
+                      <button onClick={() => { logReview(stars, false, fb); setReviewDone(true); }} style={{ height: 48, width: "100%", borderRadius: 14, background: INK, color: PAPER, fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Pošlji lokalu</button>
+                    </div>
+                  )}
+                  {stars === 0 && (
+                    <button onClick={() => setReviewOpen(false)} style={{ marginTop: 16, height: 38, width: "100%", borderRadius: 12, background: "none", border: "none", fontSize: 13.5, fontWeight: 600, color: "#9A8F80", cursor: "pointer", fontFamily: JAK }}>Morda kasneje</button>
+                  )}
+                </>
+              ) : (
+                <div className="flex flex-col items-center" style={{ gap: 8 }}>
+                  <div style={{ fontSize: 34 }}>🙏</div>
+                  <div style={{ fontSize: 17, fontWeight: 800 }}>{stars >= 4 ? "Najlepša hvala!" : "Hvala za iskrenost!"}</div>
+                  <div style={{ fontSize: 13.5, color: "#9A8F80", maxWidth: 260 }}>{stars >= 4 ? "Tvoja ocena ogromno pomeni." : "Sporočili bomo lokalu, da izboljša."}</div>
+                  <button onClick={() => setReviewOpen(false)} style={{ marginTop: 10, height: 48, width: "100%", borderRadius: 14, background: INK, color: PAPER, fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Zapri</button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
     );
   }

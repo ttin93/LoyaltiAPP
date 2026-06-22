@@ -14,11 +14,13 @@ export default async function DashboardPage() {
   if (!user) redirect("/partner");
 
   const db = getServiceClient();
-  const { data: venue } = await db
+  const { data: venues } = await db
     .from("venues")
     .select("*")
     .eq("owner_user_id", user.id)
-    .maybeSingle();
+    .order("created_at", { ascending: true })
+    .limit(1);
+  const venue = venues?.[0];
   if (!venue) redirect("/partner");
 
   const [{ data: rewards }, { data: customers }, { data: scans }, { data: redemptions }] =

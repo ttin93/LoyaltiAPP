@@ -49,6 +49,20 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 29 (BUGFIX onboarding loop + wheel-intro hero + onboarding polja)
+- **BUG (kritičen): »Ustvari lokal« te je vrglo nazaj na Onboarding.** Vzrok: `maybeSingle()`
+  na `venues` po `owner_user_id` **vrže napako, če lastnik ima >1 lokal**. Med testiranjem je
+  nastalo več lokalov za istega userja → `/partner`, `/dashboard` in `ownerVenue()` so vsi crashali
+  → neskončna zanka. **Fix:** povsod `order(created_at).limit(1)` namesto `maybeSingle()` +
+  `createVenue` zdaj preveri obstoj in ne ustvari drugega (redirect na /dashboard).
+  (Opomba: testni račun ima 2 lokala — »PrMaticku« + »a«; koda zdaj vzame najstarejšega.)
+- **Onboarding razširjen** (seja prej): polja owner_name/phone/venue_type/city + model nagrajevanja
+  (migracija 0006). Polepšan v topli temi (3 kartice).
+- **Wheel-intro zaslon `/p/[code]` prenovljen** (bil prazen na PC-ju): osrednja topla kartica +
+  topli žarki v ozadju + 4 plavajoči nagradni čipi okoli (samo ≥lg) + trust vrstica
+  (Brez aplikacije · En vrtljaj · Nagrada takoj). Na telefonu čipi skriti, kartica se prilega.
+- **Partner auth** (seja prej): prenovljen v topli temi (split kartica + brand panel + segmentni toggle).
+
 ### 2026-06-20 — seja 28 (TRIJEZIČNOST SLO/HR/ANG + skupni header/footer + marketinška bomba)
 - **Trijezičnost** z gumbi za preklop (SLO/HR/EN v headerju, shranjeno v localStorage):
   - `lib/i18n.ts` — slovar za cel landing + nav + footer + kontakt v **sl/hr/en** (marketinško okrepljena kopija).

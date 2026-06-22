@@ -24,18 +24,24 @@ async function ownerVenue() {
   const user = await getCurrentUser();
   if (!user) throw new Error("Nisi prijavljen.");
   const db = getServiceClient();
-  const { data: venue } = await db
+  // limit(1) namesto maybeSingle: maybeSingle vrže napako, če je lastnik nekoč ustvaril >1 lokal
+  const { data: venues } = await db
     .from("venues")
     .select("*")
     .eq("owner_user_id", user.id)
-    .maybeSingle();
-  return { user, db, venue };
+    .order("created_at", { ascending: true })
+    .limit(1);
+  return { user, db, venue: venues?.[0] ?? null };
 }
 
 export async function createVenue(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Nisi prijavljen.");
   const db = getServiceClient();
+
+  // če lokal že obstaja, ne ustvarjaj drugega — pelji na dashboard
+  const { data: already } = await db.from("venues").select("id").eq("owner_user_id", user.id).limit(1);
+  if (already && already.length) redirect("/dashboard");
 
   const name = String(formData.get("name") || "").trim();
   const brand = String(formData.get("brand_color") || "#16a34a");

@@ -11,6 +11,14 @@ import { WHEEL_SLOTS, WHEEL_TARGET } from "@/lib/demo";
 const ROTS = [-5, 3, -2, 6, -4, 2, -6, 4, -3, 5];
 const REWARD_ICONS = ["cup", "croissant", "cake"];
 
+// Okrasni plavajoči nagradni čipi okoli kolesa (samo desktop) — da PC zaslon ni prazen
+const INTRO_CHIPS: { e: string; t: string; pos: React.CSSProperties; anim: string }[] = [
+  { e: "☕", t: "Brezplačna kava", pos: { top: "20%", left: "9%" }, anim: "floaty 5s ease-in-out infinite" },
+  { e: "🎯", t: "+30 točk", pos: { top: "14%", right: "8%" }, anim: "floaty2 6s ease-in-out infinite" },
+  { e: "🏷️", t: "−10 % popust", pos: { bottom: "22%", left: "11%" }, anim: "floaty2 6.6s ease-in-out infinite" },
+  { e: "🎁", t: "Nagrada ob prijavi", pos: { bottom: "16%", right: "7%" }, anim: "floaty 5.4s ease-in-out infinite" },
+];
+
 function shortLabel(name: string): string {
   const w = name.split(/\s+/).filter((x) => !/^brezpla/i.test(x));
   return (w[0] || name).toUpperCase().slice(0, 6);
@@ -357,22 +365,45 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   // WHEEL-SPIN za nove obiskovalce (pred prijavo)
   if (!customerId && !spun && !pendingPrize) {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center px-6 pb-10 pt-14">
-        <div className="flex items-center gap-3">
-          <Logo bg={logoBg} name={venue.name} />
-          <div className="font-display text-lg font-bold">{venue.name}</div>
+      <main className="relative flex min-h-dvh w-full items-center justify-center overflow-hidden px-5 py-10" style={{ background: "#EAE2D3" }}>
+        {/* topli žarki v ozadju */}
+        <div aria-hidden className="pointer-events-none absolute" style={{ top: -130, left: -110, width: 380, height: 380, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,162,61,0.24), transparent 70%)" }} />
+        <div aria-hidden className="pointer-events-none absolute" style={{ bottom: -150, right: -120, width: 420, height: 420, borderRadius: "50%", background: "radial-gradient(circle, rgba(200,81,43,0.16), transparent 70%)" }} />
+
+        {/* plavajoči nagradni čipi — samo na širših zaslonih, da PC ni prazen */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
+          {INTRO_CHIPS.map((c, i) => (
+            <div key={i} className="absolute flex items-center gap-2 rounded-[14px] border border-[#EFE6D4] bg-[#FFFCF6] py-2 pl-2.5 pr-3.5" style={{ ...c.pos, boxShadow: "0 14px 30px rgba(43,29,23,0.12)", animation: c.anim }}>
+              <span className="text-[18px]">{c.e}</span>
+              <span className="text-[13px] font-bold text-[#2B1D17]">{c.t}</span>
+            </div>
+          ))}
         </div>
-        <h1 className="mt-6 text-center font-display text-[30px] font-extrabold leading-tight">Zavrti in osvoji!</h1>
-        <p className="mb-8 mt-2 text-center text-[15px] leading-relaxed text-[#5C4C3E]">Vsak nov gost dobi en vrtljaj. Kaj boš osvojil?</p>
-        <Wheel
-          slots={WHEEL_SLOTS}
-          target={WHEEL_TARGET}
-          onResult={(i) => {
-            setPendingPrize(WHEEL_SLOTS[i].prize || "Nagrada");
-            setSpun(true);
-          }}
-        />
-        <button onClick={() => setSpun(true)} className="mt-9 text-[14px] font-semibold text-[#8A7A66] underline">Preskoči — samo zbiram žige</button>
+
+        {/* osrednja kartica */}
+        <div className="relative z-[2] flex w-full max-w-[460px] flex-col items-center rounded-[32px] border border-[#EFE6D4] bg-[#FFFCF6] px-6 pb-8 pt-9" style={{ boxShadow: "0 2px 10px rgba(43,29,23,0.05), 0 30px 70px rgba(43,29,23,0.16)" }}>
+          <div className="flex items-center gap-3">
+            <Logo bg={logoBg} name={venue.name} />
+            <div className="font-display text-lg font-bold">{venue.name}</div>
+          </div>
+          <div className="mt-4 flex h-[28px] items-center gap-1.5 rounded-full px-3 text-[12px] font-extrabold" style={{ background: "rgba(232,162,61,0.2)", color: "#8A5B14" }}>🎉 1 brezplačen vrtljaj</div>
+          <h1 className="mt-3 text-center font-display text-[30px] font-extrabold leading-tight">Zavrti in osvoji!</h1>
+          <p className="mb-6 mt-2 max-w-[320px] text-center text-[15px] leading-relaxed text-[#5C4C3E]">Vsak nov gost dobi en vrtljaj. Kaj boš osvojil?</p>
+          <Wheel
+            slots={WHEEL_SLOTS}
+            target={WHEEL_TARGET}
+            onResult={(i) => {
+              setPendingPrize(WHEEL_SLOTS[i].prize || "Nagrada");
+              setSpun(true);
+            }}
+          />
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
+            {["Brez aplikacije", "En vrtljaj", "Nagrada takoj"].map((t) => (
+              <span key={t} className="flex items-center gap-1.5 text-[12.5px] font-semibold text-[#8A7A66]"><Icon name="check" color="#5E7F52" size={14} strokeWidth={2.4} />{t}</span>
+            ))}
+          </div>
+          <button onClick={() => setSpun(true)} className="mt-5 text-[14px] font-semibold text-[#8A7A66] underline">Preskoči — samo zbiram žige</button>
+        </div>
       </main>
     );
   }

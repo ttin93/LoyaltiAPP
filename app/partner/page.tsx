@@ -14,12 +14,13 @@ export default async function Partner() {
   if (!user) return <AuthForm />;
 
   const db = getServiceClient();
-  const { data: venue } = await db
+  const { data: venues } = await db
     .from("venues")
     .select("id")
     .eq("owner_user_id", user.id)
-    .maybeSingle();
+    .order("created_at", { ascending: true })
+    .limit(1);
 
-  if (venue) redirect("/dashboard");
+  if (venues && venues.length) redirect("/dashboard");
   return <Onboarding />;
 }

@@ -445,10 +445,18 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         ? `Še ${visitsLeft} ${visitWord} do brezplačne ${(stampReward?.name || "kave").toLowerCase()}.`
         : rewardReady ? "Lahko unovčiš nagrado pri osebju." : `Še ${left} točk do nagrade.`;
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center" style={{ background: BG, fontFamily: JAK, color: INK, padding: "48px 24px", gap: 22 }}>
-        <div className="flex items-center justify-center" style={{ minWidth: 92, height: 92, borderRadius: 26, padding: "0 18px", background: cardCompleted ? `linear-gradient(150deg,${mix(brand, CREAM, 0.3)},${brand})` : "rgba(94,127,82,0.14)", border: cardCompleted ? "none" : `2.5px solid ${GREEN}`, animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
-          <span style={{ fontWeight: 800, fontSize: cardCompleted ? 40 : 24, color: cardCompleted ? "#fff" : GREEN }}>{cardCompleted ? "🎉" : "+1 žig"}</span>
-        </div>
+      <main className="flex min-h-dvh w-full flex-col items-center justify-center" style={{ background: BG, fontFamily: JAK, color: INK, padding: 20 }}>
+        <div className="flex w-full max-w-md flex-col items-center px-6 py-8 lg:max-w-[440px] lg:rounded-[30px] lg:border lg:border-[#E8DCC8] lg:bg-[#FBF7F0] lg:px-9 lg:py-12 lg:shadow-[0_30px_70px_rgba(34,28,22,0.18)]" style={{ gap: 22 }}>
+          {/* badge: logo lokala + »+1 žig« pill + pulse (telefon + desktop) */}
+          <div style={{ position: "relative", animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
+            {!cardCompleted && <span aria-hidden style={{ position: "absolute", inset: -8, borderRadius: "50%", border: `2px solid ${brand}`, animation: "ringPulse 1.3s ease-out 0.35s both" }} />}
+            <div className="flex items-center justify-center" style={{ width: 96, height: 96, borderRadius: 30, background: cardCompleted ? `linear-gradient(150deg,${mix(brand, CREAM, 0.3)},${brand})` : logoBg, color: PAPER, fontWeight: 800, fontSize: cardCompleted ? 44 : 38, boxShadow: "0 14px 34px rgba(42,36,29,0.2)" }}>
+              {cardCompleted ? "🎉" : (venue.name.trim().charAt(0) || "M").toUpperCase()}
+            </div>
+            {!cardCompleted && (
+              <div style={{ position: "absolute", bottom: -10, left: "50%", transform: "translateX(-50%)", background: GREEN, color: "#F4F0E4", fontSize: 12.5, fontWeight: 800, padding: "5px 13px", borderRadius: 999, whiteSpace: "nowrap", boxShadow: "0 8px 18px rgba(94,127,82,0.4)", animation: "popIn 0.45s cubic-bezier(0.2,1.6,0.4,1) both 0.25s" }}>+1 žig</div>
+            )}
+          </div>
         {hasCard && (
           <div style={{ width: "100%", background: "#fff", borderRadius: 24, padding: "22px 20px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)" }}>
             <StampGrid stamps={displayStamps} count={stampGoal} animateNew accent={brand} />
@@ -460,6 +468,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         </div>
 
         <button onClick={() => { setView("home"); setCardCompleted(false); }} style={{ height: 54, width: "100%", borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Super, nazaj na kartico</button>
+        </div>
 
         {/* Google-ocene POPUP — odpre se takoj po vsakem skenu (4–5★ → Google, 1–3★ → zasebno lokalu) */}
         {reviewOpen && (
@@ -511,16 +520,18 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   // ERROR
   if (view === "error") {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center text-center" style={{ background: BG, fontFamily: JAK, color: INK, padding: "48px 24px", gap: 18 }}>
-        <div className="flex items-center justify-center" style={{ width: 76, height: 76, borderRadius: "50%", border: `2.5px solid ${CORAL}`, background: "rgba(196,98,61,0.12)", transform: "rotate(-5deg)" }}>
-          <Icon name="x" color={CORAL} size={30} strokeWidth={2.1} />
-        </div>
-        <div style={{ maxWidth: 300, fontSize: 24, fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.01em" }}>{errText.t}</div>
-        <div style={{ maxWidth: 280, fontSize: 15, lineHeight: 1.5, color: MUTED }}>{errText.h}</div>
-        <div style={{ fontSize: 13.5, color: "#9A8F80" }}>Tvoje točke ostajajo: <strong>{points}</strong></div>
-        <div className="flex w-full flex-col" style={{ marginTop: 8, gap: 10 }}>
-          <button onClick={() => { setView("home"); setScanning(true); }} style={{ height: 54, borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Skeniraj drug račun</button>
-          <button onClick={() => setView("home")} style={{ height: 48, borderRadius: 16, background: "none", border: "none", fontSize: 15, fontWeight: 600, color: "#9A8F80", cursor: "pointer", fontFamily: JAK }}>Nazaj na kartico</button>
+      <main className="flex min-h-dvh w-full flex-col items-center justify-center" style={{ background: BG, fontFamily: JAK, color: INK, padding: 20 }}>
+        <div className="flex w-full max-w-md flex-col items-center px-6 py-8 text-center lg:max-w-[440px] lg:rounded-[30px] lg:border lg:border-[#E8DCC8] lg:bg-[#FBF7F0] lg:px-9 lg:py-12 lg:shadow-[0_30px_70px_rgba(34,28,22,0.18)]" style={{ gap: 18 }}>
+          <div className="flex items-center justify-center" style={{ width: 76, height: 76, borderRadius: "50%", border: `2.5px solid ${CORAL}`, background: "rgba(196,98,61,0.12)", transform: "rotate(-5deg)", animation: "popIn 0.45s cubic-bezier(0.2,1.5,0.4,1) both" }}>
+            <Icon name="x" color={CORAL} size={30} strokeWidth={2.1} />
+          </div>
+          <div style={{ maxWidth: 300, fontSize: 24, fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.01em" }}>{errText.t}</div>
+          <div style={{ maxWidth: 280, fontSize: 15, lineHeight: 1.5, color: MUTED }}>{errText.h}</div>
+          <div style={{ fontSize: 13.5, color: "#9A8F80" }}>Tvoje točke ostajajo: <strong>{points}</strong></div>
+          <div className="flex w-full flex-col" style={{ marginTop: 8, gap: 10 }}>
+            <button onClick={() => { setView("home"); setScanning(true); }} style={{ height: 54, borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Skeniraj drug račun</button>
+            <button onClick={() => setView("home")} style={{ height: 48, borderRadius: 16, background: "none", border: "none", fontSize: 15, fontWeight: 600, color: "#9A8F80", cursor: "pointer", fontFamily: JAK }}>Nazaj na kartico</button>
+          </div>
         </div>
       </main>
     );

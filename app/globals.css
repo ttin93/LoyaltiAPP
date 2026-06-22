@@ -28,6 +28,10 @@ body {
   from { top: 8%; }
   to { top: 90%; }
 }
+@keyframes ringPulse {
+  0% { transform: scale(0.85); opacity: 0.55; }
+  100% { transform: scale(1.65); opacity: 0; }
+}
 @keyframes floaty {
   0% { transform: translateY(0) rotate(-3deg); }
   50% { transform: translateY(-12px) rotate(-3deg); }

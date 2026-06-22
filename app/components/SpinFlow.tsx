@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createBrowserSupabase } from "@/lib/supabase/ssrClient";
 import { BRAND } from "@/lib/brand";
+import type { WheelConfig } from "@/lib/types";
 
 // Nova design paleta (Plus Jakarta Sans)
 const INK = "#2A241D";
@@ -58,6 +59,7 @@ export default function SpinFlow({
   venueInitial,
   brandColor = "#E2A04A",
   tagline = "Tvoj prvi obisk si zasluži nagrado",
+  wheel,
   demo = false,
 }: {
   code: string;
@@ -65,22 +67,48 @@ export default function SpinFlow({
   venueInitial: string;
   brandColor?: string;
   tagline?: string;
+  wheel?: WheelConfig | null;
   demo?: boolean;
 }) {
-  const [step, setStep] = useState<"wheel" | "won" | "register" | "coupon">("wheel");
+  // konfiguracija kolesa (lastnik jo nastavi v dashboardu); fallback = privzeti segmenti
+  const cfg = wheel && Array.isArray(wheel.segments) && wheel.segments.length >= 2 ? wheel : null;
+  const enabled = cfg ? cfg.enabled !== false : true;
+  const segs = cfg ? cfg.segments.map((s) => s.label || "—") : SEGS;
+  const N = segs.length;
+
+  function pickWinner(): number {
+    if (!cfg) return 0;
+    if (cfg.mode === "weighted") {
+      const total = cfg.segments.reduce((a, s) => a + (Number(s.weight) || 0), 0);
+      if (total <= 0) return 0;
+      let x = Math.random() * total;
+      for (let i = 0; i < cfg.segments.length; i++) { x -= Number(cfg.segments[i].weight) || 0; if (x <= 0) return i; }
+      return cfg.segments.length - 1;
+    }
+    return Math.max(0, Math.min(cfg.winner ?? 0, N - 1));
+  }
+
+  const [step, setStep] = useState<"wheel" | "won" | "register" | "coupon">(enabled ? "wheel" : "register");
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
+  const [wonIndex, setWonIndex] = useState(cfg && cfg.mode === "fixed" ? Math.max(0, Math.min(cfg.winner ?? 0, N - 1)) : 0);
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [gErr, setGErr] = useState("");
   const [couponCode, setCouponCode] = useState("");
+  const wonLabel = segs[wonIndex] || segs[0] || "Nagrada";
 
   function spin() {
     if (spinning || step !== "wheel") return;
     setSpinning(true);
+    const seg = 360 / N;
+    const w = pickWinner();
+    setWonIndex(w);
     const cur = ((rotation % 360) + 360) % 360;
-    const jitter = Math.round(Math.random() * 26 - 13);
-    const delta = (330 - cur + 360) % 360;
+    const target = (360 - (w * seg + seg / 2) + 360) % 360; // sredina zmagovalnega segmenta na kazalec (vrh)
+    const jMax = Math.max(2, seg / 2 - 8);
+    const jitter = Math.round((Math.random() * 2 - 1) * jMax);
+    const delta = (target - cur + 360) % 360;
     setRotation(rotation + 360 * 5 + delta + jitter);
     setTimeout(() => {
       setSpinning(false);
@@ -88,13 +116,13 @@ export default function SpinFlow({
     }, 4400);
   }
 
-  function grantWelcomeCoupon() {
+  function grantWelcomeCoupon(label: string) {
     const ck = `loyalty:${code}:coupons`;
     const already = localStorage.getItem(`loyalty:${code}:welcomeClaimed`) === "1";
     if (!already) {
       let coupons: { id: string; name: string }[] = [];
       try { coupons = JSON.parse(localStorage.getItem(ck) || "[]"); } catch {}
-      coupons.push({ id: "c" + coupons.length, name: "Brezplačna kava" });
+      coupons.push({ id: "c" + coupons.length, name: label });
       localStorage.setItem(ck, JSON.stringify(coupons));
       localStorage.setItem(`loyalty:${code}:welcomeClaimed`, "1");
     }
@@ -104,7 +132,8 @@ export default function SpinFlow({
   async function doRegister(payload: { email?: string }) {
     if (demo) {
       localStorage.setItem(`loyalty:${code}:customerId`, "demo");
-      grantWelcomeCoupon();
+      if (!enabled) { window.location.href = `/p/${code}`; return; }
+      grantWelcomeCoupon(wonLabel);
       setStep("coupon");
       return;
     }
@@ -120,8 +149,9 @@ export default function SpinFlow({
     } catch {
       /* best-effort */
     } finally {
-      grantWelcomeCoupon();
       setBusy(false);
+      if (!enabled) { window.location.href = `/p/${code}`; return; }
+      grantWelcomeCoupon(wonLabel);
       setStep("coupon");
     }
   }
@@ -177,24 +207,25 @@ export default function SpinFlow({
   }, []);
 
   // ---- WHEEL SVG (rotacija na ovojnem divu — CSS prehod) ----
-  const wheel = (() => {
-    const cx = 100, cy = 100, r = 92;
+  const wheelEl = (() => {
+    const cx = 100, cy = 100, r = 92, segA = 360 / N;
     const polar = (deg: number) => { const a = ((deg - 90) * Math.PI) / 180; return [r2(cx + r * Math.cos(a)), r2(cy + r * Math.sin(a))]; };
-    const fills = [brandColor, "#FFFFFF", "#F6EAD6", "#FFFFFF", "#F6EAD6", "#FFFFFF"];
+    const hi = cfg && cfg.mode === "weighted" ? -1 : wonIndex; // ne razkrij zmagovalca pri naključnem
     const paths: React.ReactNode[] = [];
     const labels: React.ReactNode[] = [];
-    for (let i = 0; i < 6; i++) {
-      const [x0, y0] = polar(i * 60);
-      const [x1, y1] = polar((i + 1) * 60);
-      paths.push(<path key={"p" + i} d={`M${cx} ${cy} L${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1} Z`} fill={fills[i]} stroke="#EAD9BC" strokeWidth={1} />);
-      const mid = i * 60 + 30;
+    for (let i = 0; i < N; i++) {
+      const [x0, y0] = polar(i * segA);
+      const [x1, y1] = polar((i + 1) * segA);
+      const win = i === hi;
+      const fill = win ? brandColor : i % 2 === 0 ? "#FFFFFF" : "#F6EAD6";
+      paths.push(<path key={"p" + i} d={`M${cx} ${cy} L${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1} Z`} fill={fill} stroke="#EAD9BC" strokeWidth={1} />);
+      const mid = i * segA + segA / 2;
       const a = ((mid - 90) * Math.PI) / 180;
       const lx = r2(cx + r * 0.62 * Math.cos(a));
       const ly = r2(cy + r * 0.62 * Math.sin(a));
-      const win = i === 0;
       labels.push(
-        <text key={"t" + i} x={lx} y={ly} transform={`rotate(${mid} ${lx} ${ly})`} textAnchor="middle" dominantBaseline="middle" style={{ fontFamily: "var(--font-jakarta), sans-serif", fontWeight: win ? 800 : 700, fontSize: win ? 9 : 8.5, fill: win ? "#FFFFFF" : "#7A6A50" }}>
-          {SEGS[i]}
+        <text key={"t" + i} x={lx} y={ly} transform={`rotate(${mid} ${lx} ${ly})`} textAnchor="middle" dominantBaseline="middle" style={{ fontFamily: "var(--font-jakarta), sans-serif", fontWeight: win ? 800 : 700, fontSize: N > 7 ? 7.5 : N > 6 ? 8 : 9, fill: win ? "#FFFFFF" : "#7A6A50" }}>
+          {(segs[i] || "").slice(0, 13)}
         </text>,
       );
     }
@@ -251,7 +282,7 @@ export default function SpinFlow({
                 <div style={{ position: "absolute", top: -6, left: "50%", transform: "translateX(-50%)", zIndex: 3, filter: "drop-shadow(0 3px 4px rgba(42,36,29,0.3))" }}>
                   <svg width="30" height="26" viewBox="0 0 30 26"><path d="M15 24 L4 4 Q15 10 26 4 Z" fill={INK} /></svg>
                 </div>
-                {wheel}
+                {wheelEl}
                 <button onClick={spin} aria-label="Zavrti" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 72, height: 72, borderRadius: "50%", border: "none", background: "transparent", color: CREAM, fontFamily: "var(--font-jakarta), sans-serif", fontWeight: 800, fontSize: 13, letterSpacing: "0.04em", cursor: "pointer" }}>{spinning ? "···" : "ZAVRTI"}</button>
               </div>
               <div style={{ fontSize: 12.5, color: "#9A8F80", marginTop: 4 }}>Zadetek prevzameš ob registraciji</div>
@@ -266,13 +297,13 @@ export default function SpinFlow({
               </div>
               <div className="flex flex-col" style={{ gap: 6 }}>
                 <div style={{ fontWeight: 800, fontSize: 27, letterSpacing: "-0.01em" }}>Zadetek!</div>
-                <div style={{ fontSize: 15, color: MUTED, lineHeight: 1.5, maxWidth: 270 }}>Osvojil si <strong style={{ color: INK }}>brezplačno kavo</strong> za prvi obisk.</div>
+                <div style={{ fontSize: 15, color: MUTED, lineHeight: 1.5, maxWidth: 270 }}>Osvojil si <strong style={{ color: INK }}>{wonLabel}</strong> za prvi obisk.</div>
               </div>
               <div className="flex items-center" style={{ width: "100%", background: "linear-gradient(135deg,#FCEFD8,#F8E3C2)", borderRadius: 16, padding: 14, gap: 12 }}>
                 <div className="flex items-center justify-center" style={{ width: 42, height: 42, borderRadius: 12, background: "#FFFFFF", flexShrink: 0 }}><CoffeeIcon size={22} stroke={brandColor} w={1.8} /></div>
                 <div style={{ textAlign: "left" }}>
-                  <div style={{ fontWeight: 800, fontSize: 15 }}>Brezplačna kava</div>
-                  <div style={{ fontSize: 12, color: "#B4862F", fontWeight: 600 }}>vrednost 2,20 € · velja 14 dni</div>
+                  <div style={{ fontWeight: 800, fontSize: 15 }}>{wonLabel}</div>
+                  <div style={{ fontSize: 12, color: "#B4862F", fontWeight: 600 }}>velja 14 dni · ob prvem obisku</div>
                 </div>
               </div>
               <button onClick={() => setStep("register")} className="flex items-center justify-center" style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: INK, color: CREAM, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 700, cursor: "pointer", gap: 8 }}>
@@ -337,7 +368,7 @@ export default function SpinFlow({
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: brandColor }} />
                   <span style={{ fontSize: 11, letterSpacing: "0.16em", fontWeight: 800, color: brandColor }}>{venueName.toUpperCase()}</span>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 23, textAlign: "center", letterSpacing: "-0.01em" }}>Brezplačna kava</div>
+                <div style={{ fontWeight: 800, fontSize: 23, textAlign: "center", letterSpacing: "-0.01em" }}>{wonLabel}</div>
                 <div style={{ margin: "14px 0", borderTop: "1.5px dashed rgba(251,243,230,0.26)" }} />
                 <div className="flex items-center" style={{ gap: 16 }}>
                   <div style={{ background: "#FFFFFF", borderRadius: 10, padding: 8 }}><FakeQr px={70} seed={7} /></div>

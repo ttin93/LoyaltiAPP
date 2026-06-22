@@ -366,6 +366,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         venueInitial={(venue.name.trim().charAt(0) || "M").toUpperCase()}
         brandColor={venue.brand_color && venue.brand_color !== "#16a34a" ? venue.brand_color : "#E2A04A"}
         tagline="Tvoj prvi obisk si zasluži nagrado"
+        wheel={venue.wheel_config}
       />
     );
   }

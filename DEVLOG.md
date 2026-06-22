@@ -49,6 +49,14 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-22 — seja 41 (feedback 3: Kolo sreče konfiguracija, zgodovina kdo/kdaj, jezik, ročni dnevnik)
+- **Kolo sreče — nov dashboard zavihek + konfiguracija**: `venues.wheel_config` (jsonb), `saveWheel` action. Lastnik nastavi: vklop/izklop, način (**fixed** = vedno isti zadetek / **weighted** = naključno po utežeh %), segmente (napis + utež), zmagovalca (fixed), z živim mini-predogledom (`WheelMini`). **SpinFlow prebere config**: N segmentov, pickWinner (fixed/weighted), pristane na pravem segmentu, WON/kupon kažejo dejansko osvojeno nagrado (ne več fiksne »kave«). Če disabled → preskoči kolo, gre naravnost v registracijo. Wired v GuestApp + /embed + /p/[code]/spin. **Preverjeno v živo**: /p/prtinu/spin prikaže custom 4 segmente iz baze.
+- **Zgodovina kdo/kdaj/kaj**: skeni + redemptions zdaj kažejo **email** (prej »—« ker je telefon null). Ročno dodane točke (admin) se beležijo v novo tabelo `point_grants` in se kažejo v **Podarjene** z oznako »ročno«. (Migracija 0009.)
+- **Jezik gostove strani**: `venues.language` + selektor v Nastavitvah (SLO/EN/HR/SR/BS/DE). Zaenkrat shrani nastavitev; prevodi celega gostovega flowa pridejo kasneje.
+- **Pregled obogaten**: hitre akcije (skok na test/kolo/kampanjo/QR/ocene) + »Za dokončat« setup-checklist (skeniranje, nagrade, Google link, kolo).
+- **Registracija (odgovor na vprašanje)**: priporočilo = NE dodajati gesla+2×+email-koda za loyalty goste (preveč friction, ubije signupe). Ostaja email-only; če bo treba verificirati email → passwordless magic-link, ne gesla. Forgot-password brez gesel ni potreben. (Ni grajeno — čaka potrditev.)
+- Build čist, migracija 0009 v živo (201).
+
 ### 2026-06-22 — seja 40 (feedback po testu: onboarding + dashboard razširitve, Google-ocene statistika)
 - **Test login**: ustvarjen potrjen owner (`tin.suklje93@gmail.com` / `123456`) prek admin API (registracija prek UI je čakala na email-potrditev).
 - **Onboarding**: korak 1 = barvni picker (`<input type=color>` + hex polje) poleg presetov; korak 2 = točke na obisk lahko **0** (samo žigi); korak 3 = **pravo urejanje nagrad** (žig-nagrada + točkovne nagrade z imeni/točkami, add/remove) → `createVenue` bere `point_rewards` JSON + točke 0.

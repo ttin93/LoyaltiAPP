@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Venue, Reward, Customer, ScanRow, RedemptionRow } from "@/lib/types";
-import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, signOut } from "@/app/actions";
+import { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow, WheelConfig, WheelSegment } from "@/lib/types";
+import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, saveWheel, signOut } from "@/app/actions";
 import Scanner from "@/app/components/Scanner";
 import QrCode from "./QrCode";
 
@@ -19,7 +19,7 @@ const GREEN = "#5E7F52";
 const MUTED = "#6E6253";
 const BORD = "#EFE6D6";
 
-type IcName = "grid" | "chart" | "clock" | "users" | "mega" | "qr" | "sliders" | "star" | "crown";
+type IcName = "grid" | "chart" | "clock" | "users" | "mega" | "qr" | "sliders" | "star" | "crown" | "wheel";
 function Ic({ name, color = INK, size = 20 }: { name: IcName; color?: string; size?: number }) {
   const st = { fill: "none", stroke: color, strokeWidth: 1.9, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   const p: Record<IcName, React.ReactNode> = {
@@ -32,11 +32,12 @@ function Ic({ name, color = INK, size = 20 }: { name: IcName; color?: string; si
     sliders: <><path d="M4 7.5h16M4 12h16M4 16.5h16" style={st} /><circle cx={15} cy={7.5} r={2.1} style={st} /><circle cx={8.5} cy={12} r={2.1} style={st} /><circle cx={16} cy={16.5} r={2.1} style={st} /></>,
     star: <path d="M12 4.5l2.3 4.8 5.2.7-3.8 3.6 1 5.1L12 16.4 7.1 18.3l1-5.1L4.3 9.6l5.2-.7L12 4.5Z" style={st} />,
     crown: <><path d="M4 8.5l3.5 3 4.5-6 4.5 6 3.5-3-1.5 9.5H5.5L4 8.5Z" style={st} /><path d="M5.5 18h13" style={st} /></>,
+    wheel: <><circle cx={12} cy={12} r={8.5} style={st} /><path d="M12 3.5v17M3.5 12h17M6 6l12 12M18 6 6 18" style={st} /></>,
   };
   return <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", flexShrink: 0 }}>{p[name]}</svg>;
 }
 
-const NAV: [string, string, IcName][] = [["pregled", "Pregled", "grid"], ["analitika", "Analitika", "chart"], ["ocene", "Ocene", "star"], ["zgodovina", "Zgodovina", "clock"], ["stranke", "Stranke", "users"], ["marketing", "Marketing", "mega"], ["sistem", "Sistem", "qr"], ["nastavitve", "Nastavitve", "sliders"], ["narocnina", "Naročnina", "crown"]];
+const NAV: [string, string, IcName][] = [["pregled", "Pregled", "grid"], ["analitika", "Analitika", "chart"], ["ocene", "Ocene", "star"], ["zgodovina", "Zgodovina", "clock"], ["stranke", "Stranke", "users"], ["marketing", "Marketing", "mega"], ["kolo", "Kolo sreče", "wheel"], ["sistem", "Sistem", "qr"], ["nastavitve", "Nastavitve", "sliders"], ["narocnina", "Naročnina", "crown"]];
 const card: React.CSSProperties = { background: "#fff", border: `1px solid ${BORD}`, borderRadius: 18, padding: 22 };
 const inp: React.CSSProperties = { height: 46, width: "100%", border: "1.5px solid #E4D9C7", borderRadius: 12, background: "#fff", padding: "0 14px", fontFamily: JAK, fontSize: 14.5, color: INK, outline: "none", boxSizing: "border-box" };
 function fmt(ts: string) { return new Date(ts).toLocaleString("sl-SI", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); }
@@ -49,8 +50,35 @@ const PRESETS: { k: string; t: string; seg: string }[] = [
 function StarRow({ n, size = 14 }: { n: number; size?: number }) {
   return <span style={{ letterSpacing: 1, whiteSpace: "nowrap" }}>{[1, 2, 3, 4, 5].map((i) => <span key={i} style={{ color: i <= n ? AMBER : "#E4D9C7", fontSize: size }}>★</span>)}</span>;
 }
+const LANGS: [string, string][] = [["sl", "Slovenščina 🇸🇮"], ["en", "English 🇬🇧"], ["hr", "Hrvaški 🇭🇷"], ["sr", "Srbski 🇷🇸"], ["bs", "Bosanski 🇧🇦"], ["de", "Nemški 🇩🇪"]];
+const DEFAULT_WHEEL: WheelConfig = { enabled: true, mode: "fixed", winner: 0, segments: [{ label: "Brezplačna kava", weight: 1 }, { label: "−10 %", weight: 1 }, { label: "+30 točk", weight: 1 }, { label: "Piškot", weight: 1 }, { label: "−15 %", weight: 1 }, { label: "Sirup", weight: 1 }] };
+const SEGFILL = ["#E2A04A", "#C4623D", "#5E7F52", "#3D5A80", "#8E5BA6", "#D98C3A", "#7A9E6E", "#B05050"];
 
-export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], ownerEmail }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; ownerEmail: string }) {
+function WheelMini({ segments, winner, accent }: { segments: WheelSegment[]; winner: number; accent: string }) {
+  const n = Math.max(1, segments.length), cx = 100, cy = 100, r = 92, seg = 360 / n;
+  const polar = (deg: number) => { const a = ((deg - 90) * Math.PI) / 180; return [Math.round((cx + r * Math.cos(a)) * 100) / 100, Math.round((cy + r * Math.sin(a)) * 100) / 100]; };
+  return (
+    <svg width="220" height="220" viewBox="0 0 200 200" style={{ display: "block", filter: "drop-shadow(0 10px 22px rgba(42,36,29,0.14))" }}>
+      {segments.map((s, i) => {
+        const [x0, y0] = polar(i * seg), [x1, y1] = polar((i + 1) * seg);
+        const isWin = i === winner;
+        const fill = isWin ? accent : i % 2 === 0 ? "#FFFFFF" : "#F6EAD6";
+        const mid = i * seg + seg / 2, a = ((mid - 90) * Math.PI) / 180;
+        const lx = Math.round((cx + r * 0.6 * Math.cos(a)) * 100) / 100, ly = Math.round((cy + r * 0.6 * Math.sin(a)) * 100) / 100;
+        return (
+          <g key={i}>
+            <path d={`M${cx} ${cy} L${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1} Z`} fill={fill} stroke="#EAD9BC" strokeWidth={1} />
+            <text x={lx} y={ly} transform={`rotate(${mid} ${lx} ${ly})`} textAnchor="middle" dominantBaseline="middle" style={{ fontFamily: JAK, fontWeight: isWin ? 800 : 700, fontSize: n > 7 ? 7 : 8, fill: isWin ? "#fff" : "#7A6A50" }}>{(s.label || "—").slice(0, 12)}</text>
+          </g>
+        );
+      })}
+      <circle cx={cx} cy={cy} r={r + 2} fill="none" stroke={INK} strokeWidth={4} />
+      <circle cx={cx} cy={cy} r={24} fill={INK} stroke="#fff" strokeWidth={3} />
+    </svg>
+  );
+}
+
+export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string }) {
   const router = useRouter();
   const [sec, setSec] = useState("pregled");
   const [switchOpen, setSwitchOpen] = useState(false);
@@ -62,6 +90,10 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   const [custQuery, setCustQuery] = useState("");
   const [custSel, setCustSel] = useState<Customer | null>(null);
   const [settingsColor, setSettingsColor] = useState(venue.brand_color || "#E2A04A");
+  const [wheel, setWheel] = useState<WheelConfig>(() => (venue.wheel_config && Array.isArray(venue.wheel_config.segments) && venue.wheel_config.segments.length ? venue.wheel_config : DEFAULT_WHEEL));
+  function patchWheel(p: Partial<WheelConfig>) { setWheel((w) => ({ ...w, ...p })); }
+  function setSeg(i: number, p: Partial<WheelSegment>) { setWheel((w) => ({ ...w, segments: w.segments.map((s, j) => (j === i ? { ...s, ...p } : s)) })); }
+  const totalW = wheel.segments.reduce((a, s) => a + (Number(s.weight) || 0), 0);
   const title = NAV.find((n) => n[0] === sec)?.[1] || "Pregled";
 
   const stats = useMemo(() => {
@@ -132,6 +164,13 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   const stampRewards = rewards.filter((r) => (r as Reward).kind === "stamp");
   const pointsRewards = rewards.filter((r) => (r as Reward).kind !== "stamp");
 
+  // ZGODOVINA — podarjene = skeni + ročne točke (kdo/kdaj/kaj)
+  const givenLog = useMemo(() => {
+    const a = scans.map((s) => ({ id: "s" + s.id, t: s.created_at, who: s.customers?.email ?? s.customers?.phone ?? "—", points: s.points_awarded, manual: false }));
+    const b = grants.map((g) => ({ id: "g" + g.id, t: g.created_at, who: g.customers?.email ?? g.customers?.phone ?? "—", points: g.points, manual: true }));
+    return [...a, ...b].sort((x, y) => (x.t < y.t ? 1 : -1));
+  }, [scans, grants]);
+
   function flash(t: string) { setMsg(t); setTimeout(() => setMsg(null), 3000); }
   async function run(fn: () => Promise<unknown>, ok?: string) { try { await fn(); if (ok) flash(ok); router.refresh(); } catch (e) { flash(e instanceof Error ? e.message : "Napaka."); } }
   async function handleScanResult(payload: string) {
@@ -188,6 +227,27 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
 
                 {sec === "pregled" && (
                   <div className="flex flex-col" style={{ gap: 20 }}>
+                    {/* hitre akcije */}
+                    <div className="flex" style={{ gap: 10, flexWrap: "wrap" }}>
+                      {([["Testiraj račun", "sistem"], ["Uredi kolo", "kolo"], ["Nova kampanja", "marketing"], ["QR koda", "sistem"], ["Ocene", "ocene"]] as const).map(([t, target]) => <button key={t} onClick={() => setSec(target)} style={{ height: 40, padding: "0 16px", border: "1px solid #E4D9C7", borderRadius: 11, background: "#fff", color: INK, fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>{t}</button>)}
+                    </div>
+                    {/* za dokončat (setup) */}
+                    {(() => {
+                      const items = [
+                        { done: !!venue.davcna_stevilka, label: "Aktiviraj skeniranje računov", to: "sistem" },
+                        { done: stampRewards.length > 0 || pointsRewards.length > 0, label: "Dodaj vsaj eno nagrado", to: "nastavitve" },
+                        { done: !!venue.google_review_url, label: "Nastavi Google povezavo za ocene", to: "nastavitve" },
+                        { done: !!venue.wheel_config, label: "Uredi kolo sreče", to: "kolo" },
+                      ];
+                      const left = items.filter((i) => !i.done);
+                      if (!left.length) return null;
+                      return (
+                        <div style={{ ...card, display: "flex", flexDirection: "column", gap: 10 }}>
+                          <div className="flex items-center justify-between"><span style={{ fontWeight: 700, fontSize: 15 }}>Za dokončat</span><span style={{ fontSize: 12.5, color: "#9A8F80" }}>{items.length - left.length}/{items.length} urejeno</span></div>
+                          {left.map((i) => <button key={i.label} onClick={() => setSec(i.to)} className="flex items-center justify-between" style={{ background: CREAM, border: "1px solid #F1E8D9", borderRadius: 12, padding: "11px 14px", cursor: "pointer", fontFamily: JAK, textAlign: "left" }}><span className="flex items-center" style={{ gap: 10 }}><span style={{ width: 18, height: 18, borderRadius: "50%", border: "2px solid #D9CDBA", flexShrink: 0 }} /><span style={{ fontSize: 13.5, fontWeight: 600, color: INK }}>{i.label}</span></span><span style={{ fontSize: 18, color: "#B5AB9C" }}>›</span></button>)}
+                        </div>
+                      );
+                    })()}
                     <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))" }}>
                       <Kpi l="Skeniranja" v={scans.length} d={`${stats.pointsAwarded} podarjenih točk`} dc={GREEN} />
                       <Kpi l="Stranke" v={customers.length} />
@@ -284,8 +344,8 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                   <div className="flex flex-col" style={{ gap: 16 }}>
                     <div className="flex" style={{ background: "#F1E8D9", borderRadius: 12, padding: 4, width: 280 }}>{(["given", "redeemed"] as const).map((t) => <button key={t} onClick={() => setHistTab(t)} style={{ flex: 1, height: 36, border: "none", borderRadius: 9, background: histTab === t ? "#fff" : "transparent", color: histTab === t ? INK : "#9A8F80", fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>{t === "given" ? "Podarjene" : "Unovčene"}</button>)}</div>
                     <div style={{ ...card, padding: "6px 22px" }}>
-                      {histTab === "given" ? (scans.length === 0 ? <div style={{ padding: "20px 0", textAlign: "center", fontSize: 13.5, color: "#9A8F80" }}>Ni zapisov.</div> : scans.map((s, i) => <div key={s.id} className="flex items-center justify-between" style={{ padding: "14px 0", borderTop: i ? "1px solid #F4ECDF" : "none" }}><div style={{ minWidth: 0 }}><div className="truncate" style={{ fontSize: 14, fontWeight: 600 }}>{s.customers?.phone ?? "—"}</div><div style={{ fontSize: 12.5, color: "#9A8F80" }}>{fmt(s.created_at)}</div></div><span style={{ fontSize: 14, fontWeight: 700, color: GREEN, whiteSpace: "nowrap" }}>+{s.points_awarded}</span></div>))
-                        : (redemptions.length === 0 ? <div style={{ padding: "20px 0", textAlign: "center", fontSize: 13.5, color: "#9A8F80" }}>Ni zapisov.</div> : redemptions.map((r, i) => <div key={r.id} className="flex items-center justify-between" style={{ padding: "14px 0", borderTop: i ? "1px solid #F4ECDF" : "none" }}><div style={{ minWidth: 0 }}><div className="truncate" style={{ fontSize: 14, fontWeight: 600 }}>{r.customers?.phone ?? "—"} · {r.rewards?.name ?? "nagrada"}</div><div style={{ fontSize: 12.5, color: "#9A8F80" }}>{fmt(r.created_at)}</div></div><span style={{ fontSize: 14, fontWeight: 700, color: CORAL, whiteSpace: "nowrap" }}>−{r.points_spent}</span></div>))}
+                      {histTab === "given" ? (givenLog.length === 0 ? <div style={{ padding: "20px 0", textAlign: "center", fontSize: 13.5, color: "#9A8F80" }}>Ni zapisov.</div> : givenLog.map((g, i) => <div key={g.id} className="flex items-center justify-between" style={{ padding: "14px 0", borderTop: i ? "1px solid #F4ECDF" : "none", gap: 12 }}><div style={{ minWidth: 0 }}><div className="flex items-center truncate" style={{ fontSize: 14, fontWeight: 600, gap: 8 }}>{g.who}{g.manual && <span style={{ height: 18, padding: "0 7px", borderRadius: 999, background: "#FCEFD8", color: "#B4781E", fontSize: 10.5, fontWeight: 800, display: "inline-flex", alignItems: "center", flexShrink: 0 }}>ročno</span>}</div><div style={{ fontSize: 12.5, color: "#9A8F80" }}>{g.manual ? "ročni vnos" : "skeniran račun"} · {fmt(g.t)}</div></div><span style={{ fontSize: 14, fontWeight: 700, color: GREEN, whiteSpace: "nowrap" }}>+{g.points}</span></div>))
+                        : (redemptions.length === 0 ? <div style={{ padding: "20px 0", textAlign: "center", fontSize: 13.5, color: "#9A8F80" }}>Ni zapisov.</div> : redemptions.map((r, i) => <div key={r.id} className="flex items-center justify-between" style={{ padding: "14px 0", borderTop: i ? "1px solid #F4ECDF" : "none", gap: 12 }}><div style={{ minWidth: 0 }}><div className="truncate" style={{ fontSize: 14, fontWeight: 600 }}>{r.customers?.email ?? r.customers?.phone ?? "—"}</div><div style={{ fontSize: 12.5, color: "#9A8F80" }}>{r.rewards?.name ?? "nagrada"} · {fmt(r.created_at)}</div></div><span style={{ fontSize: 14, fontWeight: 700, color: CORAL, whiteSpace: "nowrap" }}>−{r.points_spent}</span></div>))}
                     </div>
                   </div>
                 )}
@@ -300,6 +360,54 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                       <div className="hidden items-center sm:flex" style={{ gap: 14, padding: "14px 22px", fontSize: 11.5, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: "#A89B88", background: "#FBF6EC" }}><div style={{ flex: 1 }}>Stranka</div><div style={{ width: 64, textAlign: "right" }}>Točke</div><div style={{ width: 60, textAlign: "right" }}>Žigi</div><div style={{ width: 60, textAlign: "right" }}>Obiski</div><div style={{ width: 110, textAlign: "right" }}>Zadnji</div><div style={{ width: 84, textAlign: "right" }}>Ročno</div></div>
                       {custFiltered.length === 0 && <div style={{ padding: "28px 0", textAlign: "center", fontSize: 14, color: "#9A8F80" }}>{customers.length === 0 ? "Še ni strank." : "Ni zadetkov."}</div>}
                       {custFiltered.map((c, i) => { const v = stats.visits.get(c.id); return <div key={c.id} onClick={() => setCustSel(c)} className="flex items-center" style={{ gap: 14, padding: "13px 22px", borderTop: i ? "1px solid #F4ECDF" : "none", cursor: "pointer" }}><div className="flex flex-1 items-center truncate" style={{ fontSize: 14, fontWeight: 600, minWidth: 0 }}>{c.email ?? c.phone ?? "—"}</div><div style={{ width: 64, textAlign: "right", fontSize: 13.5, fontWeight: 700, color: "#B4862F" }}>{c.points}</div><div className="hidden sm:block" style={{ width: 60, textAlign: "right", fontSize: 13.5, color: MUTED }}>{c.stamps ?? 0}</div><div className="hidden sm:block" style={{ width: 60, textAlign: "right", fontSize: 13.5, color: MUTED }}>{v?.visits ?? 0}</div><div className="hidden sm:block" style={{ width: 110, textAlign: "right", fontSize: 13, color: "#9A8F80" }}>{v ? fmt(v.last) : "—"}</div><div style={{ width: 84, textAlign: "right" }}><button onClick={(e) => { e.stopPropagation(); const n = Number(window.prompt(`Dodaj točke za ${c.email ?? c.phone ?? "stranko"}:`, "10")); if (n) run(() => addManualPoints(c.id, n), "Točke dodane."); }} style={{ border: "1px solid #E4D9C7", borderRadius: 9, padding: "5px 9px", fontSize: 12, fontWeight: 700, background: "#fff", cursor: "pointer", fontFamily: JAK }}>+ točke</button></div></div>; })}
+                    </div>
+                  </div>
+                )}
+
+                {sec === "kolo" && (
+                  <div className="flex flex-col" style={{ gap: 16, maxWidth: 780 }}>
+                    <div style={{ background: "#FCEFD8", borderRadius: 14, padding: "14px 16px", fontSize: 13, lineHeight: 1.5, color: "#7A5E1E" }}>Kolo se zavrti <b>samo novim gostom</b> ob prvi prijavi (welcome nagrada). Tu izbereš segmente in kako se določi zadetek.</div>
+                    <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
+                      <div className="flex flex-col" style={{ gap: 14 }}>
+                        {/* vklop + način */}
+                        <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>
+                          <div className="flex items-center justify-between">
+                            <div><div style={{ fontWeight: 700, fontSize: 15 }}>Kolo sreče</div><div style={{ fontSize: 12.5, color: "#9A8F80" }}>Prikaži kolo novim gostom</div></div>
+                            <button onClick={() => patchWheel({ enabled: !wheel.enabled })} aria-label="vklop" style={{ width: 50, height: 28, borderRadius: 999, border: "none", background: wheel.enabled ? GREEN : "#D9CDBA", position: "relative", cursor: "pointer", flexShrink: 0 }}><span style={{ position: "absolute", top: 3, left: wheel.enabled ? 25 : 3, width: 22, height: 22, borderRadius: "50%", background: "#fff", transition: "left .15s" }} /></button>
+                          </div>
+                          <div style={{ height: 1, background: "#F1E8D9" }} />
+                          <div className="flex flex-col" style={{ gap: 8 }}>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Način zadetka</span>
+                            <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                              {([["fixed", "Vedno isti zadetek", "Kolo se vrti, a vedno pristane na isti nagradi."], ["weighted", "Naključno (%)", "Vsak segment ima svoj % možnosti."]] as const).map(([m, t, d]) => <button key={m} onClick={() => patchWheel({ mode: m })} style={{ textAlign: "left", border: wheel.mode === m ? `2px solid ${AMBER}` : "1px solid #E4D9C7", borderRadius: 14, background: wheel.mode === m ? "#FCEFD8" : "#fff", padding: "12px 13px", cursor: "pointer", fontFamily: JAK }}><div style={{ fontSize: 13.5, fontWeight: 700 }}>{t}</div><div style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4, marginTop: 3 }}>{d}</div></button>)}
+                            </div>
+                          </div>
+                        </div>
+                        {/* segmenti */}
+                        <div style={{ ...card, display: "flex", flexDirection: "column", gap: 10 }}>
+                          <div className="flex items-center justify-between"><span style={{ fontWeight: 700, fontSize: 15 }}>Segmenti</span>{wheel.mode === "weighted" && <span style={{ fontSize: 12, color: totalW > 0 ? "#9A8F80" : CORAL }}>skupaj {totalW} uteži</span>}</div>
+                          {wheel.segments.map((s, i) => (
+                            <div key={i} className="flex items-center" style={{ gap: 8 }}>
+                              {wheel.mode === "fixed" ? <button onClick={() => patchWheel({ winner: i })} aria-label="zmagovalec" title="Naredi za zadetek" style={{ width: 22, height: 22, borderRadius: "50%", border: wheel.winner === i ? `6px solid ${GREEN}` : "2px solid #D9CDBA", background: "#fff", cursor: "pointer", flexShrink: 0 }} /> : <span style={{ width: 10, height: 10, borderRadius: "50%", background: SEGFILL[i % SEGFILL.length], flexShrink: 0, margin: "0 6px" }} />}
+                              <input value={s.label} onChange={(e) => setSeg(i, { label: e.target.value })} placeholder="napis segmenta" style={{ ...inp, flex: 1 }} />
+                              {wheel.mode === "weighted" && <><input value={s.weight} onChange={(e) => setSeg(i, { weight: Math.max(0, Number(e.target.value) || 0) })} type="number" min={0} style={{ ...inp, width: 62 }} /><span style={{ fontSize: 12, fontWeight: 700, color: "#9A8F80", width: 38, textAlign: "right" }}>{totalW > 0 ? Math.round((s.weight / totalW) * 100) : 0}%</span></>}
+                              <button onClick={() => patchWheel({ segments: wheel.segments.filter((_, j) => j !== i), winner: Math.max(0, Math.min(wheel.winner, wheel.segments.length - 2)) })} disabled={wheel.segments.length <= 2} aria-label="odstrani" style={{ width: 38, height: 46, border: "1px solid #E4D9C7", borderRadius: 12, background: "#fff", color: CORAL, cursor: wheel.segments.length <= 2 ? "not-allowed" : "pointer", opacity: wheel.segments.length <= 2 ? 0.4 : 1, fontFamily: JAK, flexShrink: 0 }}>✕</button>
+                            </div>
+                          ))}
+                          {wheel.segments.length < 8 && <button onClick={() => patchWheel({ segments: [...wheel.segments, { label: "", weight: 1 }] })} className="flex items-center justify-center" style={{ height: 44, border: "1.5px dashed #E0D2BC", borderRadius: 12, color: "#9A8F80", fontSize: 13.5, fontWeight: 700, gap: 8, background: "transparent", cursor: "pointer", fontFamily: JAK }}>+ Dodaj segment</button>}
+                          {wheel.mode === "fixed" && <span style={{ fontSize: 12, color: "#9A8F80", lineHeight: 1.5 }}>Zmagovalni segment (zelena pika) gost vedno osvoji — drugi so samo za videz.</span>}
+                        </div>
+                        <div className="flex" style={{ gap: 10 }}>
+                          <button onClick={() => run(() => saveWheel(wheel), "Kolo shranjeno.")} style={{ height: 48, padding: "0 22px", border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: "pointer" }}>Shrani kolo</button>
+                          <button onClick={() => setWheel(DEFAULT_WHEEL)} style={{ height: 48, padding: "0 18px", border: "1.5px solid #E4D9C7", borderRadius: 12, background: "#fff", color: MUTED, fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Ponastavi</button>
+                        </div>
+                      </div>
+                      {/* predogled */}
+                      <div className="flex flex-col items-center" style={{ ...card, gap: 12, height: "fit-content" }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "#A89B88" }}>Predogled</span>
+                        <WheelMini segments={wheel.segments} winner={wheel.mode === "fixed" ? wheel.winner : -1} accent={settingsColor} />
+                        <span style={{ fontSize: 12.5, color: wheel.enabled ? GREEN : "#9A8F80", fontWeight: 700 }}>{wheel.enabled ? "● Aktivno" : "○ Izklopljeno"}</span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -406,6 +514,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                       </div>
                       <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Časovno okno računa (ure)</span><input name="scan_window_hours" type="number" defaultValue={String(venue.scan_window_hours)} style={inp} /></label>
                       <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Google povezava za ocene</span><input name="google_review_url" type="url" defaultValue={venue.google_review_url ?? ""} placeholder="https://g.page/r/…" style={inp} /><span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Kamor pošljemo zadovoljne goste (4–5★). Najdeš jo v Google Business profilu → »Pridobi več ocen«.</span></label>
+                      <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Jezik gostove strani</span><select name="language" defaultValue={(venue as { language?: string }).language || "sl"} style={inp}>{LANGS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Jezik celotnega flowa za goste. Prevodi (EN/HR/SR/BS/DE) se vklopijo kmalu — zaenkrat se nastavitev shrani.</span></label>
                       <button style={{ marginTop: 4, height: 48, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: "pointer", alignSelf: "flex-start", padding: "0 22px" }}>Shrani</button>
                     </form>
                   </div>

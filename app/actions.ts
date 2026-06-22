@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createSSRClient, getCurrentUser } from "@/lib/supabase/ssrServer";
 import { getServiceClient } from "@/lib/supabase/server";
 import { parseFiscalQR } from "@/lib/fiscalQr";
+import type { WheelConfig } from "@/lib/types";
 
 function slugify(s: string): string {
   return (
@@ -112,6 +113,7 @@ export async function updateVenueSettings(formData: FormData) {
     patch.scan_window_hours = Number(formData.get("scan_window_hours"));
   if (formData.has("google_review_url"))
     patch.google_review_url = String(formData.get("google_review_url")).trim() || null;
+  if (formData.has("language")) patch.language = String(formData.get("language")) || "sl";
   if (formData.has("davcna_stevilka")) {
     const dav = String(formData.get("davcna_stevilka")).replace(/\D/g, "").slice(0, 8);
     patch.davcna_stevilka = dav.length === 8 ? dav : null;
@@ -197,6 +199,16 @@ export async function addManualPoints(customerId: string, points: number) {
     .from("customers")
     .update({ points: c.points + points })
     .eq("id", customerId);
+  // dnevnik: kdo/kdaj/koliko (vidno v Zgodovini)
+  await db.from("point_grants").insert({ venue_id: venue.id, customer_id: customerId, points });
+  revalidatePath("/dashboard");
+}
+
+/** Shrani konfiguracijo kolesa sreče. */
+export async function saveWheel(config: WheelConfig) {
+  const { db, venue } = await ownerVenue();
+  if (!venue) throw new Error("Nimaš lokala.");
+  await db.from("venues").update({ wheel_config: config }).eq("id", venue.id);
   revalidatePath("/dashboard");
 }
 

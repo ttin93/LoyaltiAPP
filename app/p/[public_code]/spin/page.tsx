@@ -11,18 +11,20 @@ export default async function SpinPage({
   const { public_code } = await params;
   let name = "Kavarna Moka";
   let brand = "#2B1D17";
+  let wheelCfg: import("@/lib/types").WheelConfig | null = null;
 
   if (isSupabaseConfigured() && public_code !== "demo") {
     try {
       const db = getServiceClient();
       const { data: v } = await db
         .from("venues")
-        .select("name, brand_color")
+        .select("name, brand_color, wheel_config")
         .eq("public_code", public_code)
         .maybeSingle();
       if (v) {
         name = v.name;
         brand = v.brand_color;
+        wheelCfg = (v.wheel_config ?? null) as import("@/lib/types").WheelConfig | null;
       }
     } catch {}
   }
@@ -55,6 +57,7 @@ export default async function SpinPage({
         venueInitial={initial}
         brandColor={wheelBrand}
         tagline="Zavrti kolo in osvoji nagrado za prvi obisk"
+        wheel={wheelCfg}
       />
 
       <div className="mt-[18px] text-center text-[12px] text-[rgba(245,239,230,0.5)]">

@@ -17,7 +17,21 @@ export interface Venue {
   redemption_minutes: number;
   daily_scan_cap: number | null;
   google_review_url?: string | null; // za Google-ocene autopilot (opcijsko)
+  language?: string; // jezik gostovega flowa (sl/en/hr/sr/bs/de)
+  wheel_config?: WheelConfig | null; // konfiguracija kolesa sreče
   created_at: string;
+}
+
+export interface WheelSegment {
+  label: string;
+  weight: number; // utež za naključni način (večja = večja verjetnost)
+}
+
+export interface WheelConfig {
+  enabled: boolean;
+  mode: "fixed" | "weighted"; // fixed = vedno isti zadetek; weighted = naključno po utežeh
+  winner: number; // indeks zmagovalnega segmenta (za fixed)
+  segments: WheelSegment[];
 }
 
 export interface Activation {
@@ -66,7 +80,7 @@ export interface ScanRow {
   created_at: string;
   points_awarded: number;
   customer_id: string;
-  customers: { phone: string | null } | null;
+  customers: { phone: string | null; email: string | null } | null;
 }
 
 export interface RedemptionRow {
@@ -74,5 +88,13 @@ export interface RedemptionRow {
   created_at: string;
   points_spent: number;
   rewards: { name: string } | null;
-  customers: { phone: string | null } | null;
+  customers: { phone: string | null; email: string | null } | null;
+}
+
+export interface GrantRow {
+  id: string;
+  created_at: string;
+  points: number;
+  note: string | null;
+  customers: { phone: string | null; email: string | null } | null;
 }

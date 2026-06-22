@@ -3,7 +3,7 @@ import { isSupabaseConfigured, getServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/ssrServer";
 import Dashboard, { type ReviewRow } from "./Dashboard";
 import DashboardDemo from "./DashboardDemo";
-import type { Venue, Reward, Customer, ScanRow, RedemptionRow } from "@/lib/types";
+import type { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -24,19 +24,19 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const venue = venues.find((v) => v.id === sp?.v) || venues[0];
 
-  const [{ data: rewards }, { data: customers }, { data: scans }, { data: redemptions }, { data: reviews }] =
+  const [{ data: rewards }, { data: customers }, { data: scans }, { data: redemptions }, { data: reviews }, { data: grants }] =
     await Promise.all([
       db.from("rewards").select("*").eq("venue_id", venue.id).order("points_required"),
       db.from("customers").select("*").eq("venue_id", venue.id).order("points", { ascending: false }),
       db
         .from("scans")
-        .select("id, created_at, points_awarded, customer_id, customers(phone)")
+        .select("id, created_at, points_awarded, customer_id, customers(phone, email)")
         .eq("venue_id", venue.id)
         .order("created_at", { ascending: false })
         .limit(200),
       db
         .from("redemptions")
-        .select("id, created_at, points_spent, rewards(name), customers(phone)")
+        .select("id, created_at, points_spent, rewards(name), customers(phone, email)")
         .eq("venue_id", venue.id)
         .order("created_at", { ascending: false })
         .limit(200),
@@ -46,6 +46,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         .eq("venue_id", venue.id)
         .order("created_at", { ascending: false })
         .limit(300),
+      db
+        .from("point_grants")
+        .select("id, created_at, points, note, customers(phone, email)")
+        .eq("venue_id", venue.id)
+        .order("created_at", { ascending: false })
+        .limit(200),
     ]);
 
   return (
@@ -57,6 +63,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       scans={(scans ?? []) as unknown as ScanRow[]}
       redemptions={(redemptions ?? []) as unknown as RedemptionRow[]}
       reviews={(reviews ?? []) as unknown as ReviewRow[]}
+      grants={(grants ?? []) as unknown as GrantRow[]}
       ownerEmail={user.email ?? ""}
     />
   );

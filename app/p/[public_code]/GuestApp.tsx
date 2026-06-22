@@ -594,9 +594,18 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
     );
   }
 
-  // HOME (kartonček)
+  // HOME (kartonček / točke + nagrade + kuponi) — responsive 1-stolpec (telefon) / 2-stolpca (PC)
+  const visitsNote = isStampMode
+    ? stamps >= 10
+      ? "Kartonček je poln — aktiviraj kupon."
+      : `Še ${visitsLeft} ${visitWord} do brezplačne ${(sorted[0]?.name || "kave").toLowerCase()}.`
+    : rewardReady
+      ? "Imaš dovolj točk — unovči nagrado."
+      : `Še ${left} točk do nagrade.`;
+
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-12 pt-16">
+    <main className="mx-auto min-h-dvh w-full max-w-md px-5 pb-14 pt-10 lg:max-w-[960px] lg:pt-14" style={{ background: "#EAE2D3" }}>
+      {/* header */}
       <div className="mb-5 flex items-center gap-3">
         <Logo bg={logoBg} name={venue.name} />
         <div className="flex flex-col">
@@ -605,92 +614,110 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         </div>
       </div>
 
-      <div className="rounded-3xl border border-[#EFE6D4] bg-[#FFFCF6] p-5 shadow-[0_2px_10px_rgba(43,29,23,0.05),0_14px_34px_rgba(43,29,23,0.08)]">
-        <div className="mb-1 flex items-baseline justify-between">
-          <div className="text-[12px] font-bold uppercase tracking-[0.09em] text-[#8A7A66]">{isStampMode ? "Tvoj kartonček" : "Tvoje točke"}</div>
-        </div>
-        <div className="mb-[18px] flex items-baseline gap-2">
-          <span className="font-display text-[54px] font-extrabold leading-none">{isStampMode ? `${stamps}/10` : points}</span>
-          <span className="text-[16px] font-medium text-[#8A7A66]">{isStampMode ? "žigov" : "točk"}</span>
-        </div>
-        {isStampMode && <StampGrid stamps={stamps} goalLabel={goalLabel} />}
-        <div className="mt-4 border-t border-dashed border-[#E2D7C2] pt-3.5 text-[14px] leading-snug text-[#5C4C3E]">
-          {isStampMode
-            ? stamps >= 10
-              ? "Kartonček je poln — aktiviraj kupon spodaj."
-              : `Še ${visitsLeft} ${visitWord} do brezplačne ${(sorted[0]?.name || "kave").toLowerCase()}.`
-            : rewardReady
-              ? "Imaš dovolj točk — unovči nagrado spodaj."
-              : `Še ${left} točk do nagrade.`}
-        </div>
-      </div>
-
-      {!isStampMode && rewardReady && (
-        <div className="mt-4 flex items-center gap-3.5 rounded-[20px] bg-[#5E7F52] px-[18px] py-4 text-[#F5EFE6]">
-          <div className="flex flex-1 flex-col gap-0.5">
-            <div className="font-display text-[17px] font-bold">{sorted[0].name} te čaka</div>
-            <div className="text-[13px] opacity-85">Aktiviraj in pokaži kodo osebju.</div>
-          </div>
-          <button onClick={() => openRedeem(sorted[0])} className="h-[42px] flex-shrink-0 rounded-full bg-[#F5EFE6] px-[18px] text-[14px] font-bold text-[#3E5536]">Unovči</button>
-        </div>
-      )}
-
-      <button onClick={() => setScanning(true)} disabled={busy} className="mt-[18px] flex h-[58px] w-full items-center justify-center gap-2.5 rounded-full bg-[#2B1D17] text-[17px] font-semibold text-[#F5EFE6] shadow-[0_10px_24px_rgba(43,29,23,0.22)] disabled:opacity-50">
-        <Icon name="camera" color="#F5EFE6" size={21} strokeWidth={1.8} />
-        <span>Skeniraj račun</span>
-      </button>
-
-      {coupons.length > 0 && (
-        <>
-          <div className="mt-7 font-display text-[20px] font-bold">Tvoji kuponi 🎟️</div>
-          <div className="mt-3 flex flex-col gap-2.5">
-            {coupons.map((c) => (
-              <div key={c.id} className="flex items-center gap-3.5 rounded-[18px] border-2 border-dashed border-[#E8A23D] p-3.5" style={{ background: "rgba(232,162,61,0.08)" }}>
-                <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[14px] bg-[#F1E7D2]">
-                  <Icon name="ticket" color="#B97F1F" size={24} />
-                </div>
-                <div className="flex-1 text-[15px] font-semibold">{c.name}</div>
-                <button onClick={() => activateCoupon(c)} className="flex-shrink-0 rounded-full bg-[#E8A23D] px-4 py-2 text-[13px] font-bold text-[#2B1D17]">Aktiviraj</button>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {!isStampMode && (
-      <>
-      <div className="mt-7 flex items-baseline justify-between">
-        <div className="font-display text-[20px] font-bold">Nagrade</div>
-        <div className="text-[13px] text-[#8A7A66]">1 € = {venue.points_per_euro} točk</div>
-      </div>
-      <div className="mt-3 flex flex-col gap-2.5">
-        {sorted.map((r, idx) => {
-          const ready = points >= r.points_required;
-          const pct = Math.min(100, Math.round((points / r.points_required) * 100));
-          return (
-            <div key={r.id} className="flex items-center gap-3.5 rounded-[18px] border border-[#EFE6D4] bg-[#FFFCF6] p-3.5">
-              <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[14px] bg-[#F1E7D2]">
-                <Icon name={REWARD_ICONS[idx % REWARD_ICONS.length]} color="#2B1D17" size={24} />
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col gap-[7px]">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-[15px] font-semibold">{r.name}</span>
-                  {ready ? (
-                    <button onClick={() => openRedeem(r)} className="whitespace-nowrap text-[12.5px] font-bold text-[#5E7F52]">unovči</button>
-                  ) : (
-                    <span className="whitespace-nowrap text-[12.5px] text-[#8A7A66]">{points} / {r.points_required} točk</span>
-                  )}
-                </div>
-                <div className="h-[7px] overflow-hidden rounded-full bg-[#EFE6D4]">
-                  <div className="h-full rounded-full" style={{ width: `${pct}%`, background: ready ? "#5E7F52" : "#E8A23D" }} />
-                </div>
-              </div>
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start lg:gap-6">
+        {/* LEVO: napredek + skeniraj + kuponi */}
+        <div className="flex flex-col gap-4">
+          {/* napredek */}
+          <div className="rounded-3xl border border-[#EFE6D4] bg-[#FFFCF6] p-5 shadow-[0_2px_10px_rgba(43,29,23,0.05),0_14px_34px_rgba(43,29,23,0.08)]">
+            <div className="mb-1 text-[12px] font-bold uppercase tracking-[0.09em] text-[#8A7A66]">{isStampMode ? "Tvoj kartonček" : "Tvoje točke"}</div>
+            <div className="mb-[18px] flex items-baseline gap-2">
+              <span className="font-display text-[54px] font-extrabold leading-none">{isStampMode ? `${stamps}/10` : points}</span>
+              <span className="text-[16px] font-medium text-[#8A7A66]">{isStampMode ? "žigov" : "točk"}</span>
             </div>
-          );
-        })}
+            {isStampMode && <StampGrid stamps={stamps} goalLabel={goalLabel} />}
+            <div className="mt-4 border-t border-dashed border-[#E2D7C2] pt-3.5 text-[14px] leading-snug text-[#5C4C3E]">{visitsNote}</div>
+          </div>
+
+          {/* nagrada-pripravljena (točke) */}
+          {!isStampMode && rewardReady && (
+            <div className="flex items-center gap-3.5 rounded-[20px] bg-[#5E7F52] px-[18px] py-4 text-[#F5EFE6]">
+              <div className="flex flex-1 flex-col gap-0.5">
+                <div className="font-display text-[17px] font-bold">{sorted[0].name} te čaka</div>
+                <div className="text-[13px] opacity-85">Aktiviraj in pokaži kodo osebju.</div>
+              </div>
+              <button onClick={() => openRedeem(sorted[0])} className="h-[42px] flex-shrink-0 rounded-full bg-[#F5EFE6] px-[18px] text-[14px] font-bold text-[#3E5536]">Unovči</button>
+            </div>
+          )}
+
+          {/* skeniraj */}
+          <button onClick={() => setScanning(true)} disabled={busy} className="flex h-[58px] w-full items-center justify-center gap-2.5 rounded-full bg-[#2B1D17] text-[17px] font-semibold text-[#F5EFE6] shadow-[0_10px_24px_rgba(43,29,23,0.22)] disabled:opacity-50">
+            <Icon name="camera" color="#F5EFE6" size={21} strokeWidth={1.8} />
+            <span>Skeniraj račun</span>
+          </button>
+
+          {/* kuponi — vedno (z empty-state) */}
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <div className="font-display text-[18px] font-bold">Tvoji kuponi 🎟️</div>
+              {coupons.length > 0 && <span className="rounded-full bg-[#F1E7D2] px-2.5 py-0.5 text-[12px] font-bold text-[#8A5B14]">{coupons.length}</span>}
+            </div>
+            {coupons.length > 0 ? (
+              <div className="flex flex-col gap-2.5">
+                {coupons.map((c) => (
+                  <div key={c.id} className="flex items-center gap-3.5 rounded-[18px] border-2 border-dashed border-[#E8A23D] p-3.5" style={{ background: "rgba(232,162,61,0.08)" }}>
+                    <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[14px] bg-[#F1E7D2]"><Icon name="ticket" color="#B97F1F" size={24} /></div>
+                    <div className="flex-1 text-[15px] font-semibold">{c.name}</div>
+                    <button onClick={() => activateCoupon(c)} className="flex-shrink-0 rounded-full bg-[#E8A23D] px-4 py-2 text-[13px] font-bold text-[#2B1D17]">Aktiviraj</button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3.5 rounded-[18px] border border-dashed border-[#E2D7C2] bg-[#FBF6EC] p-4">
+                <div className="flex h-[44px] w-[44px] flex-shrink-0 items-center justify-center rounded-[12px] bg-[#F1E7D2]"><Icon name="ticket" color="#B97F1F" size={22} /></div>
+                <div className="text-[13.5px] leading-snug text-[#8A7A66]">Nimaš še kuponov. Napolni kartonček ali zavrti kolo za nagrado.</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* DESNO: nagrade */}
+        <div>
+          <div className="mb-3 flex items-baseline justify-between">
+            <div className="font-display text-[20px] font-bold">{isStampMode ? "Nagrade v lokalu" : "Nagrade"}</div>
+            <div className="text-[13px] text-[#8A7A66]">{isStampMode ? "poln kartonček = nagrada" : `1 € = ${venue.points_per_euro} točk`}</div>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {sorted.map((r, idx) => {
+              const primary = idx === 0;
+              const ready = !isStampMode && points >= r.points_required;
+              const pct = isStampMode ? (primary ? stamps * 10 : 0) : Math.min(100, Math.round((points / r.points_required) * 100));
+              return (
+                <div key={r.id} className="flex items-center gap-3.5 rounded-[18px] border border-[#EFE6D4] bg-[#FFFCF6] p-3.5">
+                  <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[14px] bg-[#F1E7D2]">
+                    <Icon name={REWARD_ICONS[idx % REWARD_ICONS.length]} color="#2B1D17" size={24} />
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col gap-[7px]">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-[15px] font-semibold">{r.name}</span>
+                      {isStampMode ? (
+                        primary ? (
+                          <span className="whitespace-nowrap rounded-full bg-[#F1E7D2] px-2 py-0.5 text-[11px] font-bold text-[#8A5B14]">kartonček</span>
+                        ) : (
+                          <span className="whitespace-nowrap text-[12px] text-[#A6967F]">v meniju</span>
+                        )
+                      ) : ready ? (
+                        <button onClick={() => openRedeem(r)} className="whitespace-nowrap text-[12.5px] font-bold text-[#5E7F52]">unovči</button>
+                      ) : (
+                        <span className="whitespace-nowrap text-[12.5px] text-[#8A7A66]">{points} / {r.points_required} točk</span>
+                      )}
+                    </div>
+                    {(!isStampMode || primary) && (
+                      <>
+                        <div className="h-[7px] overflow-hidden rounded-full bg-[#EFE6D4]">
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: ready || (isStampMode && stamps >= 10) ? "#5E7F52" : "#E8A23D" }} />
+                        </div>
+                        {isStampMode && primary && (
+                          <div className="text-[12px] text-[#8A7A66]">{stamps >= 10 ? "Pripravljeno — kupon v denarnici" : `${stamps}/10 žigov`}</div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
-      </>
-      )}
 
       {scanning && <Scanner onResult={handleScan} onClose={() => setScanning(false)} />}
       {redeemReward && (

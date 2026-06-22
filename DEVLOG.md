@@ -49,6 +49,16 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-20 — seja 31 (gostov DOM prenovljen: responsive + nagrade + kuponi vidni)
+- Prijavljeni gostov dom (`/p/[code]`) je bil pretemeljen (samo kartonček + skeniraj). Zdaj:
+  - **Responsive**: telefon = 1 stolpec, **PC = 2 stolpca** (`lg:grid`, levo napredek+skeniraj+kuponi,
+    desno meni nagrad). Potrjeno: mobile=flex, desktop=grid, brez prelivanja.
+  - **Kuponi** sekcija je zdaj **vedno** vidna (prej skrita če prazna) — z empty-state
+    (»Nimaš še kuponov…«).
+  - **Nagrade** so zdaj vidne tudi v **stamp** načinu (prej samo točke): »Nagrade v lokalu« —
+    prva = kartonček nagrada s progress (žigi/10), ostale »v meniju«. V točke načinu po starem
+    (progress bar + unovči).
+
 ### 2026-06-20 — seja 30 (gost registracija: telefon → EMAIL + prenovljen zaslon)
 - **Registracija gosta (`/p/[code]`) preklopljena s telefona na EMAIL** (uporabnik: SMS predrag za start).
   Opomba: telefon pri nama itak NI pošiljal SMS-a (zastonj), a email je za pošiljanje kampanj zastonj → boljši za start.

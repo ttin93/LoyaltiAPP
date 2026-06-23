@@ -2,8 +2,9 @@ import { notFound } from "next/navigation";
 import { isSupabaseConfigured, getServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/ssrServer";
 import { isSuperadmin } from "@/lib/superadmin";
+import { monthlyEquivalent, isPaying, PLANS, PLAN_ORDER } from "@/lib/plans";
 import Superadmin from "./Superadmin";
-import type { Venue } from "@/lib/types";
+import type { Venue, PlanKey } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,19 @@ export type SATotals = {
 };
 
 export type SADay = { date: string; label: string; count: number };
+
+export type SARevenue = {
+  mrr: number;
+  arr: number;
+  paying: number;
+  free: number;
+  trialing: number;
+  avgPerPaying: number;
+  monthlyCount: number;
+  yearlyCount: number;
+  committed: number;
+  byPlan: { plan: PlanKey; label: string; count: number; mrr: number }[];
+};
 
 const dayKey = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -152,12 +166,57 @@ export default async function SuperadminPage() {
     count,
   }));
 
+  // ---- naročnine / prihodek ----
+  let mrr = 0;
+  let paying = 0;
+  let trialing = 0;
+  let monthlyCount = 0;
+  let yearlyCount = 0;
+  let committed = 0;
+  const planAgg = new Map<PlanKey, { count: number; mrr: number }>();
+  for (const v of venues) {
+    const plan = (v.plan ?? "free") as PlanKey;
+    const status = v.subscription_status ?? "active";
+    const me = monthlyEquivalent(plan, v.billing_cycle, v.custom_price_eur);
+    if (isPaying(plan, status)) {
+      paying++;
+      mrr += me;
+      if (v.billing_cycle === "yearly") yearlyCount++;
+      else monthlyCount++;
+      if ((v.commitment_months ?? 0) > 0) committed++;
+      const a = planAgg.get(plan) ?? { count: 0, mrr: 0 };
+      a.count++;
+      a.mrr += me;
+      planAgg.set(plan, a);
+    }
+    if (status === "trialing") trialing++;
+  }
+  mrr = Math.round(mrr * 100) / 100;
+  const revenue: SARevenue = {
+    mrr,
+    arr: Math.round(mrr * 12 * 100) / 100,
+    paying,
+    free: venues.length - paying,
+    trialing,
+    avgPerPaying: paying ? Math.round((mrr / paying) * 100) / 100 : 0,
+    monthlyCount,
+    yearlyCount,
+    committed,
+    byPlan: PLAN_ORDER.filter((p) => p !== "free").map((p) => ({
+      plan: p,
+      label: PLANS[p].label,
+      count: planAgg.get(p)?.count ?? 0,
+      mrr: Math.round((planAgg.get(p)?.mrr ?? 0) * 100) / 100,
+    })),
+  };
+
   return (
     <Superadmin
       venues={saVenues}
       owners={owners}
       totals={totals}
       series={series}
+      revenue={revenue}
       adminEmail={user.email ?? ""}
     />
   );

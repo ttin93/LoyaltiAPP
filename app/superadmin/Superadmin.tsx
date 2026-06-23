@@ -2,8 +2,10 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { SAVenue, SAOwner, SATotals, SADay } from "./page";
+import type { SAVenue, SAOwner, SATotals, SADay, SARevenue } from "./page";
 import { adminUpdateVenue } from "./actions";
+import type { PlanKey, SubStatus } from "@/lib/types";
+import { PLANS, PLAN_ORDER, STATUS_LABEL, YEARLY_DISCOUNT, fmtEur, chargedAmount, monthlyEquivalent } from "@/lib/plans";
 
 const INK = "#2A241D";
 const CREAM = "#FBF7F0";
@@ -46,15 +48,17 @@ export default function Superadmin({
   owners,
   totals,
   series,
+  revenue,
   adminEmail,
 }: {
   venues: SAVenue[];
   owners: SAOwner[];
   totals: SATotals;
   series: SADay[];
+  revenue: SARevenue;
   adminEmail: string;
 }) {
-  const [tab, setTab] = useState<"pregled" | "lokali" | "lastniki">("pregled");
+  const [tab, setTab] = useState<"pregled" | "lokali" | "narocnine" | "lastniki">("pregled");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<SAVenue | null>(null);
 
@@ -92,7 +96,7 @@ export default function Superadmin({
       {/* TABS */}
       <div style={{ background: CREAM, borderBottom: `1px solid ${BORD}`, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: "0 20px", display: "flex", gap: 4 }}>
-          {([["pregled", "Pregled"], ["lokali", `Lokali · ${venues.length}`], ["lastniki", `Lastniki · ${totals.owners}`]] as const).map(([k, label]) => (
+          {([["pregled", "Pregled"], ["lokali", `Lokali · ${venues.length}`], ["narocnine", "Naročnine"], ["lastniki", `Lastniki · ${totals.owners}`]] as const).map(([k, label]) => (
             <button
               key={k}
               onClick={() => setTab(k)}
@@ -121,6 +125,7 @@ export default function Superadmin({
         {tab === "lokali" && (
           <Lokali venues={filtered} query={query} setQuery={setQuery} onOpen={setSelected} total={venues.length} />
         )}
+        {tab === "narocnine" && <Narocnine revenue={revenue} venues={venues} onOpen={setSelected} />}
         {tab === "lastniki" && <Lastniki owners={owners} />}
       </div>
 
@@ -301,6 +306,127 @@ function Lokali({
   );
 }
 
+/* ---------------- NAROČNINE ---------------- */
+
+const PLAN_COLOR: Record<PlanKey, string> = { free: "#B4A892", espresso: AMBER, doppio: CORAL, palaca: GREEN };
+
+function PlanBadge({ plan }: { plan: PlanKey }) {
+  const c = PLAN_COLOR[plan] || MUTED;
+  return (
+    <span className="inline-flex items-center" style={{ gap: 6, height: 24, padding: "0 10px", borderRadius: 999, background: `${c}22`, color: plan === "free" ? MUTED : c, fontSize: 12, fontWeight: 800 }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: c }} />
+      {PLANS[plan]?.label || plan}
+    </span>
+  );
+}
+
+function Narocnine({ revenue: r, venues, onOpen }: { revenue: SARevenue; venues: SAVenue[]; onOpen: (v: SAVenue) => void }) {
+  const maxPlanMrr = Math.max(1, ...r.byPlan.map((p) => p.mrr));
+  // primer letnega popusta na Doppio
+  const dMonthly = PLANS.doppio.monthly || 0;
+  const sorted = useMemo(() => {
+    const rank = (v: SAVenue) => (((v.plan ?? "free") !== "free") ? 1 : 0);
+    return [...venues].sort((a, b) => rank(b) - rank(a) || monthlyEquivalent(b.plan, b.billing_cycle, b.custom_price_eur) - monthlyEquivalent(a.plan, a.billing_cycle, a.custom_price_eur));
+  }, [venues]);
+
+  return (
+    <div className="flex flex-col" style={{ gap: 18 }}>
+      <div style={{ background: "#FBF1DD", border: `1px solid #F0DDB4`, borderRadius: 12, padding: "10px 14px", fontSize: 12.5, color: "#8A6A1E" }}>
+        Predviden prihodek iz <strong>aktivnih naročnin</strong>. Pravi plačilni sistem (Stripe) še ni vključen — pakete za zdaj dodeljuješ ročno v urejevalniku lokala.
+      </div>
+
+      {/* KPI */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+        <Kpi label="MRR (mesečno)" value={fmtEur(r.mrr)} sub="ponavljajoči prihodek" accent={GREEN} />
+        <Kpi label="ARR (letno)" value={fmtEur(r.arr)} accent={INK} />
+        <Kpi label="Plačujoči lokali" value={String(r.paying)} sub={`${r.free} brezplačnih`} accent={CORAL} />
+        <Kpi label="Povpr. / lokal" value={fmtEur(r.avgPerPaying)} sub="med plačujočimi" />
+        <Kpi label="Mesečno / letno" value={`${r.monthlyCount} / ${r.yearlyCount}`} sub={`${r.committed} z vezavo`} />
+        <Kpi label="Poskusni" value={String(r.trialing)} accent={AMBER} />
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18 }}>
+        {/* plani */}
+        <Card>
+          <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 14 }}>Prihodek po paketih</div>
+          <div className="flex flex-col" style={{ gap: 14 }}>
+            {r.byPlan.map((p) => (
+              <div key={p.plan} className="flex items-center" style={{ gap: 12 }}>
+                <span style={{ width: 86, flexShrink: 0 }}><PlanBadge plan={p.plan} /></span>
+                <div style={{ flex: 1 }}>
+                  <div className="flex items-center justify-between" style={{ marginBottom: 5 }}>
+                    <span style={{ fontSize: 12.5, color: MUTED }}>{p.count} {p.count === 1 ? "lokal" : "lokalov"}</span>
+                    <span style={{ fontWeight: 800, fontSize: 13.5 }}>{fmtEur(p.mrr)}</span>
+                  </div>
+                  <div style={{ height: 7, background: BG, borderRadius: 99, overflow: "hidden" }}>
+                    <div style={{ width: `${(p.mrr / maxPlanMrr) * 100}%`, height: "100%", background: PLAN_COLOR[p.plan], borderRadius: 99 }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+            {r.paying === 0 && <Empty>Še nihče ne plačuje — dodeli paket lokalu.</Empty>}
+          </div>
+        </Card>
+
+        {/* letni popust razlaga */}
+        <Card>
+          <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 6 }}>Letni paketi</div>
+          <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, marginBottom: 14 }}>
+            Letna naročnina = <strong style={{ color: INK }}>−{Math.round(YEARLY_DISCOUNT * 100)} %</strong> (nastaviš v <span style={{ fontFamily: "monospace", fontSize: 12 }}>lib/plans.ts</span>). Lokal plača vnaprej za leto, ti dobiš boljši cash-flow + manj odpovedi.
+          </div>
+          {PLAN_ORDER.filter((p) => PLANS[p].monthly).map((p) => {
+            const m = PLANS[p].monthly || 0;
+            const yearly = chargedAmount(p, "yearly");
+            return (
+              <div key={p} className="flex items-center justify-between" style={{ padding: "9px 0", borderTop: `1px solid ${BORD}` }}>
+                <span style={{ fontWeight: 700, fontSize: 13.5 }}>{PLANS[p].label}</span>
+                <span style={{ fontSize: 13, color: MUTED }}>
+                  {fmtEur(m)}/mes · <strong style={{ color: GREEN }}>{fmtEur(yearly)}/leto</strong>
+                </span>
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 11.5, color: "#A89B88", marginTop: 10 }}>Primer: Doppio letno prihrani {fmtEur(dMonthly * 12 * YEARLY_DISCOUNT)} na leto.</div>
+        </Card>
+      </div>
+
+      {/* tabela naročnin */}
+      <div style={{ background: CREAM, border: `1px solid ${BORD}`, borderRadius: 16, overflow: "hidden" }}>
+        <div className="hidden md:grid" style={{ gridTemplateColumns: "2fr 1.2fr 1fr 1.2fr 1fr 0.9fr", gap: 10, padding: "12px 16px", borderBottom: `1px solid ${BORD}`, fontSize: 11.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: MUTED }}>
+          <span>Lokal</span><span>Paket</span><span>Cikel</span><span>Cena</span><span>Status</span><span>Vezava</span>
+        </div>
+        {sorted.map((v) => {
+          const plan = (v.plan ?? "free") as PlanKey;
+          const me = monthlyEquivalent(plan, v.billing_cycle, v.custom_price_eur);
+          const yearly = v.billing_cycle === "yearly";
+          return (
+            <button
+              key={v.id}
+              onClick={() => onOpen(v)}
+              className="grid w-full items-center hover:bg-[#F3EADB]"
+              style={{ gridTemplateColumns: "2fr 1.2fr 1fr 1.2fr 1fr 0.9fr", gap: 10, padding: "12px 16px", borderBottom: `1px solid ${BORD}`, background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: JAK }}
+            >
+              <span className="flex items-center" style={{ gap: 10, minWidth: 0 }}>
+                <Avatar name={v.name} color={v.brand_color} />
+                <span style={{ fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{v.name}</span>
+              </span>
+              <span><PlanBadge plan={plan} /></span>
+              <span style={{ fontSize: 13, color: MUTED }}>{plan === "free" ? "—" : yearly ? "letno" : "mesečno"}</span>
+              <span style={{ fontSize: 13.5, fontWeight: 700 }}>
+                {plan === "free" ? <span style={{ color: "#B4A892", fontWeight: 600 }}>0 €</span> : (
+                  <>{fmtEur(me)}<span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>/mes</span></>
+                )}
+              </span>
+              <span style={{ fontSize: 12.5, color: v.subscription_status === "canceled" ? CORAL : v.subscription_status === "past_due" ? "#B4781E" : MUTED }}>{STATUS_LABEL[v.subscription_status ?? "active"] || "—"}</span>
+              <span style={{ fontSize: 12.5, color: MUTED }}>{(v.commitment_months ?? 0) > 0 ? `${v.commitment_months} mes` : "—"}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- LASTNIKI ---------------- */
 
 function Lastniki({ owners }: { owners: SAOwner[] }) {
@@ -345,6 +471,15 @@ function VenueModal({ venue, onClose }: { venue: SAVenue; onClose: () => void })
   const [lang, setLang] = useState(venue.language || "sl");
   const [google, setGoogle] = useState(venue.google_review_url || "");
   const [davcna, setDavcna] = useState(venue.davcna_stevilka || "");
+  const [plan, setPlan] = useState<PlanKey>((venue.plan ?? "free") as PlanKey);
+  const [cycle, setCycle] = useState<"monthly" | "yearly">(venue.billing_cycle === "yearly" ? "yearly" : "monthly");
+  const [subStatus, setSubStatus] = useState(venue.subscription_status || "active");
+  const [commit, setCommit] = useState(String(venue.commitment_months ?? 0));
+  const [customPrice, setCustomPrice] = useState(venue.custom_price_eur != null ? String(venue.custom_price_eur) : "");
+
+  const cp = customPrice.trim() ? Number(customPrice.replace(",", ".")) : null;
+  const meNow = monthlyEquivalent(plan, cycle, cp);
+  const yearlyNow = chargedAmount(plan, "yearly", cp);
 
   function save() {
     setErr("");
@@ -360,6 +495,11 @@ function VenueModal({ venue, onClose }: { venue: SAVenue; onClose: () => void })
     fd.set("language", lang);
     fd.set("google_review_url", google);
     fd.set("davcna_stevilka", davcna);
+    fd.set("plan", plan);
+    fd.set("billing_cycle", cycle);
+    fd.set("subscription_status", subStatus);
+    fd.set("commitment_months", commit);
+    fd.set("custom_price_eur", customPrice);
     startTransition(async () => {
       try {
         await adminUpdateVenue(fd);
@@ -434,6 +574,39 @@ function VenueModal({ venue, onClose }: { venue: SAVenue; onClose: () => void })
             </Field>
             <Field label="Google-ocene URL"><input value={google} onChange={(e) => setGoogle(e.target.value)} placeholder="https://g.page/r/…" style={inp} /></Field>
             <Field label="Davčna številka (8 mest)"><input value={davcna} onChange={(e) => setDavcna(e.target.value)} placeholder="npr. 12345678" style={inp} /></Field>
+          </div>
+
+          {/* NAROČNINA */}
+          <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: MUTED, margin: "22px 0 10px" }}>Naročnina</div>
+          <div className="flex flex-col" style={{ gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <Field label="Paket">
+                <select value={plan} onChange={(e) => setPlan(e.target.value as PlanKey)} style={{ ...inp, cursor: "pointer" }}>
+                  {PLAN_ORDER.map((p) => <option key={p} value={p}>{PLANS[p].label}</option>)}
+                </select>
+              </Field>
+              <Field label="Obračun">
+                <select value={cycle} onChange={(e) => setCycle(e.target.value as "monthly" | "yearly")} style={{ ...inp, cursor: "pointer" }}>
+                  <option value="monthly">Mesečno</option>
+                  <option value="yearly">Letno (−{Math.round(YEARLY_DISCOUNT * 100)} %)</option>
+                </select>
+              </Field>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <Field label="Status">
+                <select value={subStatus} onChange={(e) => setSubStatus(e.target.value as SubStatus)} style={{ ...inp, cursor: "pointer" }}>
+                  {Object.keys(STATUS_LABEL).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+                </select>
+              </Field>
+              <Field label="Vezava (mesecev)"><input type="number" value={commit} onChange={(e) => setCommit(e.target.value)} style={inp} /></Field>
+            </div>
+            <Field label="Cena po meri (€/mes — povozi paket)"><input value={customPrice} onChange={(e) => setCustomPrice(e.target.value)} placeholder={plan === "palaca" ? "npr. 149,99" : "prazno = paketna cena"} style={inp} /></Field>
+            {plan !== "free" && (
+              <div style={{ background: PAPER, borderRadius: 11, padding: "10px 13px", fontSize: 12.5, color: MUTED }}>
+                Prispevek k MRR: <strong style={{ color: GREEN }}>{fmtEur(meNow)}/mes</strong>
+                {cycle === "yearly" && <> · letni obračun <strong style={{ color: INK }}>{fmtEur(yearlyNow)}</strong></>}
+              </div>
+            )}
           </div>
 
           {err && <div style={{ fontSize: 13, color: CORAL, fontWeight: 600, marginTop: 12 }}>{err}</div>}

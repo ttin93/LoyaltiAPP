@@ -49,6 +49,14 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-24 — seja 48 (Super Admin: NAROČNINE — statistika prihodka/plačil)
+- Nova **Naročnine** sekcija v `/superadmin`: MRR (mesečni ponavljajoči prihodek), ARR, plačujoči vs brezplačni, povpr./lokal, mesečno/letno split, vezava, poskusni; prihodek po paketih (graf), razlaga letnih paketov, tabela vseh lokalov z paketom/ciklom/ceno/statusom/vezavo (klik → urejevalnik).
+- Pravi paketi iz cenika: **Espresso 49,99 €/mes, Doppio 79,99 €/mes, Palača po dogovoru** (+ Brezplačni). Letni = `YEARLY_DISCOUNT` (default **−20 %**, ena konstanta v [`lib/plans.ts`](lib/plans.ts)).
+- DB: migracija [`0015_subscriptions.sql`](supabase/0015_subscriptions.sql) — venues + `plan, billing_cycle, subscription_status, commitment_months, subscribed_at, custom_price_eur` (+ pgrst reload).
+- Urejevalnik lokala dobi naročninska polja (paket, obračun, status, vezava, cena po meri za Palačo) + živ izračun prispevka k MRR; `adminUpdateVenue` jih shrani + ob prehodu na plačljiv paket zabeleži `subscribed_at`.
+- **Pravi Stripe še NI** — pakete dodeljuješ ročno; prihodek je izračunan iz aktivnih naročnin (jasno označeno v UI). Naslednji korak za pravo plačevanje = Stripe.
+- Preverjeno v živo: round-trip (PrTinu → Espresso letno → MRR 39,99 € / ARR 479,88 € → nazaj na free). `tsc` čist.
+
 ### 2026-06-24 — seja 47 (SUPER ADMIN panel — platformni nadzor nad vsemi lokali)
 - Nov **`/superadmin`** (gated): vidi ga samo email iz [`lib/superadmin.ts`](lib/superadmin.ts) (default `tin.suklje93@gmail.com`; dodatni prek env `SUPERADMIN_EMAILS="a@x,b@x"` brez deploya). Drugi → 404 (`notFound`).
 - **Pregled**: platformni KPI (lokali, aktivni lastniki, stranke +ta teden, skeni skupaj/30d, unovčenja, povpr. ocena), 30-dnevni graf skenov (y-os + hover), Najboljši + Najnovejši lokali (klik → modal).

@@ -36,6 +36,34 @@ export async function adminUpdateVenue(formData: FormData) {
     patch.davcna_stevilka = dav.length === 8 ? dav : null;
   }
 
+  // naročnina
+  const PLANS = ["free", "espresso", "doppio", "palaca"];
+  const STATUSES = ["trialing", "active", "past_due", "canceled"];
+  let planVal: string | undefined;
+  if (formData.has("plan")) {
+    planVal = PLANS.includes(String(formData.get("plan"))) ? String(formData.get("plan")) : "free";
+    patch.plan = planVal;
+  }
+  if (formData.has("billing_cycle"))
+    patch.billing_cycle = String(formData.get("billing_cycle")) === "yearly" ? "yearly" : "monthly";
+  if (formData.has("subscription_status"))
+    patch.subscription_status = STATUSES.includes(String(formData.get("subscription_status")))
+      ? String(formData.get("subscription_status"))
+      : "active";
+  if (formData.has("commitment_months"))
+    patch.commitment_months = Math.max(0, Math.min(60, Number(formData.get("commitment_months")) || 0));
+  if (formData.has("custom_price_eur")) {
+    const raw = String(formData.get("custom_price_eur")).replace(",", ".").trim();
+    const n = raw ? Number(raw) : NaN;
+    patch.custom_price_eur = Number.isFinite(n) && n > 0 ? n : null;
+  }
+
+  // ob prehodu na plačljiv paket zabeleži začetek naročnine (če še ni)
+  if (planVal && planVal !== "free") {
+    const { data: cur } = await db.from("venues").select("subscribed_at").eq("id", venueId).maybeSingle();
+    if (!cur?.subscribed_at) patch.subscribed_at = new Date().toISOString();
+  }
+
   const { error } = await db.from("venues").update(patch).eq("id", venueId);
   if (error) throw error;
   revalidatePath("/superadmin");

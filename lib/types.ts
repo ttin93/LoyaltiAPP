@@ -21,8 +21,19 @@ export interface Venue {
   language?: string; // jezik gostovega flowa (sl/en/hr/sr/bs/de)
   wheel_config?: WheelConfig | null; // konfiguracija kolesa sreče
   automations?: Automations | null; // marketing avtomatizacije
+  // naročnina (super-admin ročno dodeli; pravi Stripe še ni)
+  plan?: PlanKey;
+  billing_cycle?: BillingCycle;
+  subscription_status?: SubStatus;
+  commitment_months?: number;
+  subscribed_at?: string | null;
+  custom_price_eur?: number | null;
   created_at: string;
 }
+
+export type PlanKey = "free" | "espresso" | "doppio" | "palaca";
+export type BillingCycle = "monthly" | "yearly";
+export type SubStatus = "trialing" | "active" | "past_due" | "canceled";
 
 export interface Automation {
   enabled: boolean;

@@ -104,7 +104,7 @@ function WheelMini({ segments, winner, accent }: { segments: WheelSegment[]; win
   );
 }
 
-export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string }) {
+export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail, isAdmin = false }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string; isAdmin?: boolean }) {
   const router = useRouter();
   const [sec, setSec] = useState("pregled");
   const [switchOpen, setSwitchOpen] = useState(false);
@@ -282,7 +282,8 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                 <span style={{ fontSize: 11.5, color: "#9A7B36", lineHeight: 1.4 }}>Nadgradi za SMS, več lokalov in napredno analitiko.</span>
                 <span style={{ fontSize: 12.5, fontWeight: 800, color: "#B4781E", marginTop: 2 }}>Nadgradi paket →</span>
               </button>
-              <form action={signOut} className="flex items-center" style={{ gap: 10, padding: "12px 8px 0", marginTop: 12, borderTop: "1px solid #F1E8D9" }}><button style={{ fontSize: 13, fontWeight: 600, color: "#9A8F80", background: "none", border: "none", cursor: "pointer", fontFamily: JAK }}>Odjava · {ownerEmail}</button></form>
+              {isAdmin && <a href="/superadmin" className="flex items-center" style={{ gap: 8, marginTop: 12, height: 42, padding: "0 13px", borderRadius: 12, background: INK, color: PAPER, fontSize: 13.5, fontWeight: 700, textDecoration: "none" }}><span style={{ fontSize: 15 }}>⚡</span> Super Admin</a>}
+              <form action={signOut} className="flex items-center" style={{ gap: 10, padding: "12px 8px 0", marginTop: isAdmin ? 8 : 12, borderTop: "1px solid #F1E8D9" }}><button style={{ fontSize: 13, fontWeight: 600, color: "#9A8F80", background: "none", border: "none", cursor: "pointer", fontFamily: JAK }}>Odjava · {ownerEmail}</button></form>
             </div>
 
             {/* MAIN */}

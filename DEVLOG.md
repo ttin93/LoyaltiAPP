@@ -49,6 +49,17 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-24 — seja 47 (SUPER ADMIN panel — platformni nadzor nad vsemi lokali)
+- Nov **`/superadmin`** (gated): vidi ga samo email iz [`lib/superadmin.ts`](lib/superadmin.ts) (default `tin.suklje93@gmail.com`; dodatni prek env `SUPERADMIN_EMAILS="a@x,b@x"` brez deploya). Drugi → 404 (`notFound`).
+- **Pregled**: platformni KPI (lokali, aktivni lastniki, stranke +ta teden, skeni skupaj/30d, unovčenja, povpr. ocena), 30-dnevni graf skenov (y-os + hover), Najboljši + Najnovejši lokali (klik → modal).
+- **Lokali**: iskalnik (ime / email lastnika / koda) + tabela; klik → drsni modal z mini-statistiko + urejanjem VSEH nastavitev kateregakoli lokala (ime, barva, točke, žig-cilj, okno, cooldown, jezik, Google URL, davčna) prek `adminUpdateVenue` (gated). Linka na gostovo stran + kolo.
+- **Lastniki**: vsi auth uporabniki — email, # lokalov + imena, ustvarjen, zadnja prijava.
+- Vstop: v lastnikovem dashboardu se superadminu pokaže "⚡ Super Admin" link (`isAdmin` prop iz `dashboard/page.tsx`).
+- **Brez vlog/RBAC** v tej rundi (po dogovoru "pusti to") — naslednji korak.
+- Datoteke: `lib/superadmin.ts`, `app/superadmin/{page,Superadmin,actions}.tsx`, +link v `dashboard/page.tsx` & `Dashboard.tsx`, `slideInRight` keyframe.
+- Preverjeno v živo: panel se izriše s pravimi podatki (4 lokali, 2 lastnika, 11 strank, 10 skenov, 3.3★); urejanje lokala se ZAPIŠE v bazo (round-trip potrjen). `tsc --noEmit` čist.
+- Opomba: PrTinu ima še test nastavitve (okno 876000h, davčna 97384933) — pred pravim zagonom nazaj na ~24h + pravo davčno.
+
 ### 2026-06-23 — seja 46 (gostov flow LOKALIZIRAN — jezik dejansko menja vmesnik)
 - **Problem**: jezik v Nastavitvah se je shranil (`venues.language`), a gostov vmesnik je ostal v SI — "jezik select dela ampak ne dejansko nč spremeni".
 - **Rešitev**: nov prevodni sloj `lib/guestI18n.ts` — `gt(lang)` vrne objekt vseh gostovih stringov. Jeziki: **SL, EN, HR, DE**; SR/BS → HR (medsebojno razumljivo), neznano → SL.

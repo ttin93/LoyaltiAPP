@@ -85,6 +85,9 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   const [scanning, setScanning] = useState(false);
   const [scanMode, setScanMode] = useState<"activate" | "test">("activate");
   const [histTab, setHistTab] = useState<"given" | "redeemed">("given");
+  const [histQuery, setHistQuery] = useState("");
+  const [histDay, setHistDay] = useState("");
+  const [histHour, setHistHour] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [range, setRange] = useState(30); // analitika: dni
   const [custQuery, setCustQuery] = useState("");
@@ -189,6 +192,19 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
     const b = grants.map((g) => ({ id: "g" + g.id, t: g.created_at, who: g.customers?.email ?? g.customers?.phone ?? "—", points: g.points, manual: true }));
     return [...a, ...b].sort((x, y) => (x.t < y.t ? 1 : -1));
   }, [scans, grants]);
+
+  // ZGODOVINA filtri (ime / dan / ura)
+  const histMatch = (t: string, who: string) => {
+    const q = histQuery.trim().toLowerCase();
+    if (q && !who.toLowerCase().includes(q)) return false;
+    const d = new Date(t);
+    if (histDay) { const ld = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; if (ld !== histDay) return false; }
+    if (histHour !== "" && d.getHours() !== Number(histHour)) return false;
+    return true;
+  };
+  const givenView = givenLog.filter((g) => histMatch(g.t, g.who));
+  const redeemedView = redemptions.filter((r) => histMatch(r.created_at, r.customers?.email ?? r.customers?.phone ?? ""));
+  const histActive = histQuery.trim() !== "" || histDay !== "" || histHour !== "";
 
   function flash(t: string) { setMsg(t); setTimeout(() => setMsg(null), 3000); }
   async function run(fn: () => Promise<unknown>, ok?: string) { try { await fn(); if (ok) flash(ok); router.refresh(); } catch (e) { flash(e instanceof Error ? e.message : "Napaka."); } }
@@ -396,9 +412,17 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                 {sec === "zgodovina" && (
                   <div className="flex flex-col" style={{ gap: 16 }}>
                     <div className="flex" style={{ background: "#F1E8D9", borderRadius: 12, padding: 4, width: 280 }}>{(["given", "redeemed"] as const).map((t) => <button key={t} onClick={() => setHistTab(t)} style={{ flex: 1, height: 36, border: "none", borderRadius: 9, background: histTab === t ? "#fff" : "transparent", color: histTab === t ? INK : "#9A8F80", fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>{t === "given" ? "Podarjene" : "Unovčene"}</button>)}</div>
+                    {/* filtri: ime / dan / ura */}
+                    <div className="flex flex-wrap items-center" style={{ gap: 10 }}>
+                      <input value={histQuery} onChange={(e) => setHistQuery(e.target.value)} placeholder="Išči ime / email…" style={{ ...inp, maxWidth: 230 }} />
+                      <input value={histDay} onChange={(e) => setHistDay(e.target.value)} type="date" aria-label="Dan" style={{ ...inp, width: 160 }} />
+                      <select value={histHour} onChange={(e) => setHistHour(e.target.value)} aria-label="Ura" style={{ ...inp, width: 150 }}><option value="">Vse ure</option>{Array.from({ length: 24 }).map((_, h) => <option key={h} value={h}>{String(h).padStart(2, "0")}:00–{String(h).padStart(2, "0")}:59</option>)}</select>
+                      {histActive && <button onClick={() => { setHistQuery(""); setHistDay(""); setHistHour(""); }} style={{ height: 46, padding: "0 14px", border: "1px solid #E4D9C7", borderRadius: 12, background: "#fff", color: MUTED, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Počisti</button>}
+                      <span style={{ fontSize: 13, color: "#9A8F80", marginLeft: "auto" }}>{histTab === "given" ? givenView.length : redeemedView.length} zapisov</span>
+                    </div>
                     <div style={{ ...card, padding: "6px 22px" }}>
-                      {histTab === "given" ? (givenLog.length === 0 ? <div style={{ padding: "20px 0", textAlign: "center", fontSize: 13.5, color: "#9A8F80" }}>Ni zapisov.</div> : givenLog.map((g, i) => <div key={g.id} className="flex items-center justify-between" style={{ padding: "14px 0", borderTop: i ? "1px solid #F4ECDF" : "none", gap: 12 }}><div style={{ minWidth: 0 }}><div className="flex items-center truncate" style={{ fontSize: 14, fontWeight: 600, gap: 8 }}>{g.who}{g.manual && <span style={{ height: 18, padding: "0 7px", borderRadius: 999, background: "#FCEFD8", color: "#B4781E", fontSize: 10.5, fontWeight: 800, display: "inline-flex", alignItems: "center", flexShrink: 0 }}>ročno</span>}</div><div style={{ fontSize: 12.5, color: "#9A8F80" }}>{g.manual ? "ročni vnos" : "skeniran račun"} · {fmt(g.t)}</div></div><span style={{ fontSize: 14, fontWeight: 700, color: GREEN, whiteSpace: "nowrap" }}>+{g.points}</span></div>))
-                        : (redemptions.length === 0 ? <div style={{ padding: "20px 0", textAlign: "center", fontSize: 13.5, color: "#9A8F80" }}>Ni zapisov.</div> : redemptions.map((r, i) => <div key={r.id} className="flex items-center justify-between" style={{ padding: "14px 0", borderTop: i ? "1px solid #F4ECDF" : "none", gap: 12 }}><div style={{ minWidth: 0 }}><div className="truncate" style={{ fontSize: 14, fontWeight: 600 }}>{r.customers?.email ?? r.customers?.phone ?? "—"}</div><div style={{ fontSize: 12.5, color: "#9A8F80" }}>{r.rewards?.name ?? "nagrada"} · {fmt(r.created_at)}</div></div><span style={{ fontSize: 14, fontWeight: 700, color: CORAL, whiteSpace: "nowrap" }}>−{r.points_spent}</span></div>))}
+                      {histTab === "given" ? (givenView.length === 0 ? <div style={{ padding: "20px 0", textAlign: "center", fontSize: 13.5, color: "#9A8F80" }}>{histActive ? "Ni zadetkov za izbrane filtre." : "Ni zapisov."}</div> : givenView.map((g, i) => <div key={g.id} className="flex items-center justify-between" style={{ padding: "14px 0", borderTop: i ? "1px solid #F4ECDF" : "none", gap: 12 }}><div style={{ minWidth: 0 }}><div className="flex items-center truncate" style={{ fontSize: 14, fontWeight: 600, gap: 8 }}>{g.who}{g.manual && <span style={{ height: 18, padding: "0 7px", borderRadius: 999, background: "#FCEFD8", color: "#B4781E", fontSize: 10.5, fontWeight: 800, display: "inline-flex", alignItems: "center", flexShrink: 0 }}>ročno</span>}</div><div style={{ fontSize: 12.5, color: "#9A8F80" }}>{g.manual ? "ročni vnos" : "skeniran račun"} · {fmt(g.t)}</div></div><span style={{ fontSize: 14, fontWeight: 700, color: GREEN, whiteSpace: "nowrap" }}>+{g.points}</span></div>))
+                        : (redeemedView.length === 0 ? <div style={{ padding: "20px 0", textAlign: "center", fontSize: 13.5, color: "#9A8F80" }}>{histActive ? "Ni zadetkov za izbrane filtre." : "Ni zapisov."}</div> : redeemedView.map((r, i) => <div key={r.id} className="flex items-center justify-between" style={{ padding: "14px 0", borderTop: i ? "1px solid #F4ECDF" : "none", gap: 12 }}><div style={{ minWidth: 0 }}><div className="truncate" style={{ fontSize: 14, fontWeight: 600 }}>{r.customers?.email ?? r.customers?.phone ?? "—"}</div><div style={{ fontSize: 12.5, color: "#9A8F80" }}>{r.rewards?.name ?? "nagrada"} · {fmt(r.created_at)}</div></div><span style={{ fontSize: 14, fontWeight: 700, color: CORAL, whiteSpace: "nowrap" }}>−{r.points_spent}</span></div>))}
                     </div>
                   </div>
                 )}

@@ -14,6 +14,7 @@ export interface Venue {
   stamp_goal?: number; // št. žigov za kartonček-nagrado (kava)
   city?: string | null;
   scan_window_hours: number;
+  scan_cooldown_minutes?: number; // min razmik med skeniranji za isto stranko (0 = off)
   redemption_minutes: number;
   daily_scan_cap: number | null;
   google_review_url?: string | null; // za Google-ocene autopilot (opcijsko)

@@ -111,6 +111,8 @@ export async function updateVenueSettings(formData: FormData) {
     patch.stamp_goal = Math.min(12, Math.max(4, Number(formData.get("stamp_goal")) || 10));
   if (formData.has("scan_window_hours"))
     patch.scan_window_hours = Number(formData.get("scan_window_hours"));
+  if (formData.has("scan_cooldown_minutes"))
+    patch.scan_cooldown_minutes = Math.max(0, Number(formData.get("scan_cooldown_minutes")) || 0);
   if (formData.has("google_review_url"))
     patch.google_review_url = String(formData.get("google_review_url")).trim() || null;
   if (formData.has("language")) patch.language = String(formData.get("language")) || "sl";

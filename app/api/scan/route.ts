@@ -61,6 +61,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Neveljaven datum računa." });
     }
 
+    // 3b) Razmik med skeniranji (anti-zloraba: ne moreš poskenirati kupa računov naenkrat)
+    const cooldown = venue.scan_cooldown_minutes || 0;
+    if (cooldown > 0) {
+      const { data: last } = await db
+        .from("scans")
+        .select("created_at")
+        .eq("venue_id", venue.id)
+        .eq("customer_id", customerId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (last) {
+        const minsSince = (Date.now() - new Date(last.created_at).getTime()) / 60000;
+        if (minsSince < cooldown) {
+          const wait = Math.max(1, Math.ceil(cooldown - minsSince));
+          return NextResponse.json({ ok: false, error: `Naslednji račun lahko skeniraš čez ${wait} min.` });
+        }
+      }
+    }
+
     // 4) Točke na obisk + žig (žigi ločeno od točk)
     const points = venue.points_per_visit;
     const stampGoal = venue.stamp_goal || 10;

@@ -6,6 +6,7 @@ import { parseFiscalQR, FiscalQRError } from "@/lib/fiscalQr";
 import { Icon, FakeQr } from "@/app/components/icons";
 import Scanner from "@/app/components/Scanner";
 import SpinFlow from "@/app/components/SpinFlow";
+import { gt } from "@/lib/guestI18n";
 
 const ROTS = [-5, 3, -2, 6, -4, 2, -6, 4, -3, 5];
 const REWARD_ICONS = ["cup", "croissant", "cake"];
@@ -96,6 +97,8 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const tintMed = mix(brand, CREAM, 0.76);
   const accentDeep = mix(brand, INK, 0.42);
   const reviewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const t = gt((venue as { language?: string }).language);
+  const lang = (venue as { language?: string }).language;
 
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [points, setPoints] = useState(0);
@@ -158,7 +161,6 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const stampReward = sorted.find((r) => (r as { kind?: string }).kind === "stamp") || null;
   const pointRewards = sorted.filter((r) => (r as { kind?: string }).kind !== "stamp");
   const visitsLeft = Math.max(0, stampGoal - stamps);
-  const visitWord = visitsLeft === 1 ? "obisk" : visitsLeft === 2 ? "obiska" : visitsLeft <= 4 ? "obiske" : "obiskov";
   const nextPR = pointRewards.find((r) => r.points_required > points) || null;
   const left = nextPR ? nextPR.points_required - points : 0;
   const rewardReady = pointRewards.some((r) => points >= r.points_required);
@@ -392,8 +394,9 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         venueName={venue.name}
         venueInitial={(venue.name.trim().charAt(0) || "M").toUpperCase()}
         brandColor={venue.brand_color && venue.brand_color !== "#16a34a" ? venue.brand_color : "#E2A04A"}
-        tagline="Tvoj prvi obisk si zasluži nagrado"
+        tagline={t.firstVisitReward}
         wheel={venue.wheel_config}
+        lang={lang}
       />
     );
   }
@@ -430,9 +433,9 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
     }
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col" style={{ background: BG, fontFamily: JAK, color: INK, padding: "56px 24px 40px" }}>
-        <div className="text-center" style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9A8F80" }}>Pokaži natakarju</div>
+        <div className="text-center" style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9A8F80" }}>{t.showStaff}</div>
         <div className="text-center tabular-nums" style={{ marginTop: 4, fontSize: 52, fontWeight: 800, color: remaining < 60000 ? CORAL : INK }}>{mmss(remaining)}</div>
-        <div className="text-center" style={{ marginTop: 4, fontSize: 14, color: "#9A8F80" }}>Velja še, tudi če zapreš aplikacijo.</div>
+        <div className="text-center" style={{ marginTop: 4, fontSize: 14, color: "#9A8F80" }}>{t.validEvenClosed}</div>
         <div className="flex flex-1 flex-col items-center justify-center" style={{ marginTop: 28 }}>
           <div className="flex w-full flex-col items-center" style={{ gap: 16, borderRadius: 24, border: "1px solid #EFE6D6", background: "#fff", padding: "28px 32px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)" }}>
             <div style={{ fontSize: 22, fontWeight: 800 }}>{activation.rewardName}</div>
@@ -441,7 +444,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           </div>
         </div>
         <button onClick={confirmActivation} disabled={busy} style={{ marginTop: 24, height: 56, width: "100%", borderRadius: 16, background: GREEN, color: "#F4F0E4", fontSize: 16.5, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK, boxShadow: "0 10px 24px rgba(94,127,82,0.3)", opacity: busy ? 0.5 : 1 }}>Osebje potrdi</button>
-        <button onClick={dismissActivation} style={{ marginTop: 8, height: 44, width: "100%", borderRadius: 16, background: "none", border: "none", fontSize: 14, fontWeight: 600, color: "#9A8F80", cursor: "pointer", fontFamily: JAK }}>Skrij (časovnik še teče)</button>
+        <button onClick={dismissActivation} style={{ marginTop: 8, height: 44, width: "100%", borderRadius: 16, background: "none", border: "none", fontSize: 14, fontWeight: 600, color: "#9A8F80", cursor: "pointer", fontFamily: JAK }}>{t.hide}</button>
       </main>
     );
   }
@@ -451,10 +454,10 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
     const displayStamps = cardCompleted ? stampGoal : stamps;
     const hasCard = !!stampReward;
     const successMsg = cardCompleted
-      ? `Kupon za ${completedReward.toLowerCase()} je v tvoji denarnici 🎟️`
+      ? t.couponInWallet(completedReward.toLowerCase())
       : hasCard
-        ? `Še ${visitsLeft} ${visitWord} do brezplačne ${(stampReward?.name || "kave").toLowerCase()}.`
-        : rewardReady ? "Lahko unovčiš nagrado pri osebju." : `Še ${left} točk do nagrade.`;
+        ? t.visitsLeft(visitsLeft, (stampReward?.name || "kave").toLowerCase())
+        : rewardReady ? t.canRedeem : t.pointsToReward(left);
     return (
       <main className="flex min-h-dvh w-full flex-col items-center justify-center" style={{ background: BG, fontFamily: JAK, color: INK, padding: 20 }}>
         <div className="relative flex w-full max-w-md flex-col items-center overflow-hidden px-6 py-8 lg:max-w-[440px] lg:rounded-[30px] lg:border lg:border-[#E8DCC8] lg:bg-[#FBF7F0] lg:px-9 lg:py-12 lg:shadow-[0_30px_70px_rgba(34,28,22,0.18)]" style={{ gap: 22 }}>
@@ -484,7 +487,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
               {cardCompleted ? "🎉" : (venue.name.trim().charAt(0) || "M").toUpperCase()}
             </div>
             {!cardCompleted && (
-              <div style={{ position: "absolute", bottom: -10, left: "50%", transform: "translateX(-50%)", background: GREEN, color: "#F4F0E4", fontSize: 12.5, fontWeight: 800, padding: "5px 13px", borderRadius: 999, whiteSpace: "nowrap", boxShadow: "0 8px 18px rgba(94,127,82,0.4)", animation: "popIn 0.45s cubic-bezier(0.2,1.6,0.4,1) both 0.25s" }}>+1 žig</div>
+              <div style={{ position: "absolute", bottom: -10, left: "50%", transform: "translateX(-50%)", background: GREEN, color: "#F4F0E4", fontSize: 12.5, fontWeight: 800, padding: "5px 13px", borderRadius: 999, whiteSpace: "nowrap", boxShadow: "0 8px 18px rgba(94,127,82,0.4)", animation: "popIn 0.45s cubic-bezier(0.2,1.6,0.4,1) both 0.25s" }}>{t.oneStamp}</div>
             )}
           </div>
         {hasCard && (
@@ -493,22 +496,22 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           </div>
         )}
         <div className="flex flex-col items-center text-center" style={{ gap: 8 }}>
-          <div style={{ fontWeight: 800, fontSize: 26, letterSpacing: "-0.01em" }}>{cardCompleted ? "Kartonček je poln!" : `Žig je tvoj · +${awarded} točk`}</div>
+          <div style={{ fontWeight: 800, fontSize: 26, letterSpacing: "-0.01em" }}>{cardCompleted ? t.cardFull : t.stampYours(awarded)}</div>
           <div style={{ maxWidth: 280, fontSize: 15, lineHeight: 1.5, color: MUTED }}>{successMsg}</div>
         </div>
 
-        <button onClick={() => { setView("home"); setCardCompleted(false); }} style={{ height: 54, width: "100%", borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Super, nazaj na kartico</button>
+        <button onClick={() => { setView("home"); setCardCompleted(false); }} style={{ height: 54, width: "100%", borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>{t.backToCard}</button>
         </div>
 
         {/* Google-ocene POPUP — Variant C "Plavajoča kartica" (4–5★ → Google, 1–3★ → zasebno ekipi) */}
         {reviewOpen && (() => {
           const stage = reviewDone ? (stars >= 4 ? "doneHigh" : "doneLow") : stars === 0 ? "rate" : stars <= 3 ? "low" : "high";
           const copy = {
-            rate: ["Kako ti je bilo?", "Oceni obisk in pomagaj nam postati boljši."],
-            low: ["Hvala za iskrenost", "Kaj bi lahko izboljšali? Sporočilo gre naravnost ekipi."],
-            high: ["Juhu, hvala!", "Bi to delil še na Googlu? Vzame 10 sekund in nam ogromno pomeni."],
-            doneLow: ["Sporočilo oddano", "Hvala — ekipa tvoje mnenje vidi takoj in se potrudi."],
-            doneHigh: ["Hvala za podporo!", "Odpiramo Google oceno v novem zavihku …"],
+            rate: [t.rateTitle, t.rateSub],
+            low: [t.thanksHonest, t.improveSub],
+            high: [t.yayThanks, t.shareGoogleSub],
+            doneLow: [t.feedbackSent, t.feedbackSentSub],
+            doneHigh: [t.thanksSupport, t.openingGoogle],
           }[stage];
           return (
             <div onClick={() => setReviewOpen(false)} className="fixed inset-0 z-[60] flex items-center justify-center" style={{ background: "rgba(233,226,214,0.7)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)", padding: 18, animation: "scrimIn 0.3s both" }}>
@@ -521,7 +524,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
                         : <svg width="33" height="33" viewBox="0 0 24 24" style={{ fill: "none", stroke: GREEN, strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M5 12.5l4.2 4.2L18.5 7.5" /></svg>}
                     </div>
                     <div><div style={{ fontWeight: 800, fontSize: 23, letterSpacing: "-0.015em" }}>{copy[0]}</div><div style={{ fontSize: 14.5, color: MUTED, lineHeight: 1.55, marginTop: 5 }}>{copy[1]}</div></div>
-                    <button onClick={() => setReviewOpen(false)} style={{ height: 44, padding: "0 20px", border: "1.5px solid #E4D9C7", borderRadius: 14, background: "transparent", color: "#9A8F80", fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Zapri</button>
+                    <button onClick={() => setReviewOpen(false)} style={{ height: 44, padding: "0 20px", border: "1.5px solid #E4D9C7", borderRadius: 14, background: "transparent", color: "#9A8F80", fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t.close}</button>
                   </div>
                 ) : (
                   <>
@@ -536,21 +539,21 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
                         </button>
                       ))}
                     </div>
-                    {stage === "rate" && <div style={{ fontSize: 13, color: "#A89878", textAlign: "center" }}>Tapni za oceno svojega obiska</div>}
+                    {stage === "rate" && <div style={{ fontSize: 13, color: "#A89878", textAlign: "center" }}>{t.tapToRate}</div>}
                     {stage === "low" && (
                       <div className="flex flex-col" style={{ gap: 13, animation: "fadeIn 0.3s both" }}>
-                        <textarea value={fb} onChange={(e) => setFb(e.target.value)} placeholder="Kaj bi izboljšali? Beremo vse…" style={{ width: "100%", boxSizing: "border-box", minHeight: 90, border: "1.5px solid #E4D9C7", borderRadius: 16, background: CREAM, padding: "13px 14px", fontFamily: JAK, fontSize: 15, color: INK, resize: "none", outline: "none", lineHeight: 1.5 }} />
-                        <button onClick={() => { logReview(stars, false, fb); setReviewDone(true); }} style={{ width: "100%", height: 56, border: "none", borderRadius: 16, background: INK, color: PAPER, fontFamily: JAK, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Pošlji ekipi</button>
-                        <div style={{ fontSize: 12.5, color: "#9A8F80", textAlign: "center" }}>Zasebno · vidi samo lastnik lokala</div>
+                        <textarea value={fb} onChange={(e) => setFb(e.target.value)} placeholder={t.feedbackPlaceholder} style={{ width: "100%", boxSizing: "border-box", minHeight: 90, border: "1.5px solid #E4D9C7", borderRadius: 16, background: CREAM, padding: "13px 14px", fontFamily: JAK, fontSize: 15, color: INK, resize: "none", outline: "none", lineHeight: 1.5 }} />
+                        <button onClick={() => { logReview(stars, false, fb); setReviewDone(true); }} style={{ width: "100%", height: 56, border: "none", borderRadius: 16, background: INK, color: PAPER, fontFamily: JAK, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>{t.sendTeam}</button>
+                        <div style={{ fontSize: 12.5, color: "#9A8F80", textAlign: "center" }}>{t.privateNote}</div>
                       </div>
                     )}
                     {stage === "high" && (
                       <div className="flex flex-col" style={{ gap: 14, animation: "fadeIn 0.3s both" }}>
                         <a href={googleReviewUrl} target="_blank" rel="noreferrer" onClick={() => { logReview(stars, true); setReviewDone(true); }} className="flex items-center justify-center" style={{ width: "100%", boxSizing: "border-box", height: 58, border: "none", borderRadius: 16, background: INK, color: PAPER, fontFamily: JAK, fontSize: 16, fontWeight: 700, cursor: "pointer", gap: 12, textDecoration: "none" }}>
-                          <span className="flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: "50%", background: "#fff" }}><GoogleG /></span>Oceni na Googlu
+                          <span className="flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: "50%", background: "#fff" }}><GoogleG /></span>{t.rateOnGoogle}
                         </a>
-                        <div style={{ fontSize: 13, color: MUTED, textAlign: "center", lineHeight: 1.5 }}>Hvala! 💛 En klik na Googlu nam ogromno pomeni — vzame le 10 sekund.</div>
-                        <button onClick={() => setReviewOpen(false)} style={{ background: "none", border: "none", color: "#9A8F80", fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Mogoče kasneje</button>
+                        <div style={{ fontSize: 13, color: MUTED, textAlign: "center", lineHeight: 1.5 }}>{t.googleThanks}</div>
+                        <button onClick={() => setReviewOpen(false)} style={{ background: "none", border: "none", color: "#9A8F80", fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{t.maybeLater}</button>
                       </div>
                     )}
                   </>
@@ -573,10 +576,10 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           </div>
           <div style={{ maxWidth: 300, fontSize: 24, fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.01em" }}>{errText.t}</div>
           <div style={{ maxWidth: 280, fontSize: 15, lineHeight: 1.5, color: MUTED }}>{errText.h}</div>
-          <div style={{ fontSize: 13.5, color: "#9A8F80" }}>Tvoje točke ostajajo: <strong>{points}</strong></div>
+          <div style={{ fontSize: 13.5, color: "#9A8F80" }}>{t.pointsStay(points)}</div>
           <div className="flex w-full flex-col" style={{ marginTop: 8, gap: 10 }}>
-            <button onClick={() => { setView("home"); setScanning(true); }} style={{ height: 54, borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Skeniraj drug račun</button>
-            <button onClick={() => setView("home")} style={{ height: 48, borderRadius: 16, background: "none", border: "none", fontSize: 15, fontWeight: 600, color: "#9A8F80", cursor: "pointer", fontFamily: JAK }}>Nazaj na kartico</button>
+            <button onClick={() => { setView("home"); setScanning(true); }} style={{ height: 54, borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>{t.scanOther}</button>
+            <button onClick={() => setView("home")} style={{ height: 48, borderRadius: 16, background: "none", border: "none", fontSize: 15, fontWeight: 600, color: "#9A8F80", cursor: "pointer", fontFamily: JAK }}>{t.backToCard}</button>
           </div>
         </div>
       </main>
@@ -587,11 +590,11 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const hasCard = !!stampReward;
   const visitsNote = hasCard
     ? stamps >= stampGoal
-      ? "Kartonček je poln — aktiviraj kupon spodaj."
-      : `Še ${visitsLeft} ${visitWord} do brezplačne ${(stampReward?.name || "kave").toLowerCase()}.`
+      ? t.cardFullActivate
+      : t.visitsLeft(visitsLeft, (stampReward?.name || "kave").toLowerCase())
     : rewardReady
-      ? "Imaš dovolj točk — unovči nagrado."
-      : `Še ${left} točk do nagrade.`;
+      ? t.canRedeem
+      : t.pointsToReward(left);
 
   const city = (venue as { city?: string | null }).city || null;
   return (
@@ -606,12 +609,12 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
               <div className="flex items-center justify-center" style={{ width: 52, height: 52, borderRadius: 17, background: logoBg, color: PAPER, fontWeight: 800, fontSize: 24 }}>{(venue.name.trim().charAt(0) || "M").toUpperCase()}</div>
               <div><div style={{ fontWeight: 800, fontSize: 21 }}>{venue.name}</div>{city && <div style={{ fontSize: 13, color: accentDeep }}>{city}</div>}</div>
             </div>
-            <h2 className="relative" style={{ margin: 0, fontWeight: 800, fontSize: "clamp(28px,3vw,36px)", lineHeight: 1.08, letterSpacing: "-0.02em" }}>Vsaka kava<br />te približa nagradi.</h2>
-            <p className="relative" style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: MUTED, maxWidth: 340 }}>Skeniraj račun ob obisku — vsak prinese žig in točke. Preprosto, toplo, tvoje.</p>
+            <h2 className="relative" style={{ margin: 0, fontWeight: 800, fontSize: "clamp(28px,3vw,36px)", lineHeight: 1.08, letterSpacing: "-0.02em" }}>{t.everyCoffee}</h2>
+            <p className="relative" style={{ margin: 0, fontSize: 15.5, lineHeight: 1.6, color: MUTED, maxWidth: 340 }}>{t.scanNote}</p>
             <div className="relative flex" style={{ gap: 26, borderTop: "1px solid rgba(42,36,29,0.1)", paddingTop: 18 }}>
-              <div><div style={{ fontWeight: 800, fontSize: 24 }}>{points}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>točk</div></div>
-              {hasCard && <div><div style={{ fontWeight: 800, fontSize: 24 }}>{stamps}/{stampGoal}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>žigov</div></div>}
-              <div><div style={{ fontWeight: 800, fontSize: 24, color: accentDeep }}>{coupons.length}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>kuponov</div></div>
+              <div><div style={{ fontWeight: 800, fontSize: 24 }}>{points}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>{t.points}</div></div>
+              {hasCard && <div><div style={{ fontWeight: 800, fontSize: 24 }}>{stamps}/{stampGoal}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>{t.stamps}</div></div>}
+              <div><div style={{ fontWeight: 800, fontSize: 24, color: accentDeep }}>{coupons.length}</div><div style={{ fontSize: 12, color: "#9A8F80" }}>{t.coupons}</div></div>
             </div>
           </div>
 
@@ -620,17 +623,17 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
             {/* kartonček / točke */}
             <div style={{ background: "#fff", borderRadius: 24, padding: "22px 22px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)", border: "1px solid #F1E8D9" }}>
               <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#9A8F80" }}>{hasCard ? "Tvoja kartica" : "Tvoje točke"}</span>
-                <span style={{ fontSize: 13, fontWeight: 800, color: accentDeep }}>{hasCard ? `${stamps} / ${stampGoal}` : `${points} točk`}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#9A8F80" }}>{hasCard ? t.yourCard : t.yourPoints}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: accentDeep }}>{hasCard ? `${stamps} / ${stampGoal}` : `${points} ${t.points}`}</span>
               </div>
-              {hasCard ? <StampGrid stamps={stamps} count={stampGoal} accent={brand} /> : <div style={{ fontWeight: 800, fontSize: 52, lineHeight: 1, letterSpacing: "-0.02em" }}>{points}<span style={{ fontSize: 16, fontWeight: 600, color: "#9A8F80", marginLeft: 8 }}>točk</span></div>}
+              {hasCard ? <StampGrid stamps={stamps} count={stampGoal} accent={brand} /> : <div style={{ fontWeight: 800, fontSize: 52, lineHeight: 1, letterSpacing: "-0.02em" }}>{points}<span style={{ fontSize: 16, fontWeight: 600, color: "#9A8F80", marginLeft: 8 }}>{t.points}</span></div>}
               <div style={{ marginTop: 16, background: CREAM, borderRadius: 16, padding: "13px 15px", fontSize: 13.5, lineHeight: 1.45, color: MUTED }}>{visitsNote}</div>
             </div>
 
             {/* skeniraj */}
             <button onClick={() => setScanning(true)} disabled={busy} className="flex items-center justify-center" style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: INK, color: PAPER, fontFamily: JAK, fontSize: 15.5, fontWeight: 700, gap: 10, cursor: "pointer", opacity: busy ? 0.5 : 1 }}>
               <svg width="19" height="19" viewBox="0 0 24 24" style={{ fill: "none", stroke: PAPER, strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M4 8.6A2.6 2.6 0 0 1 6.6 6h1.5l1.5-2h4.8l1.5 2h1.5A2.6 2.6 0 0 1 20 8.6v7.8A2.6 2.6 0 0 1 17.4 19H6.6A2.6 2.6 0 0 1 4 16.4V8.6Z" /><circle cx="12" cy="12.7" r="3.4" /></svg>
-              Skeniraj račun
+              {t.scanReceipt}
             </button>
 
             {/* kuponi */}
@@ -639,21 +642,21 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
                 c.pending ? (
                   <div key={c.id} className="flex items-center" style={{ gap: 13, background: CREAM, border: "1.5px dashed #E0D2BC", borderRadius: 18, padding: 15 }}>
                     <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#fff", flexShrink: 0, opacity: 0.7 }}><Cup stroke={brand} size={22} /></div>
-                    <div className="min-w-0 flex-1"><div style={{ fontWeight: 800, fontSize: 14.5 }}>{c.name}</div><div style={{ fontSize: 12, fontWeight: 600, color: accentDeep }}>Na čakanju · aktivira se ob 1. skeniranju računa</div></div>
-                    <span className="flex items-center" style={{ height: 26, padding: "0 11px", borderRadius: 999, background: "#FCEFD8", color: "#B4781E", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>ČAKA</span>
+                    <div className="min-w-0 flex-1"><div style={{ fontWeight: 800, fontSize: 14.5 }}>{c.name}</div><div style={{ fontSize: 12, fontWeight: 600, color: accentDeep }}>{t.pendingCoupon}</div></div>
+                    <span className="flex items-center" style={{ height: 26, padding: "0 11px", borderRadius: 999, background: "#FCEFD8", color: "#B4781E", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{t.waits}</span>
                   </div>
                 ) : (
                   <div key={c.id} className="flex items-center" style={{ gap: 13, background: `linear-gradient(135deg,${tintLight},${tintMed})`, borderRadius: 18, padding: 15 }}>
                     <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#fff", flexShrink: 0 }}><Cup stroke={brand} size={22} /></div>
-                    <div className="min-w-0 flex-1"><div style={{ fontWeight: 800, fontSize: 14.5 }}>{c.name}</div><div style={{ fontSize: 12, fontWeight: 600, color: accentDeep }}>Velja še 12 dni</div></div>
-                    <button onClick={() => activateCoupon(c)} style={{ height: 38, padding: "0 15px", border: "none", borderRadius: 11, background: INK, color: PAPER, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Aktiviraj</button>
+                    <div className="min-w-0 flex-1"><div style={{ fontWeight: 800, fontSize: 14.5 }}>{c.name}</div><div style={{ fontSize: 12, fontWeight: 600, color: accentDeep }}>{t.validDays}</div></div>
+                    <button onClick={() => activateCoupon(c)} style={{ height: 38, padding: "0 15px", border: "none", borderRadius: 11, background: INK, color: PAPER, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{t.activate}</button>
                   </div>
                 ),
               )
             ) : (
               <div className="flex items-center" style={{ gap: 13, borderRadius: 18, border: "1px dashed #E0D2BC", background: CREAM, padding: 15 }}>
                 <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: tintLight, flexShrink: 0 }}><Cup stroke={brand} size={22} /></div>
-                <div style={{ fontSize: 13.5, lineHeight: 1.4, color: "#9A8F80" }}>Nimaš še kuponov. Napolni kartico za nagrado.</div>
+                <div style={{ fontSize: 13.5, lineHeight: 1.4, color: "#9A8F80" }}>{t.noCouponsYet}</div>
               </div>
             )}
           </div>
@@ -663,8 +666,8 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         {pointRewards.length > 0 && (
           <div className="px-4 lg:px-0" style={{ marginTop: 28 }}>
             <div className="flex items-baseline justify-between" style={{ marginBottom: 14 }}>
-              <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: "-0.01em" }}>Nagrade za točke</div>
-              <div style={{ fontSize: 13, color: "#9A8F80" }}>{points} točk · +{venue.points_per_visit} na obisk</div>
+              <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: "-0.01em" }}>{t.pointRewards}</div>
+              <div style={{ fontSize: 13, color: "#9A8F80" }}>{points} {t.points} · +{venue.points_per_visit}</div>
             </div>
             <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))" }}>
               {pointRewards.map((r, idx) => {
@@ -677,9 +680,9 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
                       <div className="flex items-center justify-between" style={{ gap: 8 }}>
                         <span style={{ fontSize: 15, fontWeight: 700 }}>{r.name}</span>
                         {ready ? (
-                          <button onClick={() => openRedeem(r)} style={{ whiteSpace: "nowrap", height: 32, padding: "0 14px", fontSize: 12.5, fontWeight: 800, color: "#fff", background: GREEN, border: "none", borderRadius: 10, cursor: "pointer", fontFamily: JAK }}>Unovči</button>
+                          <button onClick={() => openRedeem(r)} style={{ whiteSpace: "nowrap", height: 32, padding: "0 14px", fontSize: 12.5, fontWeight: 800, color: "#fff", background: GREEN, border: "none", borderRadius: 10, cursor: "pointer", fontFamily: JAK }}>{t.redeem}</button>
                         ) : (
-                          <span style={{ whiteSpace: "nowrap", fontSize: 12.5, color: "#9A8F80" }}>{points} / {r.points_required} točk</span>
+                          <span style={{ whiteSpace: "nowrap", fontSize: 12.5, color: "#9A8F80" }}>{points} / {r.points_required} {t.points}</span>
                         )}
                       </div>
                       <div style={{ height: 7, overflow: "hidden", borderRadius: 999, background: "#EFE4D2" }}><div style={{ height: "100%", borderRadius: 999, width: `${pct}%`, background: ready ? GREEN : brand }} /></div>
@@ -692,7 +695,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         )}
       </div>
 
-      {scanning && <Scanner demo={demo} onResult={handleScan} onClose={() => setScanning(false)} />}
+      {scanning && <Scanner demo={demo} lang={lang} onResult={handleScan} onClose={() => setScanning(false)} />}
       {redeemReward && (
         <ActivateSheet
           reward={redeemReward}
@@ -700,6 +703,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           minutes={minutes}
           busy={busy}
           accent={brand}
+          lang={lang}
           onNext={() => setSheetStep(2)}
           onActivate={() => activate(redeemReward)}
           onClose={() => setRedeemReward(null)}
@@ -734,6 +738,7 @@ function ActivateSheet({
   minutes,
   busy,
   accent = CORAL,
+  lang,
   onNext,
   onActivate,
   onClose,
@@ -743,10 +748,12 @@ function ActivateSheet({
   minutes: number;
   busy: boolean;
   accent?: string;
+  lang?: string;
   onNext: () => void;
   onActivate: () => void;
   onClose: () => void;
 }) {
+  const t = gt(lang);
   const cancelBtn: React.CSSProperties = { marginTop: 8, height: 44, width: "100%", borderRadius: 16, background: "none", border: "none", fontSize: 14, fontWeight: 600, color: "#9A8F80", cursor: "pointer", fontFamily: JAK };
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(26,18,13,0.42)", fontFamily: JAK }} onClick={onClose}>
@@ -757,20 +764,20 @@ function ActivateSheet({
             <div className="flex flex-col items-center text-center" style={{ gap: 8 }}>
               <div className="flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: 18, background: hexA(accent, 0.16) }}><Cup stroke={accent} size={28} /></div>
               <div style={{ fontWeight: 800, fontSize: 24, letterSpacing: "-0.01em" }}>{reward.name}</div>
-              <div style={{ fontSize: 14.5, color: "#9A8F80" }}>Za {reward.points_required} točk</div>
+              <div style={{ fontSize: 14.5, color: "#9A8F80" }}>{t.forPoints(reward.points_required)}</div>
             </div>
-            <button onClick={onNext} style={{ marginTop: 24, height: 54, width: "100%", borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Aktiviraj nagrado</button>
-            <button onClick={onClose} style={cancelBtn}>Prekliči</button>
+            <button onClick={onNext} style={{ marginTop: 24, height: 54, width: "100%", borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>{t.activateRewardBtn}</button>
+            <button onClick={onClose} style={cancelBtn}>{t.cancel}</button>
           </>
         ) : (
           <>
             <div className="flex flex-col items-center text-center" style={{ gap: 8 }}>
               <div className="flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: "50%", border: `2.5px solid ${accent}`, background: hexA(accent, 0.14) }}><Icon name="clock" color={mix(accent, INK, 0.42)} size={28} strokeWidth={2} /></div>
-              <div style={{ fontWeight: 800, fontSize: 22, lineHeight: 1.1 }}>Aktiviraj zdaj?</div>
-              <div style={{ maxWidth: 300, fontSize: 14.5, lineHeight: 1.5, color: MUTED }}>Točke ({reward.points_required}) se <strong>takoj porabijo</strong> in imaš <strong>{minutes} min</strong>, da kodo pokažeš natakarju. Časovnik teče, tudi če zapreš aplikacijo.</div>
+              <div style={{ fontWeight: 800, fontSize: 22, lineHeight: 1.1 }}>{t.activateNow}</div>
+              <div style={{ maxWidth: 300, fontSize: 14.5, lineHeight: 1.5, color: MUTED }}>{t.activateNote(reward.points_required, minutes)}</div>
             </div>
-            <button onClick={onActivate} disabled={busy} style={{ marginTop: 24, height: 54, width: "100%", borderRadius: 16, background: GREEN, color: "#F4F0E4", fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK, opacity: busy ? 0.5 : 1 }}>Da, aktiviraj</button>
-            <button onClick={onClose} style={cancelBtn}>Ne, nazaj</button>
+            <button onClick={onActivate} disabled={busy} style={{ marginTop: 24, height: 54, width: "100%", borderRadius: 16, background: GREEN, color: "#F4F0E4", fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK, opacity: busy ? 0.5 : 1 }}>{t.yesActivate}</button>
+            <button onClick={onClose} style={cancelBtn}>{t.noBack}</button>
           </>
         )}
       </div>

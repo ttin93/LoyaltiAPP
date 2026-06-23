@@ -49,6 +49,13 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-23 — seja 46 (gostov flow LOKALIZIRAN — jezik dejansko menja vmesnik)
+- **Problem**: jezik v Nastavitvah se je shranil (`venues.language`), a gostov vmesnik je ostal v SI — "jezik select dela ampak ne dejansko nč spremeni".
+- **Rešitev**: nov prevodni sloj `lib/guestI18n.ts` — `gt(lang)` vrne objekt vseh gostovih stringov. Jeziki: **SL, EN, HR, DE**; SR/BS → HR (medsebojno razumljivo), neznano → SL.
+- **Povezano skozi**: `GuestApp.tsx` (domača, success, review-popup, error, kuponi, ActivateSheet, timer), `SpinFlow.tsx` (kolo + registracija + kupon), `Scanner.tsx` (naslov + navodilo), `spin/page.tsx` (doda `language` v poizvedbo + `lang` prop). `venue.language` se prenese kot `lang` prop v vsako komponento.
+- **Preverjeno v živo** (PrTinu začasno na en/hr): SpinFlow + GuestApp se v celoti izrišeta v EN in HR; po testu nazaj na `sl`. `tsc --noEmit` čist.
+- **Ostane v lastnikovem jeziku** (namerno — to so njegovi podatki, ne UI): imena nagrad ("brezplačna kava"), default segmenti kolesa, server error-sporočila skena (dup/tuj/star), validacijski texti registracije, "(test)" ročni vnos v skenerju.
+
 ### 2026-06-23 — seja 45 (TZ fix, anti-fraud spoznanje, review popup)
 - **TZ bug (kritičen)**: datum računa je SLO lokalni čas (CET/CEST), parser ga je bral kot UTC → svež račun videti ~2h v prihodnosti → `api/scan` zavrnil »Neveljaven datum«. Star račun je ušel. Fix: interpretiraj kot Europe/Ljubljana (Intl longOffset) + range-validacija polj. Brez tega bi tudi pravi sveži računi padli.
 - **Anti-fraud spoznanje (POMEMBNO za pitch)**: app NE preverja pristnosti pri FURS — le strukturo + davčno + svežino + dedup(ZOI). Empirično dokazano: izmišljen QR s pravo davčno + svežim datumom GRE SKOZI (`ok, +50, žig`). ZOI-ja iz QR ni mogoče preveriti (QR nima zneska/št. računa). Prava rešitev = FURS verifikacija ali POS integracija. Za pilot: davčna+svežina+dedup+osebje potrdi unovčenje.

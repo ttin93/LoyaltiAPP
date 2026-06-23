@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
 import { Icon } from "@/app/components/icons";
+import { gt } from "@/lib/guestI18n";
 
 const JAK = "var(--font-jakarta), sans-serif";
 const AMBER = "#E2A04A";
@@ -11,14 +12,17 @@ const PAPER = "#FBF3E6";
 export default function Scanner({
   onResult,
   onClose,
-  title = "Skeniraj račun",
+  title,
   demo = false,
+  lang,
 }: {
   onResult: (text: string) => void;
   onClose: () => void;
   title?: string;
   demo?: boolean;
+  lang?: string;
 }) {
+  const t = gt(lang);
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +76,7 @@ export default function Scanner({
         <button onClick={onClose} aria-label="Zapri" className="flex items-center justify-center" style={{ width: 42, height: 42, borderRadius: "50%", border: "1px solid rgba(251,243,230,0.14)", background: "rgba(251,243,230,0.06)", cursor: "pointer" }}>
           <Icon name="x" color={PAPER} size={16} strokeWidth={2} />
         </button>
-        <span style={{ fontWeight: 700, fontSize: 16 }}>{title}</span>
+        <span style={{ fontWeight: 700, fontSize: 16 }}>{title || t.scanTitle}</span>
         <div style={{ width: 42 }} />
       </div>
 
@@ -101,7 +105,7 @@ export default function Scanner({
           )}
         </div>
         <div style={{ maxWidth: 270, textAlign: "center", fontSize: 14.5, lineHeight: 1.5, color: "rgba(251,243,230,0.68)" }}>
-          {error ? "Kamera ni na voljo. Za skeniranje računa uporabi telefon s kamero." : "Poravnaj QR z dna računa v okvir. Žig se doda samodejno."}
+          {error ? t.cameraNa : t.alignQr}
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createBrowserSupabase } from "@/lib/supabase/ssrClient";
 import { BRAND } from "@/lib/brand";
 import type { WheelConfig } from "@/lib/types";
+import { gt } from "@/lib/guestI18n";
 
 // Nova design paleta (Plus Jakarta Sans)
 const INK = "#2A241D";
@@ -58,9 +59,10 @@ export default function SpinFlow({
   venueName,
   venueInitial,
   brandColor = "#E2A04A",
-  tagline = "Tvoj prvi obisk si zasluži nagrado",
+  tagline,
   wheel,
   demo = false,
+  lang,
 }: {
   code: string;
   venueName: string;
@@ -69,7 +71,9 @@ export default function SpinFlow({
   tagline?: string;
   wheel?: WheelConfig | null;
   demo?: boolean;
+  lang?: string;
 }) {
+  const t = gt(lang);
   // konfiguracija kolesa (lastnik jo nastavi v dashboardu); fallback = privzeti segmenti
   const cfg = wheel && Array.isArray(wheel.segments) && wheel.segments.length >= 2 ? wheel : null;
   const enabled = cfg ? cfg.enabled !== false : true;
@@ -184,7 +188,7 @@ export default function SpinFlow({
     } catch {
       localStorage.removeItem(`loyalty:${code}:pendingGoogle`);
       setBusy(false);
-      setGErr("Google prijava še ni nastavljena. Uporabi email.");
+      setGErr(t.googleNotSet);
     }
   }
 
@@ -246,7 +250,7 @@ export default function SpinFlow({
     );
   })();
 
-  const kicker = { wheel: "Kolo sreče", won: "Tvoja nagrada", register: "Registracija", coupon: "Kupon" }[step];
+  const kicker = t.kicker[step];
 
   return (
     <main
@@ -266,8 +270,8 @@ export default function SpinFlow({
       <div className="flex flex-col items-center gap-2.5" style={{ marginBottom: 16 }}>
         <div className="flex items-center justify-center" style={{ width: 58, height: 58, borderRadius: 18, background: INK, color: CREAM, fontWeight: 800, fontSize: 26, boxShadow: "0 10px 24px rgba(42,36,29,0.18)" }}>{venueInitial}</div>
         <div className="text-center">
-          <div style={{ fontWeight: 800, fontSize: 21, letterSpacing: "-0.01em" }}>Dobrodošel v {venueName}</div>
-          <div style={{ fontSize: 13.5, color: "#9A7A3A", marginTop: 2 }}>{tagline}</div>
+          <div style={{ fontWeight: 800, fontSize: 21, letterSpacing: "-0.01em" }}>{t.welcomeTo(venueName)}</div>
+          <div style={{ fontSize: 13.5, color: "#9A7A3A", marginTop: 2 }}>{tagline || t.firstVisitReward}</div>
         </div>
       </div>
 
@@ -275,23 +279,23 @@ export default function SpinFlow({
       <div style={{ width: "100%", maxWidth: 404, background: "#FFFFFF", borderRadius: 28, boxShadow: "0 2px 8px rgba(42,36,29,0.05),0 24px 50px rgba(42,36,29,0.12)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div className="flex items-center justify-between" style={{ padding: "22px 22px 0" }}>
           <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "#9A8F80" }}>{kicker}</span>
-          <span className="flex items-center" style={{ height: 26, padding: "0 11px", borderRadius: 999, background: "#FCEFD8", color: "#B4781E", fontSize: 11, fontWeight: 800 }}>1 VRTLJAJ</span>
+          <span className="flex items-center" style={{ height: 26, padding: "0 11px", borderRadius: 999, background: "#FCEFD8", color: "#B4781E", fontSize: 11, fontWeight: 800 }}>{t.oneSpin}</span>
         </div>
 
         <div style={{ padding: "14px 22px 24px" }}>
           {/* WHEEL */}
           {step === "wheel" && (
             <div className="flex flex-col items-center" style={{ gap: 8 }}>
-              <div style={{ fontWeight: 800, fontSize: 24, lineHeight: 1.1, textAlign: "center", letterSpacing: "-0.01em" }}>Zavrti in osvoji</div>
-              <div style={{ fontSize: 14, color: MUTED, textAlign: "center", lineHeight: 1.45, maxWidth: 270 }}>Vsak nov gost dobi zajamčeno nagrado za prvi obisk.</div>
+              <div style={{ fontWeight: 800, fontSize: 24, lineHeight: 1.1, textAlign: "center", letterSpacing: "-0.01em" }}>{t.spinAndWin}</div>
+              <div style={{ fontSize: 14, color: MUTED, textAlign: "center", lineHeight: 1.45, maxWidth: 270 }}>{t.everyGuestReward}</div>
               <div style={{ position: "relative", width: 288, height: 288, marginTop: 10 }}>
                 <div style={{ position: "absolute", top: -6, left: "50%", transform: "translateX(-50%)", zIndex: 3, filter: "drop-shadow(0 3px 4px rgba(42,36,29,0.3))" }}>
                   <svg width="30" height="26" viewBox="0 0 30 26"><path d="M15 24 L4 4 Q15 10 26 4 Z" fill={INK} /></svg>
                 </div>
                 {wheelEl}
-                <button onClick={spin} aria-label="Zavrti" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 72, height: 72, borderRadius: "50%", border: "none", background: "transparent", color: CREAM, fontFamily: "var(--font-jakarta), sans-serif", fontWeight: 800, fontSize: 13, letterSpacing: "0.04em", cursor: "pointer" }}>{spinning ? "···" : "ZAVRTI"}</button>
+                <button onClick={spin} aria-label="Zavrti" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 72, height: 72, borderRadius: "50%", border: "none", background: "transparent", color: CREAM, fontFamily: "var(--font-jakarta), sans-serif", fontWeight: 800, fontSize: 13, letterSpacing: "0.04em", cursor: "pointer" }}>{spinning ? "···" : t.spin}</button>
               </div>
-              <div style={{ fontSize: 12.5, color: "#9A8F80", marginTop: 4 }}>Zadetek prevzameš ob registraciji</div>
+              <div style={{ fontSize: 12.5, color: "#9A8F80", marginTop: 4 }}>{t.claimAfterRegister}</div>
             </div>
           )}
 
@@ -302,18 +306,18 @@ export default function SpinFlow({
                 <CoffeeIcon size={44} />
               </div>
               <div className="flex flex-col" style={{ gap: 6 }}>
-                <div style={{ fontWeight: 800, fontSize: 27, letterSpacing: "-0.01em" }}>Zadetek!</div>
-                <div style={{ fontSize: 15, color: MUTED, lineHeight: 1.5, maxWidth: 270 }}>Osvojil si <strong style={{ color: INK }}>{wonLabel}</strong> za prvi obisk.</div>
+                <div style={{ fontWeight: 800, fontSize: 27, letterSpacing: "-0.01em" }}>{t.hit}</div>
+                <div style={{ fontSize: 15, color: MUTED, lineHeight: 1.5, maxWidth: 270 }}>{t.youWon(wonLabel)}</div>
               </div>
               <div className="flex items-center" style={{ width: "100%", background: "linear-gradient(135deg,#FCEFD8,#F8E3C2)", borderRadius: 16, padding: 14, gap: 12 }}>
                 <div className="flex items-center justify-center" style={{ width: 42, height: 42, borderRadius: 12, background: "#FFFFFF", flexShrink: 0 }}><CoffeeIcon size={22} stroke={brandColor} w={1.8} /></div>
                 <div style={{ textAlign: "left" }}>
                   <div style={{ fontWeight: 800, fontSize: 15 }}>{wonLabel}</div>
-                  <div style={{ fontSize: 12, color: "#B4862F", fontWeight: 600 }}>velja 14 dni · ob prvem obisku</div>
+                  <div style={{ fontSize: 12, color: "#B4862F", fontWeight: 600 }}>{t.validDaysFirst}</div>
                 </div>
               </div>
               <button onClick={() => setStep("register")} className="flex items-center justify-center" style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: INK, color: CREAM, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 700, cursor: "pointer", gap: 8 }}>
-                Prevzemi nagrado
+                {t.claimReward}
                 <svg width="17" height="17" viewBox="0 0 24 24" style={{ fill: "none", stroke: CREAM, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </button>
             </div>
@@ -326,11 +330,11 @@ export default function SpinFlow({
                 <svg width="16" height="16" viewBox="0 0 24 24" style={{ fill: "none", stroke: INK, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M14.5 5.5 8 12l6.5 6.5" /></svg>
               </button>
               <div className="flex flex-col" style={{ gap: 6 }}>
-                <div style={{ fontWeight: 800, fontSize: 23, lineHeight: 1.1, letterSpacing: "-0.01em" }}>Skoraj tvoje</div>
-                <div style={{ fontSize: 14.5, color: MUTED, lineHeight: 1.5 }}>Email in geslo — da shranimo kupon, žige in točke ter zaščitimo tvoj račun.</div>
+                <div style={{ fontWeight: 800, fontSize: 23, lineHeight: 1.1, letterSpacing: "-0.01em" }}>{t.almostYours}</div>
+                <div style={{ fontSize: 14.5, color: MUTED, lineHeight: 1.5 }}>{t.emailPassNote}</div>
               </div>
               <div className="flex flex-col" style={{ gap: 8 }}>
-                <label htmlFor="reg-email" style={{ fontSize: 13, fontWeight: 700, color: MUTED }}>Email</label>
+                <label htmlFor="reg-email" style={{ fontSize: 13, fontWeight: 700, color: MUTED }}>{t.email}</label>
                 <input
                   id="reg-email"
                   value={email}
@@ -343,7 +347,7 @@ export default function SpinFlow({
                 />
               </div>
               <div className="flex flex-col" style={{ gap: 8 }}>
-                <label htmlFor="reg-pass" style={{ fontSize: 13, fontWeight: 700, color: MUTED }}>Geslo</label>
+                <label htmlFor="reg-pass" style={{ fontSize: 13, fontWeight: 700, color: MUTED }}>{t.password}</label>
                 <input
                   id="reg-pass"
                   value={password}
@@ -351,22 +355,22 @@ export default function SpinFlow({
                   onKeyDown={(e) => { if (e.key === "Enter") submitRegister(); }}
                   type="password"
                   autoComplete="current-password"
-                  placeholder="vsaj 4 znaki"
+                  placeholder={t.min4}
                   style={{ height: 54, border: "1.5px solid #E4D9C7", borderRadius: 16, background: CREAM, padding: "0 16px", fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 600, color: INK, outline: "none" }}
                 />
               </div>
               {regErr && <div style={{ fontSize: 12.5, color: "#C8512B", fontWeight: 600 }}>{regErr}</div>}
-              <button onClick={submitRegister} disabled={busy} style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: brandColor, color: INK, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 800, cursor: "pointer", opacity: busy ? 0.6 : 1 }}>{busy ? "…" : "Prevzemi nagrado"}</button>
+              <button onClick={submitRegister} disabled={busy} style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: brandColor, color: INK, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 800, cursor: "pointer", opacity: busy ? 0.6 : 1 }}>{busy ? "…" : t.claimReward}</button>
               <div className="flex items-center" style={{ gap: 12 }}>
                 <div style={{ flex: 1, height: 1, background: "#EBE1D1" }} />
-                <span style={{ fontSize: 12.5, color: "#9A8F80" }}>ali</span>
+                <span style={{ fontSize: 12.5, color: "#9A8F80" }}>{t.or}</span>
                 <div style={{ flex: 1, height: 1, background: "#EBE1D1" }} />
               </div>
               <button onClick={googleSignIn} disabled={busy} className="flex items-center justify-center" style={{ width: "100%", height: 52, border: "1.5px solid #E4D9C7", borderRadius: 16, background: "#FFFFFF", color: INK, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 15, fontWeight: 700, cursor: "pointer", gap: 10, opacity: busy ? 0.6 : 1 }}>
-                <GoogleLogo /> Nadaljuj z Googlom
+                <GoogleLogo /> {t.continueGoogle}
               </button>
               {gErr && <div style={{ fontSize: 12.5, color: "#C8512B", fontWeight: 600, textAlign: "center" }}>{gErr}</div>}
-              <div style={{ fontSize: 12, color: "#9A8F80", lineHeight: 1.45, textAlign: "center" }}>Z registracijo se strinjaš s pogoji. Brez spama.</div>
+              <div style={{ fontSize: 12, color: "#9A8F80", lineHeight: 1.45, textAlign: "center" }}>{t.termsNote}</div>
             </div>
           )}
 
@@ -377,8 +381,8 @@ export default function SpinFlow({
                 <svg width="30" height="30" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#5E7F52", strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M5 12.5l4.2 4.2L18.5 7.5" /></svg>
               </div>
               <div className="flex flex-col" style={{ gap: 4 }}>
-                <div style={{ fontWeight: 800, fontSize: 23, letterSpacing: "-0.01em" }}>Kupon te čaka!</div>
-                <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.5, maxWidth: 290 }}>Shranjen v tvoji denarnici. <strong style={{ color: INK }}>Aktivira se ob prvem skeniranju računa</strong> v lokalu — potem ga unovčiš.</div>
+                <div style={{ fontWeight: 800, fontSize: 23, letterSpacing: "-0.01em" }}>{t.couponWaits}</div>
+                <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.5, maxWidth: 290 }}>{t.couponSavedNote}</div>
               </div>
               <div style={{ width: "100%", background: INK, borderRadius: 20, padding: "22px 20px", position: "relative", color: CREAM }}>
                 <div style={{ position: "absolute", top: "50%", left: -10, width: 20, height: 20, borderRadius: "50%", background: CREAM, transform: "translateY(-50%)" }} />
@@ -392,24 +396,24 @@ export default function SpinFlow({
                 <div className="flex items-center" style={{ gap: 16 }}>
                   <div style={{ background: "#FFFFFF", borderRadius: 10, padding: 8 }}><FakeQr px={70} seed={7} /></div>
                   <div className="flex flex-col" style={{ gap: 3, textAlign: "left" }}>
-                    <div style={{ fontSize: 11, color: "#A89878" }}>Koda kupona</div>
+                    <div style={{ fontSize: 11, color: "#A89878" }}>{t.couponCode}</div>
                     <div style={{ fontWeight: 800, fontSize: 19, letterSpacing: "0.08em", whiteSpace: "nowrap" }}>{couponCode || "MORA-7C4D"}</div>
-                    <div style={{ fontSize: 12, color: "#A89878", marginTop: 2 }}>Aktivira se ob 1. skeniranju računa</div>
+                    <div style={{ fontSize: 12, color: "#A89878", marginTop: 2 }}>{t.activatesOnFirstScan}</div>
                   </div>
                 </div>
               </div>
-              <a href={`/p/${code}`} className="flex items-center justify-center" style={{ width: "100%", height: 54, borderRadius: 16, background: INK, color: CREAM, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 15, fontWeight: 700, textDecoration: "none" }}>Na mojo stran zvestobe</a>
+              <a href={`/p/${code}`} className="flex items-center justify-center" style={{ width: "100%", height: 54, borderRadius: 16, background: INK, color: CREAM, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 15, fontWeight: 700, textDecoration: "none" }}>{t.toMyLoyalty}</a>
             </div>
           )}
         </div>
 
         <div className="flex items-center justify-center" style={{ padding: "12px 22px 16px", borderTop: "1px solid #F1E8D9", gap: 6 }}>
-          <span style={{ fontSize: 11, color: "#B7AB97" }}>powered by</span>
+          <span style={{ fontSize: 11, color: "#B7AB97" }}>{t.poweredBy}</span>
           <span style={{ fontWeight: 800, fontSize: 12, color: INK }}>{BRAND}</span>
         </div>
       </div>
 
-      <div style={{ marginTop: 14, textAlign: "center", fontSize: 12, color: "#9A8F80" }}>Brez prenosa aplikacije · velja samo v tem lokalu</div>
+      <div style={{ marginTop: 14, textAlign: "center", fontSize: 12, color: "#9A8F80" }}>{t.noAppNote}</div>
     </main>
   );
 }

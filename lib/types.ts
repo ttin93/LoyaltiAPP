@@ -20,8 +20,20 @@ export interface Venue {
   google_review_url?: string | null; // za Google-ocene autopilot (opcijsko)
   language?: string; // jezik gostovega flowa (sl/en/hr/sr/bs/de)
   wheel_config?: WheelConfig | null; // konfiguracija kolesa sreče
+  automations?: Automations | null; // marketing avtomatizacije
   created_at: string;
 }
+
+export interface Automation {
+  enabled: boolean;
+  message: string;
+  coupon: boolean;
+  couponName: string;
+  days?: number; // pogrešamo te
+  months?: number; // obletnica
+  date?: string; // rojstni dan lokala (MM-DD)
+}
+export type Automations = Record<string, Automation>;
 
 export interface WheelSegment {
   label: string;

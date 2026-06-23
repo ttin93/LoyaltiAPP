@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow, WheelConfig, WheelSegment } from "@/lib/types";
-import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, saveWheel, signOut } from "@/app/actions";
+import { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow, WheelConfig, WheelSegment, Automation, Automations } from "@/lib/types";
+import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, saveWheel, saveAutomations, signOut } from "@/app/actions";
 import Scanner from "@/app/components/Scanner";
 import QrCode from "./QrCode";
 
@@ -51,6 +51,32 @@ function StarRow({ n, size = 14 }: { n: number; size?: number }) {
   return <span style={{ letterSpacing: 1, whiteSpace: "nowrap" }}>{[1, 2, 3, 4, 5].map((i) => <span key={i} style={{ color: i <= n ? AMBER : "#E4D9C7", fontSize: size }}>★</span>)}</span>;
 }
 const LANGS: [string, string][] = [["sl", "Slovenščina 🇸🇮"], ["en", "English 🇬🇧"], ["hr", "Hrvaški 🇭🇷"], ["sr", "Srbski 🇷🇸"], ["bs", "Bosanski 🇧🇦"], ["de", "Nemški 🇩🇪"]];
+
+// Marketing avtomatizacije
+const AUTO_DEFS: { key: string; label: string; desc: string; emoji: string; field?: "days" | "months" | "date" }[] = [
+  { key: "welcome", label: "Dobrodošlica", desc: "Ko se gost prvič prijavi.", emoji: "👋" },
+  { key: "inactive", label: "Pogrešamo te", desc: "Ko gost X dni ne pride.", emoji: "🥺", field: "days" },
+  { key: "anniversary", label: "Obletnica pridružitve", desc: "Ko mine X mesecev odkar se je gost pridružil.", emoji: "🎂", field: "months" },
+  { key: "guest_birthday", label: "Rojstni dan gosta", desc: "Na gostov rojstni dan (rabi rojstni datum — dodamo ob prijavi).", emoji: "🎈" },
+  { key: "venue_birthday", label: "Rojstni dan lokala", desc: "Na obletnico lokala.", emoji: "🎉", field: "date" },
+  { key: "card_complete", label: "Polna kartica", desc: "Ko gost napolni kartonček.", emoji: "✅" },
+];
+function defaultAuto(key: string): Automation {
+  const m: Record<string, Partial<Automation>> = {
+    welcome: { message: "Dobrodošel v naši kavarni! ☕ Tvoj prvi obisk si zasluži posebno pozornost." },
+    inactive: { message: "Pogrešamo te! 💛 Pridi na kavo ta teden — čaka te presenečenje.", days: 30, coupon: true },
+    anniversary: { message: "Že eno leto skupaj! 🎂 Hvala za zvestobo — kava gre na nas.", months: 12, coupon: true },
+    guest_birthday: { message: "Vse najboljše! 🎈 Danes te častimo s sladico ob kavi.", coupon: true, couponName: "Sladica" },
+    venue_birthday: { message: "Praznujemo rojstni dan lokala! 🎉 Ta teden te častimo.", date: "01-01", coupon: true },
+    card_complete: { message: "Bravo, kartonček je poln! 🎉 Nagrada te čaka v denarnici." },
+  };
+  return { enabled: false, message: "", coupon: false, couponName: "Brezplačna kava", ...m[key] };
+}
+function buildAutomations(saved?: Automations | null): Automations {
+  const out: Automations = {};
+  for (const d of AUTO_DEFS) out[d.key] = { ...defaultAuto(d.key), ...(saved?.[d.key] || {}) };
+  return out;
+}
 const DEFAULT_WHEEL: WheelConfig = { enabled: true, mode: "fixed", winner: 0, segments: [{ label: "Brezplačna kava", weight: 1 }, { label: "−10 %", weight: 1 }, { label: "+30 točk", weight: 1 }, { label: "Piškot", weight: 1 }, { label: "−15 %", weight: 1 }, { label: "Sirup", weight: 1 }] };
 const SEGFILL = ["#E2A04A", "#C4623D", "#5E7F52", "#3D5A80", "#8E5BA6", "#D98C3A", "#7A9E6E", "#B05050"];
 
@@ -132,6 +158,10 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   const [couponOn, setCouponOn] = useState(false);
   const [couponName, setCouponName] = useState("Brezplačna kava");
   const [segMinPts, setSegMinPts] = useState(100);
+  const [mktTab, setMktTab] = useState<"campaign" | "auto">("campaign");
+  const [autos, setAutos] = useState<Automations>(() => buildAutomations((venue as { automations?: Automations | null }).automations));
+  const setAuto = (key: string, patch: Partial<Automation>) => setAutos((a) => ({ ...a, [key]: { ...a[key], ...patch } }));
+  const autoCount = Object.values(autos).filter((a) => a.enabled).length;
 
   // MARKETING — kdo so dejanski prejemniki izbranega segmenta (minus ročno odstranjeni)
   const segCustomers = useMemo(() => {
@@ -366,6 +396,9 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                 )}
 
                 {sec === "marketing" && (
+                  <div className="flex flex-col" style={{ gap: 16 }}>
+                    <div className="flex" style={{ background: "#F1E8D9", borderRadius: 12, padding: 4, maxWidth: 380 }}>{([["campaign", "Enkratna kampanja"], ["auto", `Avtomatizacije${autoCount ? ` · ${autoCount}` : ""}`]] as const).map(([k, l]) => <button key={k} onClick={() => setMktTab(k)} style={{ flex: 1, height: 38, border: "none", borderRadius: 9, background: mktTab === k ? "#fff" : "transparent", color: mktTab === k ? INK : "#9A8F80", fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{l}</button>)}</div>
+                    {mktTab === "campaign" && (
                   <div className="grid gap-3.5 lg:grid-cols-[1.4fr_1fr]">
                     <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>
                       <div className="flex items-center justify-between"><span style={{ fontWeight: 700, fontSize: 15 }}>Nova kampanja</span><span className="flex items-center" style={{ height: 24, padding: "0 10px", borderRadius: 999, background: "rgba(94,127,82,0.14)", color: "#3E5536", fontSize: 11, fontWeight: 800 }}>E-pošta</span></div>
@@ -406,6 +439,41 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                       {([["Najboljši (200+ t)", seg.best, "Najboljši"], ["Aktivni (≤14 dni)", seg.active, "Aktivni"], ["Neaktivni (21+ dni)", seg.inactive, "Neaktivni 21+ dni"], ["Vsi gostje", customers.length, "Vsi gostje"]] as const).map(([l, n, key]) => <button key={key} onClick={() => { setSegSel(key); setRemoved(new Set()); }} className="flex items-center justify-between" style={{ padding: "9px 10px", borderRadius: 9, background: segSel === key ? "#FCEFD8" : "transparent", border: "none", cursor: "pointer", fontFamily: JAK, textAlign: "left" }}><span style={{ fontSize: 13.5, fontWeight: segSel === key ? 700 : 600, color: segSel === key ? INK : MUTED }}>{l}</span><span style={{ fontWeight: 800, fontSize: 15, color: "#B4862F" }}>{n}</span></button>)}
                       <span style={{ fontSize: 12.5, color: "#9A8F80", lineHeight: 1.5, marginTop: 4 }}>Klikni segment za izbor. »Po meri« nastaviš prag točk, prejemnike pa ročno odstraniš na levi.</span>
                     </div>
+                  </div>
+                    )}
+                    {mktTab === "auto" && (
+                      <div className="flex flex-col" style={{ gap: 14, maxWidth: 760 }}>
+                        <div style={{ background: "#FCEFD8", borderRadius: 14, padding: "14px 16px", fontSize: 13, lineHeight: 1.5, color: "#7A5E1E" }}>Avtomatizacije pošljejo e-pošto <b>same</b>, ko se zgodi sprožilec — vklopiš jih enkrat. (Dejansko pošiljanje se vklopi z e-poštnim providerjem.)</div>
+                        {AUTO_DEFS.map((d) => {
+                          const a = autos[d.key];
+                          return (
+                            <div key={d.key} style={{ ...card, display: "flex", flexDirection: "column", gap: a.enabled ? 12 : 0, padding: 16 }}>
+                              <div className="flex items-center justify-between" style={{ gap: 12 }}>
+                                <div className="flex items-center" style={{ gap: 12, minWidth: 0 }}>
+                                  <span style={{ fontSize: 26, flexShrink: 0 }}>{d.emoji}</span>
+                                  <div style={{ minWidth: 0 }}><div style={{ fontWeight: 700, fontSize: 15 }}>{d.label}</div><div style={{ fontSize: 12.5, color: "#9A8F80", lineHeight: 1.4 }}>{d.desc}</div></div>
+                                </div>
+                                <button onClick={() => setAuto(d.key, { enabled: !a.enabled })} aria-label="vklop" style={{ width: 50, height: 28, borderRadius: 999, border: "none", background: a.enabled ? GREEN : "#D9CDBA", position: "relative", cursor: "pointer", flexShrink: 0 }}><span style={{ position: "absolute", top: 3, left: a.enabled ? 25 : 3, width: 22, height: 22, borderRadius: "50%", background: "#fff", transition: "left .15s" }} /></button>
+                              </div>
+                              {a.enabled && (
+                                <div className="flex flex-col" style={{ gap: 10, borderTop: "1px solid #F1E8D9", paddingTop: 12 }}>
+                                  {d.field === "days" && <label className="flex items-center justify-between" style={{ background: CREAM, borderRadius: 12, padding: "9px 14px" }}><span style={{ fontSize: 13, color: MUTED }}>Po koliko dneh neaktivnosti</span><input type="number" min={1} value={a.days ?? 30} onChange={(e) => setAuto(d.key, { days: Math.max(1, Number(e.target.value) || 30) })} style={{ ...inp, width: 80 }} /></label>}
+                                  {d.field === "months" && <label className="flex items-center justify-between" style={{ background: CREAM, borderRadius: 12, padding: "9px 14px" }}><span style={{ fontSize: 13, color: MUTED }}>Po koliko mesecih</span><input type="number" min={1} value={a.months ?? 12} onChange={(e) => setAuto(d.key, { months: Math.max(1, Number(e.target.value) || 12) })} style={{ ...inp, width: 80 }} /></label>}
+                                  {d.field === "date" && <label className="flex items-center justify-between" style={{ background: CREAM, borderRadius: 12, padding: "9px 14px" }}><span style={{ fontSize: 13, color: MUTED }}>Datum lokala</span><input type="text" value={a.date ?? "01-01"} onChange={(e) => setAuto(d.key, { date: e.target.value })} placeholder="MM-DD" style={{ ...inp, width: 110 }} /></label>}
+                                  <textarea value={a.message} onChange={(e) => setAuto(d.key, { message: e.target.value })} rows={2} placeholder="Sporočilo…" style={{ width: "100%", border: "1.5px solid #E4D9C7", borderRadius: 12, background: CREAM, padding: 12, fontFamily: JAK, fontSize: 14, color: INK, outline: "none", boxSizing: "border-box", resize: "vertical" }} />
+                                  <div className="flex items-center justify-between" style={{ background: CREAM, borderRadius: 12, padding: "9px 14px" }}>
+                                    <span style={{ fontSize: 13, fontWeight: 700 }}>🎟️ Pripni kupon</span>
+                                    <button onClick={() => setAuto(d.key, { coupon: !a.coupon })} aria-label="kupon" style={{ width: 44, height: 24, borderRadius: 999, border: "none", background: a.coupon ? GREEN : "#D9CDBA", position: "relative", cursor: "pointer", flexShrink: 0 }}><span style={{ position: "absolute", top: 3, left: a.coupon ? 23 : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left .15s" }} /></button>
+                                  </div>
+                                  {a.coupon && <input value={a.couponName} onChange={(e) => setAuto(d.key, { couponName: e.target.value })} placeholder="ime kupona" style={inp} />}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                        <button onClick={() => run(() => saveAutomations(autos), "Avtomatizacije shranjene.")} style={{ height: 48, padding: "0 24px", border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: "pointer", alignSelf: "flex-start" }}>Shrani avtomatizacije</button>
+                      </div>
+                    )}
                   </div>
                 )}
 

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createSSRClient, getCurrentUser } from "@/lib/supabase/ssrServer";
 import { getServiceClient } from "@/lib/supabase/server";
 import { parseFiscalQR } from "@/lib/fiscalQr";
-import type { WheelConfig } from "@/lib/types";
+import type { WheelConfig, Automations } from "@/lib/types";
 
 function slugify(s: string): string {
   return (
@@ -211,6 +211,14 @@ export async function saveWheel(config: WheelConfig) {
   const { db, venue } = await ownerVenue();
   if (!venue) throw new Error("Nimaš lokala.");
   await db.from("venues").update({ wheel_config: config }).eq("id", venue.id);
+  revalidatePath("/dashboard");
+}
+
+/** Shrani marketing avtomatizacije. */
+export async function saveAutomations(autos: Automations) {
+  const { db, venue } = await ownerVenue();
+  if (!venue) throw new Error("Nimaš lokala.");
+  await db.from("venues").update({ automations: autos }).eq("id", venue.id);
   revalidatePath("/dashboard");
 }
 

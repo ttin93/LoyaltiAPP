@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BRAND } from "@/lib/brand";
+import NavAuth from "@/app/components/NavAuth";
 
 const INK = "#2A241D";
 const CREAM = "#FBF7F0";
@@ -119,8 +120,7 @@ export default function Home() {
             <a href="#cene" style={{ fontSize: 14.5, fontWeight: 600, color: MUTED }}>Cene</a>
           </div>
           <div className="ml-auto flex items-center gap-2.5">
-            <Link href={PARTNER} className="hidden sm:flex" style={{ height: 42, padding: "0 16px", borderRadius: 12, color: INK, fontSize: 14.5, fontWeight: 700, alignItems: "center" }}>Prijava</Link>
-            <Link href={PARTNER} style={{ height: 42, padding: "0 20px", borderRadius: 12, background: INK, color: PAPER, fontSize: 14.5, fontWeight: 700, display: "flex", alignItems: "center" }}>Začni brezplačno</Link>
+            <NavAuth />
           </div>
         </div>
       </div>

@@ -120,7 +120,8 @@ export async function updateVenueSettings(formData: FormData) {
     const dav = String(formData.get("davcna_stevilka")).replace(/\D/g, "").slice(0, 8);
     patch.davcna_stevilka = dav.length === 8 ? dav : null;
   }
-  await db.from("venues").update(patch).eq("id", venue.id);
+  const { error } = await db.from("venues").update(patch).eq("id", venue.id);
+  if (error) throw error;
   revalidatePath("/dashboard");
 }
 

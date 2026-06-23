@@ -120,6 +120,12 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   const [custSel, setCustSel] = useState<Customer | null>(null);
   const [settingsColor, setSettingsColor] = useState(venue.brand_color || "#E2A04A");
   const [lang, setLang] = useState((venue as { language?: string }).language || "sl");
+  const [sName, setSName] = useState(venue.name);
+  const [sPoints, setSPoints] = useState(String(venue.points_per_visit));
+  const [sGoal, setSGoal] = useState(String(venue.stamp_goal ?? 10));
+  const [sWindow, setSWindow] = useState(String(venue.scan_window_hours));
+  const [sCooldown, setSCooldown] = useState(String((venue as { scan_cooldown_minutes?: number }).scan_cooldown_minutes ?? 0));
+  const [sGoogle, setSGoogle] = useState(venue.google_review_url ?? "");
   const [wheel, setWheel] = useState<WheelConfig>(() => (venue.wheel_config && Array.isArray(venue.wheel_config.segments) && venue.wheel_config.segments.length ? venue.wheel_config : DEFAULT_WHEEL));
   function patchWheel(p: Partial<WheelConfig>) { setWheel((w) => ({ ...w, ...p })); }
   function setSeg(i: number, p: Partial<WheelSegment>) { setWheel((w) => ({ ...w, segments: w.segments.map((s, j) => (j === i ? { ...s, ...p } : s)) })); }
@@ -637,13 +643,12 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                       </form>
                     </div>
                     {/* lokal in točke */}
-                    <form action={async (fd) => { await updateVenueSettings(fd); router.refresh(); flash("Nastavitve shranjene."); }} style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>
+                    <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>
                       <span style={{ fontWeight: 700, fontSize: 15 }}>Lokal in pravila</span>
-                      <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Ime lokala</span><input name="name" defaultValue={venue.name} style={inp} /></label>
+                      <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Ime lokala</span><input value={sName} onChange={(e) => setSName(e.target.value)} style={inp} /></label>
                       {/* barva — color picker + hex */}
                       <div className="flex flex-col" style={{ gap: 5 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Barva znamke</span>
-                        <input type="hidden" name="brand_color" value={settingsColor} />
                         <div className="flex items-center" style={{ gap: 10 }}>
                           <label className="flex items-center justify-center" style={{ width: 46, height: 46, borderRadius: 12, border: "1.5px solid #E4D9C7", background: settingsColor, cursor: "pointer", position: "relative", overflow: "hidden", flexShrink: 0 }}><input type="color" value={/^#[0-9a-fA-F]{6}$/.test(settingsColor) ? settingsColor : "#E2A04A"} onChange={(e) => setSettingsColor(e.target.value)} style={{ position: "absolute", inset: 0, width: "150%", height: "150%", opacity: 0, cursor: "pointer", border: "none" }} /></label>
                           <div className="flex items-center" style={{ gap: 8, border: "1.5px solid #E4D9C7", borderRadius: 12, height: 46, padding: "0 14px", background: "#fff", flex: 1, maxWidth: 200 }}>
@@ -654,18 +659,18 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                         </div>
                       </div>
                       <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                        <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Točke na obisk</span><input name="points_per_visit" type="number" min={0} defaultValue={String(venue.points_per_visit)} style={inp} /></label>
-                        <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Žigov za kartonček</span><input name="stamp_goal" type="number" min={4} max={12} defaultValue={String(venue.stamp_goal ?? 10)} style={inp} /></label>
+                        <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Točke na obisk</span><input value={sPoints} onChange={(e) => setSPoints(e.target.value)} type="number" min={0} style={inp} /></label>
+                        <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Žigov za kartonček</span><input value={sGoal} onChange={(e) => setSGoal(e.target.value)} type="number" min={4} max={12} style={inp} /></label>
                       </div>
                       <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                        <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Časovno okno računa (ure)</span><input name="scan_window_hours" type="number" min={1} defaultValue={String(venue.scan_window_hours)} style={inp} /></label>
-                        <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Razmik med skeniranji (min)</span><input name="scan_cooldown_minutes" type="number" min={0} defaultValue={String((venue as { scan_cooldown_minutes?: number }).scan_cooldown_minutes ?? 0)} style={inp} /></label>
+                        <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Časovno okno računa (ure)</span><input value={sWindow} onChange={(e) => setSWindow(e.target.value)} type="number" min={1} style={inp} /></label>
+                        <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Razmik med skeniranji (min)</span><input value={sCooldown} onChange={(e) => setSCooldown(e.target.value)} type="number" min={0} style={inp} /></label>
                       </div>
                       <span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4, marginTop: -6 }}>Razmik = koliko časa mora miniti, preden ista stranka spet skenira (npr. 60 = ena kava na uro). 0 = brez omejitve.</span>
-                      <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Google povezava za ocene</span><input name="google_review_url" type="url" defaultValue={venue.google_review_url ?? ""} placeholder="https://g.page/r/…" style={inp} /><span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Kamor pošljemo zadovoljne goste (4–5★). Najdeš jo v Google Business profilu → »Pridobi več ocen«.</span></label>
+                      <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Google povezava za ocene</span><input value={sGoogle} onChange={(e) => setSGoogle(e.target.value)} type="url" placeholder="https://g.page/r/…" style={inp} /><span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Kamor pošljemo zadovoljne goste (4–5★). Najdeš jo v Google Business profilu → »Pridobi več ocen«.</span></label>
                       <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Jezik gostove strani</span><select name="language" value={lang} onChange={(e) => setLang(e.target.value)} style={inp}>{LANGS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Jezik celotnega flowa za goste. Prevodi (EN/HR/SR/BS/DE) se vklopijo kmalu — zaenkrat se nastavitev shrani.</span></label>
-                      <button style={{ marginTop: 4, height: 48, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: "pointer", alignSelf: "flex-start", padding: "0 22px" }}>Shrani</button>
-                    </form>
+                      <button onClick={() => { const fd = new FormData(); fd.set("name", sName); fd.set("brand_color", settingsColor); fd.set("points_per_visit", sPoints); fd.set("stamp_goal", sGoal); fd.set("scan_window_hours", sWindow); fd.set("scan_cooldown_minutes", sCooldown); fd.set("google_review_url", sGoogle); fd.set("language", lang); run(() => updateVenueSettings(fd), "Nastavitve shranjene."); }} style={{ marginTop: 4, height: 48, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: "pointer", alignSelf: "flex-start", padding: "0 22px" }}>Shrani</button>
+                    </div>
                   </div>
                 )}
 

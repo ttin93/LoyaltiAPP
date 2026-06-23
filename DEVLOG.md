@@ -55,6 +55,7 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 - DB: migracija [`0015_subscriptions.sql`](supabase/0015_subscriptions.sql) — venues + `plan, billing_cycle, subscription_status, commitment_months, subscribed_at, custom_price_eur` (+ pgrst reload).
 - Urejevalnik lokala dobi naročninska polja (paket, obračun, status, vezava, cena po meri za Palačo) + živ izračun prispevka k MRR; `adminUpdateVenue` jih shrani + ob prehodu na plačljiv paket zabeleži `subscribed_at`.
 - **Pravi Stripe še NI** — pakete dodeljuješ ročno; prihodek je izračunan iz aktivnih naročnin (jasno označeno v UI). Naslednji korak za pravo plačevanje = Stripe.
+- **Filtri v Naročninah** (dodano isti dan): iskanje (lokal/lastnik/koda), filter po paketu / ciklu / statusu, toggle "Samo plačujoči" + "Z vezavo", sortiranje (cena ↓↑ / ime / najnovejša naročnina / vezava) + živ podseštevek "**N lokalov · MRR prikazanih: X €**" + prazno stanje. Preverjeno v živo (paying-only → 1/4, MRR 79,99 €).
 - Preverjeno v živo: round-trip (PrTinu → Espresso letno → MRR 39,99 € / ARR 479,88 € → nazaj na free). `tsc` čist.
 
 ### 2026-06-24 — seja 47 (SUPER ADMIN panel — platformni nadzor nad vsemi lokali)

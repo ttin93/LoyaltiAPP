@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { SAVenue, SAOwner, SATotals, SADay, SARevenue } from "./page";
 import { adminUpdateVenue } from "./actions";
 import type { PlanKey, SubStatus } from "@/lib/types";
-import { PLANS, PLAN_ORDER, STATUS_LABEL, YEARLY_DISCOUNT, fmtEur, chargedAmount, monthlyEquivalent } from "@/lib/plans";
+import { PLANS, PLAN_ORDER, STATUS_LABEL, YEARLY_DISCOUNT, fmtEur, chargedAmount, monthlyEquivalent, isPaying } from "@/lib/plans";
 
 const INK = "#2A241D";
 const CREAM = "#FBF7F0";
@@ -324,10 +324,50 @@ function Narocnine({ revenue: r, venues, onOpen }: { revenue: SARevenue; venues:
   const maxPlanMrr = Math.max(1, ...r.byPlan.map((p) => p.mrr));
   // primer letnega popusta na Doppio
   const dMonthly = PLANS.doppio.monthly || 0;
-  const sorted = useMemo(() => {
-    const rank = (v: SAVenue) => (((v.plan ?? "free") !== "free") ? 1 : 0);
-    return [...venues].sort((a, b) => rank(b) - rank(a) || monthlyEquivalent(b.plan, b.billing_cycle, b.custom_price_eur) - monthlyEquivalent(a.plan, a.billing_cycle, a.custom_price_eur));
-  }, [venues]);
+
+  // ---- filtri ----
+  const [q, setQ] = useState("");
+  const [fPlan, setFPlan] = useState<"all" | PlanKey>("all");
+  const [fCycle, setFCycle] = useState<"all" | "monthly" | "yearly">("all");
+  const [fStatus, setFStatus] = useState<"all" | SubStatus>("all");
+  const [payingOnly, setPayingOnly] = useState(false);
+  const [committedOnly, setCommittedOnly] = useState(false);
+  const [sortKey, setSortKey] = useState<"mrr_desc" | "mrr_asc" | "name" | "new" | "commit_desc">("mrr_desc");
+
+  const me = (v: SAVenue) => monthlyEquivalent(v.plan, v.billing_cycle, v.custom_price_eur);
+  const filtered = useMemo(() => {
+    const qq = q.trim().toLowerCase();
+    const list = venues.filter((v) => {
+      const plan = (v.plan ?? "free") as PlanKey;
+      const cyc = v.billing_cycle ?? "monthly";
+      const st = v.subscription_status ?? "active";
+      if (qq && !(v.name.toLowerCase().includes(qq) || (v.ownerEmail || "").toLowerCase().includes(qq) || v.public_code.toLowerCase().includes(qq))) return false;
+      if (fPlan !== "all" && plan !== fPlan) return false;
+      if (fCycle !== "all" && (plan === "free" || cyc !== fCycle)) return false;
+      if (fStatus !== "all" && st !== fStatus) return false;
+      if (payingOnly && !isPaying(plan, st)) return false;
+      if (committedOnly && !((v.commitment_months ?? 0) > 0)) return false;
+      return true;
+    });
+    list.sort((a, b) => {
+      if (sortKey === "name") return a.name.localeCompare(b.name, "sl");
+      if (sortKey === "mrr_asc") return me(a) - me(b);
+      if (sortKey === "new") return (b.subscribed_at || "").localeCompare(a.subscribed_at || "");
+      if (sortKey === "commit_desc") return (b.commitment_months ?? 0) - (a.commitment_months ?? 0);
+      const rank = (v: SAVenue) => (((v.plan ?? "free") !== "free") ? 1 : 0);
+      return rank(b) - rank(a) || me(b) - me(a);
+    });
+    return list;
+  }, [venues, q, fPlan, fCycle, fStatus, payingOnly, committedOnly, sortKey]);
+
+  const filteredMrr = useMemo(
+    () => Math.round(filtered.reduce((a, v) => a + (isPaying(v.plan, v.subscription_status) ? me(v) : 0), 0) * 100) / 100,
+    [filtered], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const anyFilter = q.trim() !== "" || fPlan !== "all" || fCycle !== "all" || fStatus !== "all" || payingOnly || committedOnly;
+  function clearFilters() {
+    setQ(""); setFPlan("all"); setFCycle("all"); setFStatus("all"); setPayingOnly(false); setCommittedOnly(false);
+  }
 
   return (
     <div className="flex flex-col" style={{ gap: 18 }}>
@@ -390,12 +430,51 @@ function Narocnine({ revenue: r, venues, onOpen }: { revenue: SARevenue; venues:
         </Card>
       </div>
 
+      {/* FILTRI */}
+      <div style={{ background: CREAM, border: `1px solid ${BORD}`, borderRadius: 14, padding: 12 }}>
+        <div className="flex flex-wrap items-center" style={{ gap: 8 }}>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Išči lokal, lastnika ali kodo…" style={{ flex: "1 1 200px", minWidth: 150, height: 38, border: `1px solid ${BORD}`, borderRadius: 10, background: BG, padding: "0 12px", fontFamily: JAK, fontSize: 13.5, color: INK, outline: "none" }} />
+          <select value={fPlan} onChange={(e) => setFPlan(e.target.value as "all" | PlanKey)} style={fsel}>
+            <option value="all">Vsi paketi</option>
+            {PLAN_ORDER.map((p) => <option key={p} value={p}>{PLANS[p].label}</option>)}
+          </select>
+          <select value={fCycle} onChange={(e) => setFCycle(e.target.value as "all" | "monthly" | "yearly")} style={fsel}>
+            <option value="all">Vsi cikli</option>
+            <option value="monthly">Mesečno</option>
+            <option value="yearly">Letno</option>
+          </select>
+          <select value={fStatus} onChange={(e) => setFStatus(e.target.value as "all" | SubStatus)} style={fsel}>
+            <option value="all">Vsi statusi</option>
+            {Object.keys(STATUS_LABEL).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+          </select>
+          <select value={sortKey} onChange={(e) => setSortKey(e.target.value as typeof sortKey)} style={fsel}>
+            <option value="mrr_desc">Cena ↓</option>
+            <option value="mrr_asc">Cena ↑</option>
+            <option value="name">Ime A–Ž</option>
+            <option value="new">Najnovejša naročnina</option>
+            <option value="commit_desc">Vezava ↓</option>
+          </select>
+        </div>
+        <div className="flex flex-wrap items-center" style={{ gap: 8, marginTop: 10 }}>
+          <Chip active={payingOnly} onClick={() => setPayingOnly((v) => !v)}>Samo plačujoči</Chip>
+          <Chip active={committedOnly} onClick={() => setCommittedOnly((v) => !v)}>Z vezavo</Chip>
+          {anyFilter && <button onClick={clearFilters} style={{ height: 30, padding: "0 12px", borderRadius: 999, border: "none", background: "none", color: CORAL, fontFamily: JAK, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>✕ Počisti filtre</button>}
+        </div>
+      </div>
+
+      {/* podseštevek */}
+      <div className="flex items-center justify-between" style={{ padding: "0 2px" }}>
+        <span style={{ fontSize: 12.5, color: MUTED }}>{filtered.length} {filtered.length === 1 ? "lokal" : "lokalov"}{anyFilter ? ` od ${venues.length}` : ""}</span>
+        <span style={{ fontSize: 12.5, color: MUTED }}>MRR prikazanih: <strong style={{ color: GREEN }}>{fmtEur(filteredMrr)}</strong></span>
+      </div>
+
       {/* tabela naročnin */}
       <div style={{ background: CREAM, border: `1px solid ${BORD}`, borderRadius: 16, overflow: "hidden" }}>
         <div className="hidden md:grid" style={{ gridTemplateColumns: "2fr 1.2fr 1fr 1.2fr 1fr 0.9fr", gap: 10, padding: "12px 16px", borderBottom: `1px solid ${BORD}`, fontSize: 11.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: MUTED }}>
           <span>Lokal</span><span>Paket</span><span>Cikel</span><span>Cena</span><span>Status</span><span>Vezava</span>
         </div>
-        {sorted.map((v) => {
+        {filtered.length === 0 && <div style={{ padding: 28 }}><Empty>Ni zadetkov za te filtre.</Empty></div>}
+        {filtered.map((v) => {
           const plan = (v.plan ?? "free") as PlanKey;
           const me = monthlyEquivalent(plan, v.billing_cycle, v.custom_price_eur);
           const yearly = v.billing_cycle === "yearly";
@@ -627,6 +706,7 @@ function VenueModal({ venue, onClose }: { venue: SAVenue; onClose: () => void })
 /* ---------------- helpers ---------------- */
 
 const inp: React.CSSProperties = { height: 44, width: "100%", border: `1px solid ${BORD}`, borderRadius: 11, background: CREAM, padding: "0 13px", fontFamily: JAK, fontSize: 14.5, color: INK, outline: "none" };
+const fsel: React.CSSProperties = { height: 38, border: `1px solid ${BORD}`, borderRadius: 10, background: BG, padding: "0 10px", fontFamily: JAK, fontSize: 13, fontWeight: 600, color: INK, cursor: "pointer", outline: "none" };
 const linkBtn: React.CSSProperties = { flex: 1, textAlign: "center", height: 42, lineHeight: "42px", borderRadius: 11, border: `1px solid ${BORD}`, background: CREAM, color: INK, fontSize: 13.5, fontWeight: 700, textDecoration: "none" };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -658,4 +738,15 @@ function Avatar({ name, color, big }: { name: string; color?: string; big?: bool
 
 function Empty({ children }: { children: React.ReactNode }) {
   return <div style={{ fontSize: 13.5, color: MUTED, textAlign: "center", padding: "8px 0" }}>{children}</div>;
+}
+
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{ height: 30, padding: "0 13px", borderRadius: 999, border: `1px solid ${active ? INK : BORD}`, background: active ? INK : "transparent", color: active ? CREAM : MUTED, fontFamily: JAK, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}
+    >
+      {children}
+    </button>
+  );
 }

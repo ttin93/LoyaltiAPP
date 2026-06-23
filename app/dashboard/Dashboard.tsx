@@ -90,6 +90,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   const [custQuery, setCustQuery] = useState("");
   const [custSel, setCustSel] = useState<Customer | null>(null);
   const [settingsColor, setSettingsColor] = useState(venue.brand_color || "#E2A04A");
+  const [lang, setLang] = useState((venue as { language?: string }).language || "sl");
   const [wheel, setWheel] = useState<WheelConfig>(() => (venue.wheel_config && Array.isArray(venue.wheel_config.segments) && venue.wheel_config.segments.length ? venue.wheel_config : DEFAULT_WHEEL));
   function patchWheel(p: Partial<WheelConfig>) { setWheel((w) => ({ ...w, ...p })); }
   function setSeg(i: number, p: Partial<WheelSegment>) { setWheel((w) => ({ ...w, segments: w.segments.map((s, j) => (j === i ? { ...s, ...p } : s)) })); }
@@ -123,8 +124,26 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   }, [customers, stats]);
 
   const [segSel, setSegSel] = useState("Najboljši");
-  const segCount = segSel === "Najboljši" ? seg.best : segSel === "Neaktivni 21+ dni" ? seg.inactive : seg.active;
   const [campaignMsg, setCampaignMsg] = useState("Pogrešamo te! Ta teden −20% na vse kave ☕");
+  const [removed, setRemoved] = useState<Set<string>>(new Set());
+  const [couponOn, setCouponOn] = useState(false);
+  const [couponName, setCouponName] = useState("Brezplačna kava");
+  const [segMinPts, setSegMinPts] = useState(100);
+
+  // MARKETING — kdo so dejanski prejemniki izbranega segmenta (minus ročno odstranjeni)
+  const segCustomers = useMemo(() => {
+    const now = Date.now();
+    return customers.filter((c) => {
+      const v = stats.visits.get(c.id);
+      const days = v ? (now - new Date(v.last).getTime()) / 864e5 : Infinity;
+      if (segSel === "Najboljši") return c.points >= 200;
+      if (segSel === "Aktivni") return !!v && days <= 14;
+      if (segSel === "Neaktivni 21+ dni") return !v || days >= 21;
+      if (segSel === "Po meri") return c.points >= segMinPts;
+      return true; // Vsi gostje
+    });
+  }, [customers, segSel, stats, segMinPts]);
+  const recipients = segCustomers.filter((c) => !removed.has(c.id));
 
   // ANALITIKA — dinamičen razpon (7/30/90 dni)
   const ana = useMemo(() => {
@@ -276,10 +295,22 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                       <Kpi l="Najboljši gosti" v={seg.best} d="200+ točk" />
                       <Kpi l="Neaktivni 21+ dni" v={seg.inactive} d="za reaktivacijo" dc={CORAL} />
                     </div>
-                    <div style={card}><div style={{ fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Skeniranja po dnevih</div><div className="flex items-end" style={{ gap: 4, height: 150 }}>{ana.days.map((d, i) => <div key={i} className="flex flex-1 flex-col items-center justify-end" style={{ gap: 5, height: "100%" }}><div style={{ width: "100%", height: `${Math.round((d.count / ana.maxDay) * 130)}px`, minHeight: d.count ? 4 : 0, borderRadius: "4px 4px 1px 1px", background: AMBER }} title={`${d.count}`} />{(ana.days.length <= 14 || i % 3 === 0) && <span style={{ fontSize: 8.5, color: "#B5AB9C", whiteSpace: "nowrap" }}>{d.label}</span>}</div>)}</div></div>
+                    <div style={card}>
+                      <div className="flex items-baseline justify-between" style={{ marginBottom: 16 }}><span style={{ fontWeight: 700, fontSize: 15 }}>Skeniranja po dnevih</span><span style={{ fontSize: 12, color: "#9A8F80" }}>skupaj {ana.scans}</span></div>
+                      <div className="flex" style={{ gap: 8 }}>
+                        <div className="flex flex-col items-end justify-between" style={{ height: 150, paddingBottom: 16, fontSize: 9, color: "#B5AB9C", minWidth: 14 }}><span>{ana.maxDay}</span><span>{Math.round(ana.maxDay / 2)}</span><span>0</span></div>
+                        <div className="flex flex-1 items-end" style={{ gap: 4, height: 150 }}>{ana.days.map((d, i) => <div key={i} className="group relative flex flex-1 flex-col items-center justify-end" style={{ gap: 5, height: "100%" }}><div className="pointer-events-none absolute left-1/2 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100" style={{ top: 0, whiteSpace: "nowrap", background: INK, color: PAPER, fontSize: 10.5, fontWeight: 700, padding: "3px 8px", borderRadius: 7, zIndex: 10, boxShadow: "0 6px 16px rgba(42,36,29,0.3)" }}>{d.label} · {d.count} {d.count === 1 ? "sken" : "skenov"}</div><div className="transition-opacity group-hover:opacity-75" style={{ width: "100%", height: `${Math.round((d.count / ana.maxDay) * 118)}px`, minHeight: d.count ? 4 : 0, borderRadius: "4px 4px 1px 1px", background: AMBER }} />{(ana.days.length <= 14 || i % 3 === 0) && <span style={{ fontSize: 8.5, color: "#B5AB9C", whiteSpace: "nowrap" }}>{d.label}</span>}</div>)}</div>
+                      </div>
+                    </div>
                     <div className="grid gap-3.5 lg:grid-cols-[1fr_1fr]">
                       {/* ure dneva */}
-                      <div style={card}><div style={{ fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Najbolj obiskane ure</div><div className="flex items-end" style={{ gap: 2, height: 110 }}>{ana.hours.map((h, i) => <div key={i} className="flex flex-1 flex-col items-center justify-end" style={{ height: "100%", gap: 4 }}><div style={{ width: "100%", height: `${Math.round((h / ana.maxHour) * 92)}px`, minHeight: h ? 3 : 0, borderRadius: 2, background: h ? GREEN : "#EFE6D6" }} title={`${i}h · ${h}`} />{i % 6 === 0 && <span style={{ fontSize: 8, color: "#B5AB9C" }}>{i}h</span>}</div>)}</div></div>
+                      <div style={card}>
+                        <div className="flex items-baseline justify-between" style={{ marginBottom: 16 }}><span style={{ fontWeight: 700, fontSize: 15 }}>Najbolj obiskane ure</span><span style={{ fontSize: 12, color: "#9A8F80" }}>vrh {ana.maxHour}</span></div>
+                        <div className="flex" style={{ gap: 6 }}>
+                          <div className="flex flex-col items-end justify-between" style={{ height: 110, paddingBottom: 14, fontSize: 9, color: "#B5AB9C", minWidth: 12 }}><span>{ana.maxHour}</span><span>0</span></div>
+                          <div className="flex flex-1 items-end" style={{ gap: 2, height: 110 }}>{ana.hours.map((h, i) => <div key={i} className="group relative flex flex-1 flex-col items-center justify-end" style={{ height: "100%", gap: 4 }}><div className="pointer-events-none absolute left-1/2 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100" style={{ top: -2, whiteSpace: "nowrap", background: INK, color: PAPER, fontSize: 10.5, fontWeight: 700, padding: "3px 7px", borderRadius: 7, zIndex: 10, boxShadow: "0 6px 16px rgba(42,36,29,0.3)" }}>{String(i).padStart(2, "0")}:00 · {h} {h === 1 ? "sken" : "skenov"}</div><div className="transition-opacity group-hover:opacity-75" style={{ width: "100%", height: `${Math.round((h / ana.maxHour) * 82)}px`, minHeight: h ? 3 : 0, borderRadius: 2, background: h ? GREEN : "#EFE6D6" }} />{i % 6 === 0 && <span style={{ fontSize: 8, color: "#B5AB9C" }}>{i}h</span>}</div>)}</div>
+                        </div>
+                      </div>
                       {/* segmenti */}
                       <div style={{ ...card, display: "flex", flexDirection: "column", gap: 12 }}><div style={{ fontWeight: 700, fontSize: 15 }}>Segmenti</div>{([["Najboljši (200+ t)", seg.best, GREEN], ["Aktivni (≤14 dni)", seg.active, INK], ["Neaktivni (21+ dni)", seg.inactive, CORAL]] as const).map(([l, n, c]) => <div key={l} className="flex items-center justify-between"><span style={{ fontSize: 13.5, color: MUTED }}>{l}</span><span style={{ fontWeight: 800, fontSize: 16, color: c }}>{n}</span></div>)}</div>
                     </div>
@@ -324,18 +355,40 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                       <div className="flex items-center justify-between"><span style={{ fontWeight: 700, fontSize: 15 }}>Nova kampanja</span><span className="flex items-center" style={{ height: 24, padding: "0 10px", borderRadius: 999, background: "rgba(94,127,82,0.14)", color: "#3E5536", fontSize: 11, fontWeight: 800 }}>E-pošta</span></div>
                       <div className="flex flex-col" style={{ gap: 7 }}>
                         <span style={{ fontSize: 12.5, fontWeight: 600, color: MUTED }}>Predloge</span>
-                        <div className="flex" style={{ gap: 7, flexWrap: "wrap" }}>{PRESETS.map((p) => <button key={p.k} onClick={() => { setCampaignMsg(p.t); setSegSel(p.seg); }} style={{ height: 32, padding: "0 12px", borderRadius: 99, border: "1px solid #E4D9C7", background: campaignMsg === p.t ? "#FCEFD8" : "#fff", color: INK, fontFamily: JAK, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>{p.k}</button>)}</div>
+                        <div className="flex" style={{ gap: 7, flexWrap: "wrap" }}>{PRESETS.map((p) => <button key={p.k} onClick={() => { setCampaignMsg(p.t); setSegSel(p.seg); setRemoved(new Set()); }} style={{ height: 32, padding: "0 12px", borderRadius: 99, border: "1px solid #E4D9C7", background: campaignMsg === p.t ? "#FCEFD8" : "#fff", color: INK, fontFamily: JAK, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>{p.k}</button>)}</div>
                       </div>
                       <textarea rows={4} value={campaignMsg} onChange={(e) => setCampaignMsg(e.target.value)} style={{ width: "100%", border: "1.5px solid #E4D9C7", borderRadius: 12, background: CREAM, padding: 12, fontFamily: JAK, fontSize: 14, color: INK, outline: "none", boxSizing: "border-box", resize: "vertical" }} />
-                      <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Komu pošljem</span><select value={segSel} onChange={(e) => setSegSel(e.target.value)} style={inp}>{["Najboljši", "Aktivni", "Neaktivni 21+ dni", "Vsi gostje"].map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
-                      <div className="flex items-center justify-between" style={{ background: CREAM, borderRadius: 12, padding: "11px 14px" }}><span style={{ fontSize: 13, color: MUTED }}>Prejemniki</span><span style={{ fontSize: 14, fontWeight: 700 }}>{segSel === "Vsi gostje" ? customers.length : segCount} gostov</span></div>
-                      <button onClick={() => flash("E-pošta kampanje pride z e-poštnim providerjem (kmalu). SMS/WhatsApp pozneje.")} style={{ height: 48, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: "pointer" }}>Pošlji e-pošto · {segSel === "Vsi gostje" ? customers.length : segCount} gostom</button>
-                      <span style={{ fontSize: 12, color: "#9A8F80", lineHeight: 1.5 }}>Zaenkrat samo e-pošta (gostje se prijavijo z emailom). SMS in WhatsApp dodamo pozneje.</span>
+                      {/* kupon kampanje */}
+                      <div className="flex flex-col" style={{ gap: 10, background: CREAM, borderRadius: 12, padding: "12px 14px" }}>
+                        <div className="flex items-center justify-between">
+                          <span style={{ fontSize: 13.5, fontWeight: 700 }}>🎟️ Pripni kupon</span>
+                          <button type="button" onClick={() => setCouponOn((o) => !o)} aria-label="kupon" style={{ width: 46, height: 26, borderRadius: 999, border: "none", background: couponOn ? GREEN : "#D9CDBA", position: "relative", cursor: "pointer", flexShrink: 0 }}><span style={{ position: "absolute", top: 3, left: couponOn ? 23 : 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left .15s" }} /></button>
+                        </div>
+                        {couponOn && (
+                          <div className="flex flex-col" style={{ gap: 8 }}>
+                            <div className="flex" style={{ gap: 6, flexWrap: "wrap" }}>{["Brezplačna kava", "−20 %", "1+1 gratis", "Rogljiček"].map((p) => <button key={p} onClick={() => setCouponName(p)} style={{ height: 30, padding: "0 11px", borderRadius: 99, border: "1px solid #E4D9C7", background: couponName === p ? "#FCEFD8" : "#fff", color: INK, fontFamily: JAK, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{p}</button>)}</div>
+                            <input value={couponName} onChange={(e) => setCouponName(e.target.value)} placeholder="ime kupona" style={inp} />
+                            <span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Vsak prejemnik dobi ta kupon v denarnico, ko odpre kampanjo.</span>
+                          </div>
+                        )}
+                      </div>
+                      <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Komu pošljem (segment)</span><select value={segSel} onChange={(e) => { setSegSel(e.target.value); setRemoved(new Set()); }} style={inp}>{["Najboljši", "Aktivni", "Neaktivni 21+ dni", "Vsi gostje", "Po meri"].map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
+                      {segSel === "Po meri" && <label className="flex items-center justify-between" style={{ background: CREAM, borderRadius: 12, padding: "9px 14px" }}><span style={{ fontSize: 13, color: MUTED }}>Pravilo: vsaj točk</span><input value={segMinPts} onChange={(e) => { setSegMinPts(Math.max(0, Number(e.target.value) || 0)); setRemoved(new Set()); }} type="number" min={0} style={{ ...inp, width: 90 }} /></label>}
+                      {/* seznam prejemnikov */}
+                      <div className="flex flex-col" style={{ gap: 8 }}>
+                        <div className="flex items-center justify-between"><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Prejemniki</span><span style={{ fontSize: 13.5, fontWeight: 800, color: "#B4862F" }}>{recipients.length}</span></div>
+                        <div style={{ maxHeight: 176, overflowY: "auto", border: "1px solid #F1E8D9", borderRadius: 12 }}>
+                          {recipients.length === 0 ? <div style={{ padding: 16, textAlign: "center", fontSize: 13, color: "#9A8F80" }}>Ni prejemnikov v tem segmentu.</div> : recipients.map((c, i) => <div key={c.id} className="flex items-center justify-between" style={{ padding: "9px 12px", borderTop: i ? "1px solid #F4ECDF" : "none", gap: 8 }}><span className="truncate" style={{ fontSize: 13, fontWeight: 600, minWidth: 0 }}>{c.email || c.phone || "—"}</span><div className="flex items-center" style={{ gap: 9, flexShrink: 0 }}><span style={{ fontSize: 12, color: "#9A8F80" }}>{c.points} t</span><button onClick={() => setRemoved((s) => new Set(s).add(c.id))} aria-label="odstrani" style={{ width: 24, height: 24, border: "1px solid #E4D9C7", borderRadius: 7, background: "#fff", color: CORAL, cursor: "pointer", fontFamily: JAK, fontSize: 12, lineHeight: 1 }}>✕</button></div></div>)}
+                        </div>
+                        {removed.size > 0 && <button onClick={() => setRemoved(new Set())} style={{ alignSelf: "flex-start", fontSize: 12, fontWeight: 700, color: "#9A8F80", background: "none", border: "none", cursor: "pointer", fontFamily: JAK }}>↩ Povrni odstranjene ({removed.size})</button>}
+                      </div>
+                      <button onClick={() => flash(`Pošiljanje (${recipients.length} gostom${couponOn ? ` + kupon: ${couponName}` : ""}) pride z e-poštnim providerjem — kmalu.`)} disabled={recipients.length === 0} style={{ height: 48, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: recipients.length === 0 ? "not-allowed" : "pointer", opacity: recipients.length === 0 ? 0.5 : 1 }}>Pošlji e-pošto · {recipients.length} gostom{couponOn ? " 🎟️" : ""}</button>
+                      <span style={{ fontSize: 12, color: "#9A8F80", lineHeight: 1.5 }}>Zaenkrat samo e-pošta. SMS in WhatsApp dodamo pozneje.</span>
                     </div>
-                    <div style={{ ...card, display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={{ ...card, display: "flex", flexDirection: "column", gap: 10 }}>
                       <span style={{ fontWeight: 700, fontSize: 15 }}>Tvoji segmenti</span>
-                      {([["Najboljši (200+ t)", seg.best], ["Aktivni (≤14 dni)", seg.active], ["Neaktivni (21+ dni)", seg.inactive], ["Vsi gostje", customers.length]] as const).map(([l, n]) => <div key={l} className="flex items-center justify-between" style={{ borderBottom: "1px solid #F1E8D9", paddingBottom: 8 }}><span style={{ fontSize: 13.5, color: MUTED }}>{l}</span><span style={{ fontWeight: 800, fontSize: 15, color: "#B4862F" }}>{n}</span></div>)}
-                      <span style={{ fontSize: 12.5, color: "#9A8F80", lineHeight: 1.5, marginTop: 4 }}>Segmenti se računajo iz pravih obiskov. Urejanje pravil segmentov + ročni izbor gostov dodamo kmalu.</span>
+                      {([["Najboljši (200+ t)", seg.best, "Najboljši"], ["Aktivni (≤14 dni)", seg.active, "Aktivni"], ["Neaktivni (21+ dni)", seg.inactive, "Neaktivni 21+ dni"], ["Vsi gostje", customers.length, "Vsi gostje"]] as const).map(([l, n, key]) => <button key={key} onClick={() => { setSegSel(key); setRemoved(new Set()); }} className="flex items-center justify-between" style={{ padding: "9px 10px", borderRadius: 9, background: segSel === key ? "#FCEFD8" : "transparent", border: "none", cursor: "pointer", fontFamily: JAK, textAlign: "left" }}><span style={{ fontSize: 13.5, fontWeight: segSel === key ? 700 : 600, color: segSel === key ? INK : MUTED }}>{l}</span><span style={{ fontWeight: 800, fontSize: 15, color: "#B4862F" }}>{n}</span></button>)}
+                      <span style={{ fontSize: 12.5, color: "#9A8F80", lineHeight: 1.5, marginTop: 4 }}>Klikni segment za izbor. »Po meri« nastaviš prag točk, prejemnike pa ročno odstraniš na levi.</span>
                     </div>
                   </div>
                 )}
@@ -518,7 +571,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                       </div>
                       <span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4, marginTop: -6 }}>Razmik = koliko časa mora miniti, preden ista stranka spet skenira (npr. 60 = ena kava na uro). 0 = brez omejitve.</span>
                       <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Google povezava za ocene</span><input name="google_review_url" type="url" defaultValue={venue.google_review_url ?? ""} placeholder="https://g.page/r/…" style={inp} /><span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Kamor pošljemo zadovoljne goste (4–5★). Najdeš jo v Google Business profilu → »Pridobi več ocen«.</span></label>
-                      <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Jezik gostove strani</span><select name="language" defaultValue={(venue as { language?: string }).language || "sl"} style={inp}>{LANGS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Jezik celotnega flowa za goste. Prevodi (EN/HR/SR/BS/DE) se vklopijo kmalu — zaenkrat se nastavitev shrani.</span></label>
+                      <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Jezik gostove strani</span><select name="language" value={lang} onChange={(e) => setLang(e.target.value)} style={inp}>{LANGS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Jezik celotnega flowa za goste. Prevodi (EN/HR/SR/BS/DE) se vklopijo kmalu — zaenkrat se nastavitev shrani.</span></label>
                       <button style={{ marginTop: 4, height: 48, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: "pointer", alignSelf: "flex-start", padding: "0 22px" }}>Shrani</button>
                     </form>
                   </div>

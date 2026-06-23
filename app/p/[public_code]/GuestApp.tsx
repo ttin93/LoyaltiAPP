@@ -500,49 +500,65 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
         <button onClick={() => { setView("home"); setCardCompleted(false); }} style={{ height: 54, width: "100%", borderRadius: 16, background: INK, color: PAPER, fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Super, nazaj na kartico</button>
         </div>
 
-        {/* Google-ocene POPUP — odpre se takoj po vsakem skenu (4–5★ → Google, 1–3★ → zasebno lokalu) */}
-        {reviewOpen && (
-          <div onClick={() => setReviewOpen(false)} className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center" style={{ background: "rgba(26,18,13,0.55)", padding: 16 }}>
-            <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 380, background: CREAM, borderRadius: 26, padding: "26px 22px 22px", textAlign: "center", boxShadow: "0 18px 50px rgba(26,18,13,0.4)", animation: "popIn 0.4s cubic-bezier(0.2,1.3,0.4,1) both" }}>
-              {!reviewDone ? (
-                <>
-                  <div style={{ fontWeight: 800, fontSize: 19, letterSpacing: "-0.01em" }}>Kako ti je bilo danes?</div>
-                  <div style={{ fontSize: 13.5, color: MUTED, marginTop: 4 }}>Ena ocena ogromno pomaga {venue.name}. 🙏</div>
-                  <div className="flex justify-center" style={{ marginTop: 18, gap: 8 }}>
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <button key={n} onClick={() => setStars(n)} aria-label={`${n} zvezdic`} className="leading-none transition-transform active:scale-90" style={{ fontSize: 42, background: "none", border: "none", cursor: "pointer", color: n <= stars ? AMBER : "#E4D9C7" }}>★</button>
-                    ))}
+        {/* Google-ocene POPUP — Variant C "Plavajoča kartica" (4–5★ → Google, 1–3★ → zasebno ekipi) */}
+        {reviewOpen && (() => {
+          const stage = reviewDone ? (stars >= 4 ? "doneHigh" : "doneLow") : stars === 0 ? "rate" : stars <= 3 ? "low" : "high";
+          const copy = {
+            rate: ["Kako ti je bilo?", "Oceni obisk in pomagaj nam postati boljši."],
+            low: ["Hvala za iskrenost", "Kaj bi lahko izboljšali? Sporočilo gre naravnost ekipi."],
+            high: ["Juhu, hvala!", "Bi to delil še na Googlu? Vzame 10 sekund in nam ogromno pomeni."],
+            doneLow: ["Sporočilo oddano", "Hvala — ekipa tvoje mnenje vidi takoj in se potrudi."],
+            doneHigh: ["Hvala za podporo!", "Odpiramo Google oceno v novem zavihku …"],
+          }[stage];
+          return (
+            <div onClick={() => setReviewOpen(false)} className="fixed inset-0 z-[60] flex items-center justify-center" style={{ background: "rgba(233,226,214,0.7)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)", padding: 18, animation: "scrimIn 0.3s both" }}>
+              <div onClick={(e) => e.stopPropagation()} className="flex flex-col" style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 26, padding: "30px 24px", gap: 20, boxShadow: "0 24px 60px rgba(42,36,29,0.22)", animation: "popIn 0.42s cubic-bezier(0.2,1.2,0.35,1) both" }}>
+                {reviewDone ? (
+                  <div className="flex flex-col items-center text-center" style={{ gap: 15 }}>
+                    <div className="flex items-center justify-center" style={{ width: 72, height: 72, borderRadius: "50%", background: stars >= 4 ? "rgba(226,160,74,0.16)" : "rgba(94,127,82,0.16)", border: `2.5px solid ${stars >= 4 ? AMBER : GREEN}`, animation: "popIn 0.45s cubic-bezier(0.2,1.5,0.4,1) both" }}>
+                      {stars >= 4
+                        ? <svg width="33" height="33" viewBox="0 0 24 24" style={{ fill: AMBER, stroke: AMBER, strokeWidth: 1.5, strokeLinejoin: "round" }}><path d="M12 20.5l-1.4-1.3C5.4 14.6 2 11.5 2 7.7 2 4.9 4.2 2.8 7 2.8c1.6 0 3.1.7 4 1.9.9-1.2 2.4-1.9 4-1.9 2.8 0 5 2.1 5 4.9 0 3.8-3.4 6.9-8.6 11.5L12 20.5z" /></svg>
+                        : <svg width="33" height="33" viewBox="0 0 24 24" style={{ fill: "none", stroke: GREEN, strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M5 12.5l4.2 4.2L18.5 7.5" /></svg>}
+                    </div>
+                    <div><div style={{ fontWeight: 800, fontSize: 23, letterSpacing: "-0.015em" }}>{copy[0]}</div><div style={{ fontSize: 14.5, color: MUTED, lineHeight: 1.55, marginTop: 5 }}>{copy[1]}</div></div>
+                    <button onClick={() => setReviewOpen(false)} style={{ height: 44, padding: "0 20px", border: "1.5px solid #E4D9C7", borderRadius: 14, background: "transparent", color: "#9A8F80", fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Zapri</button>
                   </div>
-                  {stars >= 4 && (
-                    <div className="flex flex-col items-center" style={{ marginTop: 18, gap: 10 }}>
-                      <div style={{ fontSize: 14, lineHeight: 1.4, color: MUTED }}>Juhu! 🎉 Nam pomagaš z oceno na Googlu? Traja 10 sekund.</div>
-                      <a href={googleReviewUrl} target="_blank" rel="noreferrer" onClick={() => { logReview(stars, true); setReviewDone(true); }} className="flex items-center justify-center" style={{ height: 50, width: "100%", gap: 10, borderRadius: 14, background: "#fff", fontSize: 15, fontWeight: 700, color: INK, border: "1.5px solid #E4D9C7", textDecoration: "none" }}>
-                        <GoogleG /> Oceni na Googlu
-                      </a>
+                ) : (
+                  <>
+                    <div className="flex flex-col text-center" style={{ gap: 7 }}>
+                      <div style={{ fontWeight: 800, fontSize: 25, letterSpacing: "-0.02em", lineHeight: 1.1 }}>{copy[0]}</div>
+                      <div style={{ fontSize: 14.5, color: MUTED, lineHeight: 1.5 }}>{copy[1]}</div>
                     </div>
-                  )}
-                  {stars >= 1 && stars <= 3 && (
-                    <div className="flex flex-col" style={{ marginTop: 18, gap: 10 }}>
-                      <div style={{ fontSize: 14, lineHeight: 1.4, color: MUTED }}>Žal nam je. Kaj naj popravimo? <span style={{ color: "#A89B88" }}>(vidi samo lokal)</span></div>
-                      <textarea value={fb} onChange={(e) => setFb(e.target.value)} rows={3} placeholder="Tvoje mnenje…" style={{ width: "100%", borderRadius: 12, border: "1.5px solid #E4D9C7", background: "#fff", padding: 12, textAlign: "left", fontSize: 14, fontFamily: JAK, outline: "none", boxSizing: "border-box" }} />
-                      <button onClick={() => { logReview(stars, false, fb); setReviewDone(true); }} style={{ height: 48, width: "100%", borderRadius: 14, background: INK, color: PAPER, fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Pošlji lokalu</button>
+                    <div className="flex justify-center" style={{ gap: 3 }}>
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <button key={n} onClick={() => setStars(n)} aria-label={`${n} zvezdic`} className="transition-transform hover:scale-110 active:scale-90" style={{ width: 54, height: 54, border: "none", background: "transparent", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <svg width="46" height="46" viewBox="0 0 24 24"><path d="M12 2.4l2.95 6.3 6.85.72-5.1 4.66 1.43 6.78L12 17.9 5.87 21.56l1.43-6.78-5.1-4.66 6.85-.72z" fill={stars >= n ? AMBER : "none"} stroke={stars >= n ? AMBER : "#CDBFA8"} strokeWidth={1.5} strokeLinejoin="round" /></svg>
+                        </button>
+                      ))}
                     </div>
-                  )}
-                  {stars === 0 && (
-                    <button onClick={() => setReviewOpen(false)} style={{ marginTop: 16, height: 38, width: "100%", borderRadius: 12, background: "none", border: "none", fontSize: 13.5, fontWeight: 600, color: "#9A8F80", cursor: "pointer", fontFamily: JAK }}>Morda kasneje</button>
-                  )}
-                </>
-              ) : (
-                <div className="flex flex-col items-center" style={{ gap: 8 }}>
-                  <div style={{ fontSize: 34 }}>🙏</div>
-                  <div style={{ fontSize: 17, fontWeight: 800 }}>{stars >= 4 ? "Najlepša hvala!" : "Hvala za iskrenost!"}</div>
-                  <div style={{ fontSize: 13.5, color: "#9A8F80", maxWidth: 260 }}>{stars >= 4 ? "Tvoja ocena ogromno pomeni." : "Sporočili bomo lokalu, da izboljša."}</div>
-                  <button onClick={() => setReviewOpen(false)} style={{ marginTop: 10, height: 48, width: "100%", borderRadius: 14, background: INK, color: PAPER, fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: JAK }}>Zapri</button>
-                </div>
-              )}
+                    {stage === "rate" && <div style={{ fontSize: 13, color: "#A89878", textAlign: "center" }}>Tapni za oceno svojega obiska</div>}
+                    {stage === "low" && (
+                      <div className="flex flex-col" style={{ gap: 13, animation: "fadeIn 0.3s both" }}>
+                        <textarea value={fb} onChange={(e) => setFb(e.target.value)} placeholder="Kaj bi izboljšali? Beremo vse…" style={{ width: "100%", boxSizing: "border-box", minHeight: 90, border: "1.5px solid #E4D9C7", borderRadius: 16, background: CREAM, padding: "13px 14px", fontFamily: JAK, fontSize: 15, color: INK, resize: "none", outline: "none", lineHeight: 1.5 }} />
+                        <button onClick={() => { logReview(stars, false, fb); setReviewDone(true); }} style={{ width: "100%", height: 56, border: "none", borderRadius: 16, background: INK, color: PAPER, fontFamily: JAK, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Pošlji ekipi</button>
+                        <div style={{ fontSize: 12.5, color: "#9A8F80", textAlign: "center" }}>Zasebno · vidi samo lastnik lokala</div>
+                      </div>
+                    )}
+                    {stage === "high" && (
+                      <div className="flex flex-col" style={{ gap: 14, animation: "fadeIn 0.3s both" }}>
+                        <a href={googleReviewUrl} target="_blank" rel="noreferrer" onClick={() => { logReview(stars, true); setReviewDone(true); }} className="flex items-center justify-center" style={{ width: "100%", boxSizing: "border-box", height: 58, border: "none", borderRadius: 16, background: INK, color: PAPER, fontFamily: JAK, fontSize: 16, fontWeight: 700, cursor: "pointer", gap: 12, textDecoration: "none" }}>
+                          <span className="flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: "50%", background: "#fff" }}><GoogleG /></span>Oceni na Googlu
+                        </a>
+                        <div style={{ fontSize: 13, color: MUTED, textAlign: "center", lineHeight: 1.5 }}>Hvala! 💛 En klik na Googlu nam ogromno pomeni — vzame le 10 sekund.</div>
+                        <button onClick={() => setReviewOpen(false)} style={{ background: "none", border: "none", color: "#9A8F80", fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Mogoče kasneje</button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </main>
     );
   }

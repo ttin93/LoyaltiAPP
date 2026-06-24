@@ -204,10 +204,30 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   );
 
   useEffect(() => {
-    let saved: { id: string; name: string }[] = [];
+    // deep-link: ?c=<customerId> odpre to stranko (npr. magic link iz maila / demo na telefonu);
+    // &coupon=<ime> doda aktiven kupon. Po obdelavi URL počistimo.
+    let urlCoupon: string | null = null;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const c = sp.get("c");
+      if (c) localStorage.setItem(storageKey, c);
+      urlCoupon = sp.get("coupon");
+      if (c || urlCoupon) {
+        sp.delete("c");
+        sp.delete("coupon");
+        const qs = sp.toString();
+        window.history.replaceState({}, "", window.location.pathname + (qs ? "?" + qs : ""));
+      }
+    } catch {}
+
+    let saved: { id: string; name: string; pending?: boolean }[] = [];
     try {
       saved = JSON.parse(localStorage.getItem(couponsKey) || "[]");
     } catch {}
+    if (urlCoupon && !saved.some((c) => c.name === urlCoupon)) {
+      saved = [...saved, { id: "dl" + Date.now(), name: urlCoupon, pending: false }];
+      try { localStorage.setItem(couponsKey, JSON.stringify(saved)); } catch {}
+    }
 
     const rawA = localStorage.getItem(activationKey);
     if (rawA) {

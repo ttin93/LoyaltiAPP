@@ -24,9 +24,16 @@ const JAK = "var(--font-jakarta), sans-serif";
 
 function Cup({ stroke, size }: { stroke: string; size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", fill: "none", stroke, strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" }}>
-      <path d="M5 9h10v5.5A4.5 4.5 0 0 1 10.5 19h-1A4.5 4.5 0 0 1 5 14.5V9Z" />
-      <path d="M15 10.5h1.6a2.4 2.4 0 0 1 0 4.8H15" />
+    <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", fill: "none", stroke, strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round" }}>
+      {/* para */}
+      <path d="M9.4 3c-.7.8-.7 1.6 0 2.4" strokeWidth={1.5} opacity={0.85} />
+      <path d="M12.4 2.5c-.8.9-.8 1.9 0 2.8" strokeWidth={1.5} opacity={0.85} />
+      {/* skodelica */}
+      <path d="M5.5 8h9.6v3.7a4.8 4.8 0 0 1-4.8 4.8h0a4.8 4.8 0 0 1-4.8-4.8V8Z" />
+      {/* ročaj */}
+      <path d="M15.1 9.3h1.5a2.4 2.4 0 0 1 0 4.8h-1.5" />
+      {/* krožniček */}
+      <path d="M4.4 19.3c1.6 1.2 11 1.2 12.6 0" strokeWidth={1.5} />
     </svg>
   );
 }

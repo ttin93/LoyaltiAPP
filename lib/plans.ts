@@ -1,7 +1,13 @@
 import type { PlanKey, BillingCycle } from "@/lib/types";
 
-/** Letni popust: letno = 12 mesecev z X % popusta (npr. 0.20 = −20 %). Spremeni na enem mestu. */
-export const YEARLY_DISCOUNT = 0.2;
+/**
+ * Letni model: plačaš X mesecev, dobiš 12 (2 meseca gratis).
+ * YEARLY_MONTHS = 10 → letno = mesečna × 10. Spremeni na enem mestu.
+ */
+export const YEARLY_MONTHS = 10;
+export const YEARLY_FREE_MONTHS = 12 - YEARLY_MONTHS;
+/** Izpeljani % popust (za prikaze, ki želijo odstotek). */
+export const YEARLY_DISCOUNT = YEARLY_FREE_MONTHS / 12;
 
 export const PLANS: Record<PlanKey, { label: string; tag: string; monthly: number | null }> = {
   free: { label: "Brezplačni", tag: "Začetni", monthly: 0 },
@@ -19,24 +25,24 @@ export function baseMonthly(plan: PlanKey | undefined, customPrice?: number | nu
   return p?.monthly ?? 0;
 }
 
-/** Mesečni ekvivalent prihodka (za MRR): letni paket šteje z letnim popustom. */
+/** Mesečni ekvivalent prihodka (za MRR): letni znesek / 12. */
 export function monthlyEquivalent(
   plan: PlanKey | undefined,
   cycle: BillingCycle | undefined,
   customPrice?: number | null,
 ): number {
   const base = baseMonthly(plan, customPrice);
-  return cycle === "yearly" ? base * (1 - YEARLY_DISCOUNT) : base;
+  return cycle === "yearly" ? (base * YEARLY_MONTHS) / 12 : base;
 }
 
-/** Koliko lokal dejansko plača ob obračunu (mesečno ali letni znesek vnaprej). */
+/** Koliko lokal dejansko plača ob obračunu (mesečno ali letni znesek vnaprej = ×10). */
 export function chargedAmount(
   plan: PlanKey | undefined,
   cycle: BillingCycle | undefined,
   customPrice?: number | null,
 ): number {
   const base = baseMonthly(plan, customPrice);
-  return cycle === "yearly" ? base * 12 * (1 - YEARLY_DISCOUNT) : base;
+  return cycle === "yearly" ? base * YEARLY_MONTHS : base;
 }
 
 export function isPaying(plan: PlanKey | undefined, status: string | undefined): boolean {

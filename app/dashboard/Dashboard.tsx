@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow, WheelConfig, WheelSegment, Automation, Automations, PlanKey } from "@/lib/types";
 import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, saveWheel, saveAutomations, signOut } from "@/app/actions";
-import { PLANS, fmtEur, monthlyEquivalent, chargedAmount, YEARLY_DISCOUNT, STATUS_LABEL } from "@/lib/plans";
+import { PLANS, fmtEur, monthlyEquivalent, chargedAmount, STATUS_LABEL } from "@/lib/plans";
 import Scanner from "@/app/components/Scanner";
 import QrCode from "./QrCode";
 
@@ -765,7 +765,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                             <button key={c} onClick={() => setBillingCycle(c)} style={{ height: 34, padding: "0 16px", border: "none", borderRadius: 9, background: billingCycle === c ? INK : "transparent", color: billingCycle === c ? PAPER : MUTED, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{c === "monthly" ? "Mesečno" : "Letno"}</button>
                           ))}
                         </div>
-                        {billingCycle === "yearly" && <span style={{ fontSize: 12.5, fontWeight: 700, color: GREEN }}>prihraniš {Math.round(YEARLY_DISCOUNT * 100)} %</span>}
+                        {billingCycle === "yearly" && <span style={{ fontSize: 12.5, fontWeight: 700, color: GREEN }}>2 meseca gratis 🎉</span>}
                       </div>
 
                       {/* PAKETI */}

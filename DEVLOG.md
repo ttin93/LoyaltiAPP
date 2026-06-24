@@ -49,6 +49,14 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-24 — seja 51 (letni model ×10 + landing toggle + seznam funkcij)
+- **Letni model**: bilo −20 %, zdaj **letno = mesečna × 10 (2 meseca gratis)** — `YEARLY_MONTHS=10` v [`lib/plans.ts`](lib/plans.ts). Posodobljeno v billingu (dashboard), superadminu (Naročnine), wording "2 meseca gratis".
+- **Landing cenik**: nov client island [`app/components/Pricing.tsx`](app/components/Pricing.tsx) z **Mesečno/Letno toggle** (letno = ×10, "/leto" + /mes ekvivalent). Lokalni `PLANS` v `page.tsx` odstranjen.
+- **[`docs/FEATURES.md`](docs/FEATURES.md)**: popoln seznam vseh funkcij + predlagana razdelitev po paketih — čaka odločitev za gating.
+- Ugotovljeno: **logo upload NE obstaja** (logo_url vedno null, gostova stran kaže začetnico) → treba zgraditi (Supabase Storage), ni "za testirat".
+- Preverjeno v živo: landing toggle (Espresso 49,99/mes → 499,90/leto · 41,66/mes). `tsc` čist.
+- **Naslednje (čaka tvoj input — razdelitev paketov + Polar live):** gating + `PLAN_FEATURES`/`PLAN_LIMITS`; 14-dnevni trial (Polar) + odštevanje; polni paywall (var. 3) + superadmin trial-statistika & podaljšanje; plan-change brez dvojnega trganja; per-lokal logi; logo upload; B2B davek (Polar MoR).
+
 ### 2026-06-24 — seja 50 (BILLING prek Polar.sh — prave naročnine)
 - Owner dashboard **Naročnina** tab = pravi billing: trenutni paket + status + cena, "**Naslednje plačilo: DD.MM.YYYY**" (ali "preklicano — aktivno do …"), mesečno/letno toggle (−20 %), izbira paketa → Polar checkout, "Upravljaj naročnino / Prekliči" → Polar kupčev portal. Sidebar kartica kaže pravi paket.
 - Polar integracija (vzorec iz **AskHerOut**, prirejen za PONAVLJAJOČE naročnine): [`lib/polar.ts`](lib/polar.ts) (checkout, portal, svix-podpis webhooka, paket↔produkt map), `app/api/billing/checkout`, `app/api/billing/portal`, `app/api/webhooks/polar` (`subscription.*` → `venues`).

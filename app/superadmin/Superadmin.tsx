@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { SAVenue, SAOwner, SATotals, SADay, SARevenue } from "./page";
 import { adminUpdateVenue } from "./actions";
 import type { PlanKey, SubStatus } from "@/lib/types";
-import { PLANS, PLAN_ORDER, STATUS_LABEL, YEARLY_DISCOUNT, fmtEur, chargedAmount, monthlyEquivalent, isPaying } from "@/lib/plans";
+import { PLANS, PLAN_ORDER, STATUS_LABEL, fmtEur, chargedAmount, monthlyEquivalent, isPaying } from "@/lib/plans";
 
 const INK = "#2A241D";
 const CREAM = "#FBF7F0";
@@ -469,7 +469,7 @@ function Narocnine({ revenue: r, venues, onOpen }: { revenue: SARevenue; venues:
         <Card>
           <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 6 }}>Letni paketi</div>
           <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, marginBottom: 14 }}>
-            Letna naročnina = <strong style={{ color: INK }}>−{Math.round(YEARLY_DISCOUNT * 100)} %</strong> (nastaviš v <span style={{ fontFamily: "monospace", fontSize: 12 }}>lib/plans.ts</span>). Lokal plača vnaprej za leto, ti dobiš boljši cash-flow + manj odpovedi.
+            Letno = <strong style={{ color: INK }}>2 meseca gratis</strong> (plačaš 10, dobiš 12 — nastaviš v <span style={{ fontFamily: "monospace", fontSize: 12 }}>lib/plans.ts</span>). Lokal plača vnaprej za leto, ti dobiš boljši cash-flow + manj odpovedi.
           </div>
           {PLAN_ORDER.filter((p) => PLANS[p].monthly).map((p) => {
             const m = PLANS[p].monthly || 0;
@@ -483,7 +483,7 @@ function Narocnine({ revenue: r, venues, onOpen }: { revenue: SARevenue; venues:
               </div>
             );
           })}
-          <div style={{ fontSize: 11.5, color: "#A89B88", marginTop: 10 }}>Primer: Doppio letno prihrani {fmtEur(dMonthly * 12 * YEARLY_DISCOUNT)} na leto.</div>
+          <div style={{ fontSize: 11.5, color: "#A89B88", marginTop: 10 }}>Primer: Doppio letno prihrani {fmtEur(dMonthly * 2)} na leto (2 meseca).</div>
         </Card>
       </div>
 
@@ -776,7 +776,7 @@ function VenueModal({ venue, onClose }: { venue: SAVenue; onClose: () => void })
               <Field label="Obračun">
                 <select value={cycle} onChange={(e) => setCycle(e.target.value as "monthly" | "yearly")} style={{ ...inp, cursor: "pointer" }}>
                   <option value="monthly">Mesečno</option>
-                  <option value="yearly">Letno (−{Math.round(YEARLY_DISCOUNT * 100)} %)</option>
+                  <option value="yearly">Letno (2 mes. gratis)</option>
                 </select>
               </Field>
             </div>

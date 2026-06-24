@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Pricing from "@/app/components/Pricing";
 import { BRAND } from "@/lib/brand";
 import NavAuth from "@/app/components/NavAuth";
 
@@ -98,11 +99,6 @@ const STEPS = [
   { n: "01", bg: CREAM, color: INK, rot: false, icon: <svg width="25" height="25" viewBox="0 0 24 24" style={{ fill: "none", stroke: INK, strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M4 8.6A2.6 2.6 0 0 1 6.6 6h1.5l1.5-2h4.8l1.5 2h1.5A2.6 2.6 0 0 1 20 8.6v7.8A2.6 2.6 0 0 1 17.4 19H6.6A2.6 2.6 0 0 1 4 16.4V8.6Z" /><circle cx="12" cy="12.7" r="3.4" /></svg>, t: "Skenira račun", d: "Odpre tvojo stran prek QR na mizi in poskenira fiskalni QR. Brez aplikacije, brez kartice." },
   { n: "02", bg: "rgba(196,98,61,0.1)", color: CORAL, rot: true, icon: <Cup stroke={CORAL} size={25} />, t: "Dobi žig + postane kontakt", d: "Štampiljka tlesne na kartonček. Gost je zdaj v tvoji bazi — z obiski, točkami in zgodovino." },
   { n: "03", bg: "rgba(94,127,82,0.14)", color: GREEN, rot: false, icon: <svg width="25" height="25" viewBox="0 0 24 24" style={{ fill: "none", stroke: GREEN, strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M12 3.5l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z" /></svg>, t: "Pusti oceno", d: "Po skenu ga povabimo k oceni. Zadovoljni gredo na Google, nezadovoljni naravnost k tebi." },
-];
-const PLANS = [
-  { name: "Espresso", tag: "Za en lokal, ki začenja", price: "49,99 €", per: "/ mesec", featured: false, cta: "Izberi Espresso", feats: ["1 lokal", "QR stran za goste", "Žigi, točke in nagrade", "Neomejeno strank", "Stroj za Google ocene", "Osnovna analitika"] },
-  { name: "Doppio", tag: "Cel marketinški stroj", price: "79,99 €", per: "/ mesec", featured: true, cta: "Izberi Doppio", feats: ["Vse iz Espresso", "Sporočila + kuponi + segmenti", "Avtomatizacije (rojstni dan, reaktivacija)", "Kolo sreče + vgradni widget", "Polna analitika in izvoz", "Prednostna podpora"] },
-  { name: "Palača", tag: "Veriga & zasloni po meri", price: "Po dogovoru", per: "", featured: false, cta: "Pogovorimo se", feats: ["Vse iz Doppio", "Več lokalov, en dashboard", "Zasloni gosta po meri", "Dostop do API", "Namenski skrbnik"] },
 ];
 const TRUST = ["Kavarne", "Bistroji", "Slaščičarne", "Picerije", "Frizerji", "Pekarne"];
 const FAQS = [
@@ -326,22 +322,8 @@ export default function Home() {
           <h2 style={{ margin: 0, fontWeight: 800, fontSize: "clamp(30px,3.8vw,46px)", lineHeight: 1.05, letterSpacing: "-0.02em" }}>En paket za vsako fazo</h2>
           <p style={{ margin: 0, fontSize: 17, color: MUTED, maxWidth: 500 }}>Brez provizije na obisk, brez vezave. Začni zastonj, nadgradi, ko raste.</p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(290px,1fr))", gap: 20, alignItems: "stretch" }}>
-          {PLANS.map((p) => (
-            <div key={p.name} style={p.featured ? { background: INK, borderRadius: 24, padding: 30, display: "flex", flexDirection: "column", gap: 18, position: "relative", boxShadow: "0 26px 60px rgba(42,36,29,0.3)", transform: "translateY(-8px)" } : { background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 24, padding: 30, display: "flex", flexDirection: "column", gap: 18 }}>
-              {p.featured && <div style={{ position: "absolute", top: 22, right: 24, height: 28, padding: "0 12px", borderRadius: 999, background: AMBER, color: INK, fontSize: 11.5, fontWeight: 800, display: "flex", alignItems: "center" }}>Najbolj priljubljeno</div>}
-              <div><div style={{ fontWeight: 800, fontSize: 21, color: p.featured ? "#F8F3EA" : INK }}>{p.name}</div><div style={{ fontSize: 14, color: p.featured ? "#B7A488" : "#9A8F80" }}>{p.tag}</div></div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}><span style={{ fontWeight: 800, fontSize: 38, letterSpacing: "-0.02em", color: p.featured ? "#F8F3EA" : INK, whiteSpace: "nowrap" }}>{p.price}</span>{p.per && <span style={{ fontSize: 15, color: p.featured ? "#B7A488" : "#9A8F80" }}>{p.per}</span>}</div>
-              <Link href={p.name === "Palača" ? DEMO_DASH : PARTNER} style={p.featured ? { height: 50, borderRadius: 14, background: AMBER, color: INK, fontSize: 15, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" } : { height: 50, borderRadius: 14, border: `1.5px solid ${INK}`, color: INK, fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{p.cta}</Link>
-              <div className="flex flex-col" style={{ gap: 11, borderTop: p.featured ? "1px solid rgba(248,243,234,0.14)" : "1px solid #F1E8D9", paddingTop: 18 }}>
-                {p.feats.map((f) => (
-                  <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14, color: p.featured ? "#E9E0D2" : "#41382C", lineHeight: 1.4 }}><Check stroke={p.featured ? AMBER : GREEN} size={17} />{f}</div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div style={{ textAlign: "center", marginTop: 22, fontSize: 14, color: "#9A8F80" }}>Vse cene brez DDV · prekličeš kadarkoli · 14 dni brezplačno na plačljivih paketih</div>
+        <Pricing />
+        <div style={{ textAlign: "center", marginTop: 22, fontSize: 14, color: "#9A8F80" }}>Vse cene brez DDV · 14 dni brezplačno (s kartico, prekličeš kadarkoli) · letno = 2 meseca gratis</div>
       </div>
 
       {/* FAQ */}

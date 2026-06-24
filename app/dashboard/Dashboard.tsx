@@ -277,6 +277,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
       const r = await fetch("/api/billing/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ venueId: billingVenue.id, plan, cycle: billingCycle }) });
       const j = await r.json();
       if (j.url) { window.location.href = j.url; return; }
+      if (j.changed) { flash("Paket spremenjen — obračun se prilagodi sorazmerno."); router.refresh(); setBillingBusy(false); return; }
       flash(j.error || "Checkouta ni bilo mogoče odpreti.");
     } catch { flash("Napaka povezave."); }
     setBillingBusy(false);

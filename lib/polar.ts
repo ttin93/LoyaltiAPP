@@ -79,6 +79,23 @@ export async function createCheckout(args: {
   return { url: data.url, id: data.id || "" };
 }
 
+/**
+ * Spremeni paket OBSTOJEČE naročnine (mesečno↔letno / Start↔Grow) s proracijo —
+ * Polar pripiše dobropis za neporabljeno + prilagodi naslednji obračun. BREZ nove naročnine.
+ */
+export async function updateSubscription(subscriptionId: string, productId: string): Promise<{ ok: true } | { error: string }> {
+  const r = await polarFetch(`/v1/subscriptions/${subscriptionId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ product_id: productId, proration_behavior: "prorate" }),
+  });
+  if (!r.ok) {
+    const text = await r.text();
+    console.error("[polar update-sub] non-2xx", r.status, text);
+    return { error: "Spremembe paketa ni bilo mogoče izvesti." };
+  }
+  return { ok: true };
+}
+
 /** Ustvari sejo Polar kupčevega portala (upravljanje/preklic naročnine, kartica, računi). */
 export async function createCustomerPortal(customerId: string): Promise<{ url: string } | { error: string }> {
   const r = await polarFetch("/v1/customer-sessions/", {

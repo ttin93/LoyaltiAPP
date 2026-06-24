@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/supabase/ssrServer";
 import { getServiceClient } from "@/lib/supabase/server";
-import { createCheckout, polarProductId, appOrigin } from "@/lib/polar";
+import { createCheckout, updateSubscription, polarProductId, appOrigin } from "@/lib/polar";
 import type { PlanKey, BillingCycle } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
   const db = getServiceClient();
   // lastnikov lokal (po venueId + preveri lastništvo, sicer prvi)
-  const q = db.from("venues").select("id, owner_user_id, name, polar_customer_id").eq("owner_user_id", user.id);
+  const q = db.from("venues").select("id, owner_user_id, name, polar_customer_id, polar_subscription_id, subscription_status").eq("owner_user_id", user.id);
   const { data: venues } = await (body.venueId ? q.eq("id", body.venueId) : q).order("created_at", { ascending: true }).limit(1);
   const venue = venues?.[0];
   if (!venue) return NextResponse.json({ error: "Nimaš lokala." }, { status: 404 });
@@ -34,6 +34,16 @@ export async function POST(req: Request) {
       { error: "Plačila trenutno niso nastavljena. (Manjka Polar produkt za ta paket.)" },
       { status: 503 },
     );
+  }
+
+  // PLAN-CHANGE: če naročnina že obstaja in je aktivna/poskusna → posodobi obstoječo
+  // (proracija, brez nove naročnine in dvojnega trganja), ne ustvarjaj novega checkouta.
+  const subId = venue.polar_subscription_id as string | null;
+  const status = venue.subscription_status as string | null;
+  if (subId && status && status !== "canceled") {
+    const upd = await updateSubscription(subId, productId);
+    if ("error" in upd) return NextResponse.json({ error: upd.error }, { status: 502 });
+    return NextResponse.json({ changed: true });
   }
 
   const result = await createCheckout({

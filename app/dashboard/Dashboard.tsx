@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow, WheelConfig, WheelSegment, Automation, Automations, PlanKey } from "@/lib/types";
-import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, saveWheel, saveAutomations, signOut } from "@/app/actions";
+import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, saveWheel, saveAutomations, sendGuestCampaign, saveEmailSettings, signOut } from "@/app/actions";
 import { PLANS, fmtEur, monthlyEquivalent, chargedAmount, STATUS_LABEL, planFeature, planMaxVenues } from "@/lib/plans";
 import type { Access } from "@/lib/access";
 import Scanner from "@/app/components/Scanner";
@@ -292,6 +292,22 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
     } catch { flash("Napaka povezave."); }
     setBillingBusy(false);
   }
+  // Marketing: pošlji e-pošto kampanjo gostom (z email naslovom)
+  const [campaignBusy, setCampaignBusy] = useState(false);
+  async function sendCampaign() {
+    const emails = recipients.map((c) => c.email).filter((e): e is string => !!e);
+    if (!emails.length) { flash("Noben prejemnik nima e-pošte."); return; }
+    const subject = (campaignMsg.split("\n")[0] || "").slice(0, 60) || `Ponudba pri ${venue.name}`;
+    const msg = campaignMsg + (couponOn ? `\n\n🎟️ Kupon zate: ${couponName}` : "");
+    setCampaignBusy(true);
+    try {
+      const r = await sendGuestCampaign({ subject, message: msg, emails });
+      if (r.error) flash("⚠ " + r.error);
+      else flash(`Poslano ${r.sent}/${r.total}${r.failed ? ` · ${r.failed} ni uspelo` : ""}.`);
+    } catch (e) { flash(e instanceof Error ? e.message : "Napaka."); }
+    setCampaignBusy(false);
+  }
+
   // Vrnitev s Polar checkouta → potrdi + odpri Naročnino (webhook posodobi v par sekundah)
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -537,8 +553,8 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                         </div>
                         {removed.size > 0 && <button onClick={() => setRemoved(new Set())} style={{ alignSelf: "flex-start", fontSize: 12, fontWeight: 700, color: "#9A8F80", background: "none", border: "none", cursor: "pointer", fontFamily: JAK }}>↩ Povrni odstranjene ({removed.size})</button>}
                       </div>
-                      <button onClick={() => flash(`Pošiljanje (${recipients.length} gostom${couponOn ? ` + kupon: ${couponName}` : ""}) pride z e-poštnim providerjem — kmalu.`)} disabled={recipients.length === 0} style={{ height: 48, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: recipients.length === 0 ? "not-allowed" : "pointer", opacity: recipients.length === 0 ? 0.5 : 1 }}>Pošlji e-pošto · {recipients.length} gostom{couponOn ? " 🎟️" : ""}</button>
-                      <span style={{ fontSize: 12, color: "#9A8F80", lineHeight: 1.5 }}>Zaenkrat samo e-pošta. SMS in WhatsApp dodamo pozneje.</span>
+                      <button onClick={sendCampaign} disabled={recipients.length === 0 || campaignBusy} style={{ height: 48, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: recipients.length === 0 ? "not-allowed" : "pointer", opacity: recipients.length === 0 || campaignBusy ? 0.5 : 1 }}>{campaignBusy ? "Pošiljam…" : `Pošlji e-pošto · ${recipients.length} gostom${couponOn ? " 🎟️" : ""}`}</button>
+                      <span style={{ fontSize: 12, color: "#9A8F80", lineHeight: 1.5 }}>Pošlje samo gostom z e-pošto. Rabi nastavljen RESEND_API_KEY (Scale: lasten ključ). SMS/WhatsApp kmalu.</span>
                     </div>
                     <div style={{ ...card, display: "flex", flexDirection: "column", gap: 10 }}>
                       <span style={{ fontWeight: 700, fontSize: 15 }}>Tvoji segmenti</span>
@@ -771,6 +787,17 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                       <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Jezik gostove strani</span><select name="language" value={lang} onChange={(e) => setLang(e.target.value)} style={inp}>{LANGS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Jezik celotnega flowa za goste. Prevodi (EN/HR/SR/BS/DE) se vklopijo kmalu — zaenkrat se nastavitev shrani.</span></label>
                       <button onClick={() => { const fd = new FormData(); fd.set("name", sName); fd.set("brand_color", settingsColor); fd.set("points_per_visit", sPoints); fd.set("stamp_goal", sGoal); fd.set("scan_window_hours", sWindow); fd.set("scan_cooldown_minutes", sCooldown); fd.set("google_review_url", sGoogle); fd.set("language", lang); run(() => updateVenueSettings(fd), "Nastavitve shranjene."); }} style={{ marginTop: 4, height: 48, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: "pointer", alignSelf: "flex-start", padding: "0 22px" }}>Shrani</button>
                     </div>
+                    {curPlan === "palaca" && (
+                      <div style={{ ...card, display: "flex", flexDirection: "column", gap: 12 }}>
+                        <span style={{ fontWeight: 700, fontSize: 15 }}>E-pošta iz tvoje domene <span style={{ fontSize: 11, fontWeight: 800, color: "#B4781E" }}>SCALE</span></span>
+                        <span style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5 }}>Vnesi svoj Resend ključ + pošiljatelja — kampanje gostom gredo iz tvoje domene (boljša dostavljivost + branding).</span>
+                        <form action={async (fd) => { await saveEmailSettings(fd); router.refresh(); flash("E-pošta shranjena."); }} className="flex flex-col" style={{ gap: 10 }}>
+                          <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Resend API ključ</span><input name="resend_api_key" defaultValue={billingVenue.resend_api_key ?? ""} placeholder="re_…" style={inp} /></label>
+                          <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Pošiljatelj (From)</span><input name="email_from" defaultValue={billingVenue.email_from ?? ""} placeholder="Ime <pozdrav@tvojadomena.si>" style={inp} /></label>
+                          <button style={{ height: 46, padding: "0 18px", border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer", alignSelf: "flex-start" }}>Shrani e-pošto</button>
+                        </form>
+                      </div>
+                    )}
                   </div>
                 )}
 

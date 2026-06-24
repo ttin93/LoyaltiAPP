@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/supabase/ssrServer";
 import { getServiceClient } from "@/lib/supabase/server";
 import { isSuperadmin } from "@/lib/superadmin";
+import { bestOwnerPlan } from "@/lib/plans";
+import { sendBatch, emailConfigured } from "@/lib/email";
+import { brandedEmail, textToHtml } from "@/lib/emailTemplate";
+import type { PlanKey } from "@/lib/types";
 
 async function assertSuperadmin() {
   const user = await getCurrentUser();
@@ -67,6 +71,61 @@ export async function adminUpdateVenue(formData: FormData) {
   const { error } = await db.from("venues").update(patch).eq("id", venueId);
   if (error) throw error;
   revalidatePath("/superadmin");
+}
+
+/**
+ * Super-admin → LASTNIKI: pošlji branded e-pošto (ponudbe/novice) po segmentu.
+ * Segmenti: all / paying / trial / free.
+ */
+export async function sendOwnerCampaign(formData: FormData): Promise<{ sent: number; failed: number; total: number; error?: string }> {
+  const db = await assertSuperadmin();
+  const subject = String(formData.get("subject") || "").trim();
+  const message = String(formData.get("message") || "").trim();
+  const segment = String(formData.get("segment") || "all");
+  if (!subject || !message) return { sent: 0, failed: 0, total: 0, error: "Vpiši zadevo in sporočilo." };
+  if (!emailConfigured()) return { sent: 0, failed: 0, total: 0, error: "E-pošta ni nastavljena (RESEND_API_KEY)." };
+
+  const now = Date.now();
+  const [{ data: venues }, usersRes] = await Promise.all([
+    db.from("venues").select("owner_user_id, plan, subscription_status, trial_ends_at"),
+    db.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+  ]);
+  const rows = (venues ?? []) as { owner_user_id: string | null; plan?: PlanKey; subscription_status?: string; trial_ends_at?: string | null }[];
+  const byOwner = new Map<string, typeof rows>();
+  for (const r of rows) {
+    if (!r.owner_user_id) continue;
+    const arr = byOwner.get(r.owner_user_id) ?? [];
+    arr.push(r);
+    byOwner.set(r.owner_user_id, arr);
+  }
+
+  const recipients: string[] = [];
+  for (const u of usersRes.data?.users ?? []) {
+    if (!u.email) continue;
+    const owned = byOwner.get(u.id) ?? [];
+    const plan = bestOwnerPlan(owned);
+    const paying = plan !== "free";
+    const onTrial = !paying && owned.some((v) => v.trial_ends_at && new Date(v.trial_ends_at).getTime() > now);
+    const match =
+      segment === "all" ||
+      (segment === "paying" && paying) ||
+      (segment === "trial" && onTrial) ||
+      (segment === "free" && !paying && !onTrial);
+    if (match) recipients.push(u.email);
+  }
+
+  const items = recipients.map((to) => ({
+    to,
+    subject,
+    html: brandedEmail({
+      brandName: "Tally",
+      brandColor: "#C4623D",
+      heading: subject,
+      bodyHtml: textToHtml(message),
+    }),
+  }));
+  const { sent, failed } = await sendBatch(items, { from: process.env.RESEND_FROM });
+  return { sent, failed, total: items.length };
 }
 
 /** Podaljšaj (ali zaženi) brezplačni trial lokalu za N dni — comp/test escape hatch. */

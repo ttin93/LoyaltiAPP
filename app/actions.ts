@@ -7,6 +7,8 @@ import { getServiceClient } from "@/lib/supabase/server";
 import { parseFiscalQR } from "@/lib/fiscalQr";
 import type { WheelConfig, Automations } from "@/lib/types";
 import { PLANS, bestOwnerPlan, planMaxVenues } from "@/lib/plans";
+import { sendBatch, emailConfigured } from "@/lib/email";
+import { brandedEmail, textToHtml } from "@/lib/emailTemplate";
 
 function slugify(s: string): string {
   return (
@@ -233,6 +235,36 @@ export async function saveAutomations(autos: Automations) {
   const { db, venue } = await ownerVenue();
   if (!venue) throw new Error("Nimaš lokala.");
   await db.from("venues").update({ automations: autos }).eq("id", venue.id);
+  revalidatePath("/dashboard");
+}
+
+/** Lokal → gostje: pošlji branded e-pošto kampanjo. Scale lahko uporabi svoj Resend ključ. */
+export async function sendGuestCampaign(args: { subject: string; message: string; emails: string[] }): Promise<{ sent: number; failed: number; total: number; error?: string }> {
+  const { venue } = await ownerVenue();
+  if (!venue) throw new Error("Nimaš lokala.");
+  if (!args.subject.trim() || !args.message.trim()) return { sent: 0, failed: 0, total: 0, error: "Vpiši zadevo in sporočilo." };
+  const emails = (args.emails || []).filter((e) => e && /.+@.+\..+/.test(e));
+  if (!emails.length) return { sent: 0, failed: 0, total: 0, error: "Ni prejemnikov z e-pošto." };
+  const byo = venue.plan === "palaca" && venue.resend_api_key
+    ? { apiKey: venue.resend_api_key as string, from: (venue.email_from as string) || undefined }
+    : null;
+  if (!byo && !emailConfigured()) return { sent: 0, failed: 0, total: 0, error: "E-pošta še ni nastavljena (RESEND_API_KEY)." };
+  const items = emails.map((to) => ({
+    to,
+    subject: args.subject,
+    html: brandedEmail({ brandName: venue.name, brandColor: venue.brand_color, heading: args.subject, bodyHtml: textToHtml(args.message), footer: venue.name }),
+  }));
+  const { sent, failed } = await sendBatch(items, byo ? { apiKey: byo.apiKey, from: byo.from } : undefined);
+  return { sent, failed, total: items.length };
+}
+
+/** Scale: shrani lasten Resend ključ + pošiljatelja (BYO domena). */
+export async function saveEmailSettings(formData: FormData) {
+  const { db, venue } = await ownerVenue();
+  if (!venue) throw new Error("Nimaš lokala.");
+  const key = String(formData.get("resend_api_key") || "").trim() || null;
+  const from = String(formData.get("email_from") || "").trim() || null;
+  await db.from("venues").update({ resend_api_key: key, email_from: from }).eq("id", venue.id);
   revalidatePath("/dashboard");
 }
 

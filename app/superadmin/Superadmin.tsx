@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { SAVenue, SAOwner, SATotals, SADay, SARevenue } from "./page";
-import { adminUpdateVenue, adminExtendTrial } from "./actions";
+import { adminUpdateVenue, adminExtendTrial, sendOwnerCampaign } from "./actions";
 import type { PlanKey, SubStatus } from "@/lib/types";
 import { PLANS, PLAN_ORDER, STATUS_LABEL, fmtEur, chargedAmount, monthlyEquivalent, isPaying } from "@/lib/plans";
 
@@ -58,7 +58,7 @@ export default function Superadmin({
   revenue: SARevenue;
   adminEmail: string;
 }) {
-  const [tab, setTab] = useState<"pregled" | "lokali" | "narocnine" | "lastniki">("pregled");
+  const [tab, setTab] = useState<"pregled" | "lokali" | "narocnine" | "lastniki" | "sporocila">("pregled");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<SAVenue | null>(null);
 
@@ -96,7 +96,7 @@ export default function Superadmin({
       {/* TABS */}
       <div style={{ background: CREAM, borderBottom: `1px solid ${BORD}`, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: "0 20px", display: "flex", gap: 4 }}>
-          {([["pregled", "Pregled"], ["lokali", `Lokali · ${venues.length}`], ["narocnine", "Naročnine"], ["lastniki", `Lastniki · ${totals.owners}`]] as const).map(([k, label]) => (
+          {([["pregled", "Pregled"], ["lokali", `Lokali · ${venues.length}`], ["narocnine", "Naročnine"], ["sporocila", "Sporočila"], ["lastniki", `Lastniki · ${totals.owners}`]] as const).map(([k, label]) => (
             <button
               key={k}
               onClick={() => setTab(k)}
@@ -126,6 +126,7 @@ export default function Superadmin({
           <Lokali venues={filtered} query={query} setQuery={setQuery} onOpen={setSelected} total={venues.length} />
         )}
         {tab === "narocnine" && <Narocnine revenue={revenue} venues={venues} onOpen={setSelected} onTrial={totals.onTrial} />}
+        {tab === "sporocila" && <Sporocila />}
         {tab === "lastniki" && <Lastniki owners={owners} />}
       </div>
 
@@ -638,6 +639,64 @@ function Lastniki({ owners }: { owners: SAOwner[] }) {
         </div>
       ))}
       </div>
+    </div>
+  );
+}
+
+/* ---------------- SPOROČILA (super-admin → lastniki) ---------------- */
+
+function Sporocila() {
+  const [pending, start] = useTransition();
+  const [segment, setSegment] = useState("all");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [result, setResult] = useState("");
+  function send() {
+    setResult("");
+    const fd = new FormData();
+    fd.set("segment", segment);
+    fd.set("subject", subject);
+    fd.set("message", message);
+    start(async () => {
+      try {
+        const r = await sendOwnerCampaign(fd);
+        if (r.error) setResult("⚠ " + r.error);
+        else setResult(`Poslano: ${r.sent}/${r.total}${r.failed ? ` · ${r.failed} ni uspelo` : ""}.`);
+      } catch (e) {
+        setResult("⚠ " + (e instanceof Error ? e.message : "Napaka."));
+      }
+    });
+  }
+  return (
+    <div className="flex flex-col" style={{ gap: 16, maxWidth: 620 }}>
+      <div style={{ background: "#FBF1DD", border: "1px solid #F0DDB4", borderRadius: 12, padding: "10px 14px", fontSize: 12.5, color: "#8A6A1E" }}>
+        Pošlji ponudbo / novico <strong>lastnikom lokalov</strong> (ne gostom). Maili gredo prek Resend iz Tally domene — rabi <span style={{ fontFamily: "monospace", fontSize: 12 }}>RESEND_API_KEY</span> + verificirano domeno (SPF/DKIM/DMARC).
+      </div>
+      <Card>
+        <div className="flex flex-col" style={{ gap: 12 }}>
+          <label className="flex flex-col" style={{ gap: 6 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: MUTED }}>Komu</span>
+            <select value={segment} onChange={(e) => setSegment(e.target.value)} style={{ ...inp, cursor: "pointer" }}>
+              <option value="all">Vsi lastniki</option>
+              <option value="paying">Plačujoči</option>
+              <option value="trial">Na trialu</option>
+              <option value="free">Brezplačni / potekli</option>
+            </select>
+          </label>
+          <label className="flex flex-col" style={{ gap: 6 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: MUTED }}>Zadeva</span>
+            <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="npr. Nova funkcija: avtomatizacije" style={inp} />
+          </label>
+          <label className="flex flex-col" style={{ gap: 6 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: MUTED }}>Sporočilo</span>
+            <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={7} placeholder="Pozdravljeni, …" style={{ ...inp, height: "auto", padding: "12px 13px", resize: "vertical", lineHeight: 1.5 }} />
+          </label>
+          <div className="flex items-center" style={{ gap: 12 }}>
+            <button onClick={send} disabled={pending} style={{ height: 46, padding: "0 24px", border: "none", borderRadius: 13, background: INK, color: CREAM, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: "pointer", opacity: pending ? 0.6 : 1 }}>{pending ? "Pošiljam…" : "Pošlji lastnikom"}</button>
+            {result && <span style={{ fontSize: 13, fontWeight: 700, color: result.startsWith("⚠") ? CORAL : GREEN }}>{result}</span>}
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

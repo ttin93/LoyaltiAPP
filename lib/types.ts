@@ -34,6 +34,8 @@ export interface Venue {
   current_period_end?: string | null;
   cancel_at_period_end?: boolean;
   trial_ends_at?: string | null; // do kdaj ima dostop brez plačila (trial / grace / superadmin)
+  resend_api_key?: string | null; // Scale: lasten Resend ključ (maili iz lastnikove domene)
+  email_from?: string | null;
   created_at: string;
 }
 

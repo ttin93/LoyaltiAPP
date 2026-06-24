@@ -7,20 +7,32 @@ Da gre v živo, je treba enkratno nastaviti Polar. ~15 min.
 1. Naredi račun na <https://polar.sh> in organizacijo (npr. "Tally").
 2. Začni v **Sandbox** načinu za test, kasneje preklopi na produkcijo.
 
-## 2. Ustvari 4 naročninske produkte (recurring)
+## 2. Ustvari 4 naročninske produkte (recurring) + 14-dnevni trial
 Polar dashboard → **Products** → New → tip **Subscription**.
 Naredi štiri (cena = brez DDV; Polar kot MoR davek doda sam):
 
-| Produkt              | Interval | Cena      |
-|----------------------|----------|-----------|
-| Tally Espresso (mes) | monthly  | 49,99 €   |
-| Tally Espresso (let) | yearly   | 479,90 €  |
-| Tally Doppio (mes)   | monthly  | 79,99 €   |
-| Tally Doppio (let)   | yearly   | 767,90 €  |
+| Produkt (ime je tvoje) | Interval | Cena      | Env var                              |
+|------------------------|----------|-----------|--------------------------------------|
+| Tally Start (mes)      | monthly  | 49,99 €   | `POLAR_PRODUCT_ESPRESSO_MONTHLY_ID`  |
+| Tally Start (let)      | yearly   | 499,90 €  | `POLAR_PRODUCT_ESPRESSO_YEARLY_ID`   |
+| Tally Grow (mes)       | monthly  | 79,99 €   | `POLAR_PRODUCT_DOPPIO_MONTHLY_ID`    |
+| Tally Grow (let)       | yearly   | 799,90 €  | `POLAR_PRODUCT_DOPPIO_YEARLY_ID`     |
 
-> Letne cene = mesečna × 12 × 0,8 (−20 %). Če v `lib/plans.ts` spremeniš
-> `YEARLY_DISCOUNT`, prilagodi tudi tu. Palača je "po dogovoru" → brez produkta
-> (gumb pelje na /kontakt).
+> Letno = **mesečna × 10** (2 meseca gratis). Imena paketov so Start/Grow/Scale,
+> a env ključi ostajajo `ESPRESSO`/`DOPPIO` (notranji ključi). Scale = "po dogovoru"
+> → brez produkta (gumb pelje na /kontakt).
+
+### 14-dnevni FREE TRIAL (kartica vnaprej) — KLJUČNO
+Pri **vsakem** produktu (ali na ceni/price) vklopi **Free trial = 14 dni**:
+Polar → produkt → **Pricing / Trial** → "Free trial period" → **14 days**.
+
+Kako to deluje (Polar uredi sam, mi imamo kodo že pripravljeno):
+- Ob checkoutu Polar **zahteva kartico** (a je ne bremeni).
+- 14 dni je brezplačno → naročnina je v stanju `trialing`. V dashboardu piše
+  "**Brezplačno še N dni · potem se trga X dne Y**".
+- Po 14 dneh Polar **samodejno bremeni** kartico → `subscription.active`.
+- Če gost **prekliče med trialom** (prek "Upravljaj naročnino" → Polar portal) →
+  ni bremenitve, dostop ugasne ob koncu triala.
 
 Pri vsakem produktu kopiraj **Product ID**.
 

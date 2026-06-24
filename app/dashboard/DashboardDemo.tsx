@@ -100,8 +100,8 @@ export default function DashboardDemo() {
             {/* SIDEBAR (desktop) */}
             <div className="hidden flex-col lg:flex" style={{ width: 248, flexShrink: 0, background: "#fff", borderRight: `1px solid ${BORD}`, padding: "22px 16px" }}>
               <div className="flex items-center" style={{ gap: 10, padding: "0 8px 18px", borderBottom: "1px solid #F1E8D9", marginBottom: 16 }}>
-                <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 13, background: INK, color: PAPER, fontWeight: 800, fontSize: 18 }}>M</div>
-                <div className="flex flex-col" style={{ lineHeight: 1.25, flex: 1, minWidth: 0 }}><span style={{ fontWeight: 800, fontSize: 15 }}>Mora</span><span style={{ fontSize: 12, color: "#9A8F80" }}>Ljubljana</span></div>
+                <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 13, background: INK, color: PAPER, fontWeight: 800, fontSize: 18 }}>L</div>
+                <div className="flex flex-col" style={{ lineHeight: 1.25, flex: 1, minWidth: 0 }}><span style={{ fontWeight: 800, fontSize: 15 }}>Kavarna Lipa</span><span style={{ fontSize: 12, color: "#9A8F80" }}>Ljubljana</span></div>
               </div>
               <div className="flex flex-col" style={{ gap: 3 }}>
                 {NAV.map(([id, label, icon]) => { const on = id === sec; return (

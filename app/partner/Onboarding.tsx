@@ -116,7 +116,7 @@ export default function Onboarding() {
             <div style={{ flex: 1, minHeight: 230 }}>
               {step === 1 && (
                 <div className="flex flex-col" style={{ gap: 20, maxWidth: 440 }}>
-                  <div className="flex flex-col" style={{ gap: 8 }}><label style={lbl}>Ime znamke</label><input value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="npr. Mora" style={inp} /></div>
+                  <div className="flex flex-col" style={{ gap: 8 }}><label style={lbl}>Ime znamke</label><input value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="npr. Kavarna Lipa" style={inp} /></div>
                   <div className="flex flex-col" style={{ gap: 8 }}><label style={lbl}>Logo</label><div className="flex items-center" style={{ gap: 14 }}><div className="flex items-center justify-center" style={{ width: 60, height: 60, borderRadius: 17, background: INK, color: PAPER, fontWeight: 800, fontSize: 26, flexShrink: 0 }}>{(brandName.trim()[0] || "M").toUpperCase()}</div><div className="flex flex-1 items-center justify-center" style={{ height: 60, border: "2px dashed #E0D2BC", borderRadius: 14, fontSize: 13.5, color: "#9A8F80", fontWeight: 600 }}>Logo dodaš kasneje</div></div></div>
                   <div className="flex flex-col" style={{ gap: 10 }}>
                     <label style={lbl}>Barva znamke</label>

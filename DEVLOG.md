@@ -49,6 +49,9 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-24 — seja 55b (demo lokal preimenovan)
+- Demo ime lokala **Mora → Kavarna Lipa** (bolj prijazno/univerzalno) na landingu (mockup kartica, review popup, kampanja, „Kavarna Lipa · Ljubljana"), v demo dashboardu in onboarding placeholderju. Avatar „M"→„L", „pri Mora"→„pri Lipi". FAQ beseda „mora" (=must) ostala.
+
 ### 2026-06-24 — seja 55 (email SPROŽILCI + CRON pripeti)
 - Nov [`lib/notify.ts`](lib/notify.ts) = best-effort senderji (no-op brez RESEND, nikoli ne vržejo v glavni tok), vsi prek `after()` (po odgovoru).
 - **Event sprožilci:** registracija gosta → welcome (`/api/register`); sken → točke (+ kupon ob polni kartici) (`/api/scan`); ocena → hvala (`/api/review`); nov lokal → dobrodošlica lastniku (`createVenue`); Polar `subscription.active` → potrditev nakupa lastniku (webhook).

@@ -50,17 +50,34 @@ function HeroStamps() {
 
 function RatingChart() {
   const pts = [4.1, 4.2, 4.3, 4.5, 4.6, 4.8];
-  const w = 300, h = 70, pad = 4, min = 4.0, max = 4.9;
-  const xs = pts.map((_, i) => pad + (i * (w - pad * 2)) / (pts.length - 1));
-  const ys = pts.map((p) => h - pad - ((p - min) / (max - min)) * (h - pad * 2));
-  let d = `M${xs[0]} ${ys[0]}`;
-  for (let i = 1; i < pts.length; i++) d += ` L${xs[i]} ${ys[i]}`;
-  const area = `${d} L${xs[xs.length - 1]} ${h} L${xs[0]} ${h} Z`;
+  const w = 520, h = 118, padX = 12, padY = 16, min = 4.0, max = 4.9;
+  const P = pts.map((p, i) => [
+    padX + (i * (w - padX * 2)) / (pts.length - 1),
+    h - padY - ((p - min) / (max - min)) * (h - padY * 2),
+  ] as [number, number]);
+  // gladka krivulja (Catmull-Rom → kubični bezier)
+  let d = `M${P[0][0].toFixed(1)} ${P[0][1].toFixed(1)}`;
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || p2;
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += ` C${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  const area = `${d} L${P[P.length - 1][0].toFixed(1)} ${h} L${P[0][0].toFixed(1)} ${h} Z`;
   return (
-    <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: "block" }}>
-      <path d={area} style={{ fill: "rgba(226,160,74,0.14)", stroke: "none" }} />
-      <path d={d} style={{ fill: "none", stroke: AMBER, strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" }} />
-      {xs.map((x, i) => <circle key={i} cx={x} cy={ys[i]} r={i === xs.length - 1 ? 4 : 2.5} style={{ fill: i === xs.length - 1 ? AMBER : CREAM, stroke: AMBER, strokeWidth: 2 }} />)}
+    <svg viewBox={`0 0 ${w} ${h}`} style={{ display: "block", width: "100%", height: "auto" }}>
+      <defs>
+        <linearGradient id="ratingFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="rgba(226,160,74,0.22)" />
+          <stop offset="100%" stopColor="rgba(226,160,74,0)" />
+        </linearGradient>
+      </defs>
+      <path d={area} style={{ fill: "url(#ratingFill)", stroke: "none" }} />
+      <path d={d} style={{ fill: "none", stroke: AMBER, strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round", vectorEffect: "non-scaling-stroke" }} />
+      {P.map(([x, y], i) => {
+        const last = i === P.length - 1;
+        return <circle key={i} cx={x} cy={y} r={last ? 4.5 : 3} style={{ fill: last ? AMBER : CREAM, stroke: AMBER, strokeWidth: 2, vectorEffect: "non-scaling-stroke" }} />;
+      })}
     </svg>
   );
 }

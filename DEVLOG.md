@@ -49,6 +49,9 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-24 — seja 49 (fix: RatingChart na landingu razvlečen)
+- `RatingChart` (4,8★ ocena na Googlu, hero) je imel `preserveAspectRatio="none"` → na desktopu razvlečena linija + pikice kot elipse. Fix: uniformno skaliranje (`width:100% height:auto` + viewBox 520×118), gladka Catmull-Rom krivulja, gradientno polnilo, `non-scaling-stroke`. Preverjeno v živo (razmerje 4,41, pikice okrogle 5,2×5,2).
+
 ### 2026-06-24 — seja 48 (Super Admin: NAROČNINE — statistika prihodka/plačil)
 - Nova **Naročnine** sekcija v `/superadmin`: MRR (mesečni ponavljajoči prihodek), ARR, plačujoči vs brezplačni, povpr./lokal, mesečno/letno split, vezava, poskusni; prihodek po paketih (graf), razlaga letnih paketov, tabela vseh lokalov z paketom/ciklom/ceno/statusom/vezavo (klik → urejevalnik).
 - Pravi paketi iz cenika: **Espresso 49,99 €/mes, Doppio 79,99 €/mes, Palača po dogovoru** (+ Brezplačni). Letni = `YEARLY_DISCOUNT` (default **−20 %**, ena konstanta v [`lib/plans.ts`](lib/plans.ts)).

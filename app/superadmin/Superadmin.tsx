@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { SAVenue, SAOwner, SATotals, SADay, SARevenue } from "./page";
-import { adminUpdateVenue, adminExtendTrial, sendOwnerCampaign } from "./actions";
+import { adminUpdateVenue, adminExtendTrial, sendOwnerCampaign, adminVenueLog } from "./actions";
+import type { LogEntry } from "@/lib/types";
 import type { PlanKey, SubStatus } from "@/lib/types";
 import { PLANS, PLAN_ORDER, STATUS_LABEL, fmtEur, chargedAmount, monthlyEquivalent, isPaying } from "@/lib/plans";
 
@@ -730,6 +731,13 @@ function VenueModal({ venue, onClose }: { venue: SAVenue; onClose: () => void })
 
   const [trialDays, setTrialDays] = useState("14");
   const [trialMsg, setTrialMsg] = useState("");
+  const [log, setLog] = useState<LogEntry[]>([]);
+  const [logLoading, setLogLoading] = useState(true);
+  useEffect(() => {
+    let on = true;
+    adminVenueLog(venue.id).then((l) => { if (on) { setLog(l); setLogLoading(false); } }).catch(() => { if (on) setLogLoading(false); });
+    return () => { on = false; };
+  }, [venue.id]);
   function extendTrial() {
     setTrialMsg("");
     const fd = new FormData();
@@ -824,6 +832,26 @@ function VenueModal({ venue, onClose }: { venue: SAVenue; onClose: () => void })
               <button onClick={extendTrial} disabled={pending} style={{ height: 38, padding: "0 14px", border: "none", borderRadius: 10, background: GREEN, color: "#F4F0E4", fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: pending ? 0.6 : 1 }}>+ Podaljšaj trial</button>
               {trialMsg && <span style={{ fontSize: 12.5, color: GREEN, fontWeight: 700 }}>{trialMsg}</span>}
             </div>
+          </div>
+
+          {/* DNEVNIK */}
+          <div style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: MUTED, marginBottom: 8 }}>Dnevnik</div>
+          <div style={{ background: PAPER, borderRadius: 12, maxHeight: 220, overflowY: "auto", marginBottom: 20 }}>
+            {logLoading ? (
+              <div style={{ padding: 14, fontSize: 13, color: MUTED, textAlign: "center" }}>Nalagam…</div>
+            ) : log.length === 0 ? (
+              <div style={{ padding: 14, fontSize: 13, color: MUTED, textAlign: "center" }}>Ni dogodkov.</div>
+            ) : (
+              log.map((e, i) => {
+                const lc = e.type === "sken" ? GREEN : e.type === "unovčenje" ? CORAL : e.type === "ročno" ? AMBER : INK;
+                return (
+                  <div key={i} className="flex items-center justify-between" style={{ padding: "9px 13px", borderTop: i ? `1px solid ${BORD}` : "none", gap: 10 }}>
+                    <span style={{ fontSize: 12.5, minWidth: 0 }}><span style={{ fontWeight: 700, color: lc }}>{e.type}</span> <span style={{ color: MUTED }}>· {e.detail}</span></span>
+                    <span style={{ fontSize: 11.5, color: "#A89B88", whiteSpace: "nowrap", flexShrink: 0 }}>{relTime(e.when)}</span>
+                  </div>
+                );
+              })
+            )}
           </div>
 
           {/* EDIT */}

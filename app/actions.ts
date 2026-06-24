@@ -268,6 +268,33 @@ export async function saveEmailSettings(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+/** Naloži logo lokala v Storage (bucket "logos") + shrani URL na venue. */
+export async function uploadLogo(formData: FormData): Promise<{ url?: string; error?: string }> {
+  const { db, venue } = await ownerVenue();
+  if (!venue) throw new Error("Nimaš lokala.");
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return { error: "Ni datoteke." };
+  if (file.size > 2 * 1024 * 1024) return { error: "Slika naj bo manjša od 2 MB." };
+  if (!/^image\/(png|jpe?g|webp|svg\+xml)$/.test(file.type)) return { error: "Dovoljeni: PNG, JPG, WEBP, SVG." };
+  const ext = file.type.includes("svg") ? "svg" : file.type.includes("png") ? "png" : file.type.includes("webp") ? "webp" : "jpg";
+  const path = `${venue.id}/logo-${Date.now()}.${ext}`;
+  const buf = Buffer.from(await file.arrayBuffer());
+  const { error: upErr } = await db.storage.from("logos").upload(path, buf, { contentType: file.type, upsert: true });
+  if (upErr) return { error: "Nalaganje ni uspelo: " + upErr.message };
+  const url = db.storage.from("logos").getPublicUrl(path).data.publicUrl;
+  const { error } = await db.from("venues").update({ logo_url: url }).eq("id", venue.id);
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard");
+  return { url };
+}
+
+export async function removeLogo() {
+  const { db, venue } = await ownerVenue();
+  if (!venue) throw new Error("Nimaš lokala.");
+  await db.from("venues").update({ logo_url: null }).eq("id", venue.id);
+  revalidatePath("/dashboard");
+}
+
 export async function signOut() {
   const supabase = await createSSRClient();
   await supabase.auth.signOut();

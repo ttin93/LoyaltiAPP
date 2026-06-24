@@ -39,6 +39,8 @@ export interface Venue {
   created_at: string;
 }
 
+export type LogEntry = { type: string; when: string; detail: string };
+
 export type PlanKey = "free" | "espresso" | "doppio" | "palaca";
 export type BillingCycle = "monthly" | "yearly";
 export type SubStatus = "trialing" | "active" | "past_due" | "canceled";

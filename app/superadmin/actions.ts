@@ -7,7 +7,7 @@ import { isSuperadmin } from "@/lib/superadmin";
 import { bestOwnerPlan } from "@/lib/plans";
 import { sendBatch, emailConfigured } from "@/lib/email";
 import { brandedEmail, textToHtml } from "@/lib/emailTemplate";
-import type { PlanKey } from "@/lib/types";
+import type { PlanKey, LogEntry } from "@/lib/types";
 
 async function assertSuperadmin() {
   const user = await getCurrentUser();
@@ -126,6 +126,26 @@ export async function sendOwnerCampaign(formData: FormData): Promise<{ sent: num
   }));
   const { sent, failed } = await sendBatch(items, { from: process.env.RESEND_FROM });
   return { sent, failed, total: items.length };
+}
+
+/** Per-lokal dnevnik: zadnji skeni / unovčenja / ročne točke / ocene (za super-admin). */
+export async function adminVenueLog(venueId: string): Promise<LogEntry[]> {
+  const db = await assertSuperadmin();
+  if (!venueId) return [];
+  type C = { email?: string | null; phone?: string | null } | null;
+  const [s, r, g, rev] = await Promise.all([
+    db.from("scans").select("created_at, points_awarded, customers(email, phone)").eq("venue_id", venueId).order("created_at", { ascending: false }).limit(20),
+    db.from("redemptions").select("created_at, points_spent, rewards(name), customers(email, phone)").eq("venue_id", venueId).order("created_at", { ascending: false }).limit(20),
+    db.from("point_grants").select("created_at, points, customers(email, phone)").eq("venue_id", venueId).order("created_at", { ascending: false }).limit(10),
+    db.from("reviews").select("created_at, stars, to_google").eq("venue_id", venueId).order("created_at", { ascending: false }).limit(10),
+  ]);
+  const who = (c: C) => c?.email || c?.phone || "gost";
+  const out: LogEntry[] = [];
+  for (const x of (s.data ?? []) as { created_at: string; points_awarded: number; customers: C }[]) out.push({ type: "sken", when: x.created_at, detail: `${who(x.customers)} · +${x.points_awarded} t` });
+  for (const x of (r.data ?? []) as { created_at: string; points_spent: number; rewards: { name?: string } | null; customers: C }[]) out.push({ type: "unovčenje", when: x.created_at, detail: `${who(x.customers)} · ${x.rewards?.name ?? "nagrada"} (−${x.points_spent})` });
+  for (const x of (g.data ?? []) as { created_at: string; points: number; customers: C }[]) out.push({ type: "ročno", when: x.created_at, detail: `${who(x.customers)} · +${x.points} t (admin)` });
+  for (const x of (rev.data ?? []) as { created_at: string; stars: number; to_google: boolean }[]) out.push({ type: "ocena", when: x.created_at, detail: `${x.stars}★ ${x.to_google ? "→ Google" : "zasebno"}` });
+  return out.sort((a, b) => (a.when < b.when ? 1 : -1)).slice(0, 40);
 }
 
 /** Podaljšaj (ali zaženi) brezplačni trial lokalu za N dni — comp/test escape hatch. */

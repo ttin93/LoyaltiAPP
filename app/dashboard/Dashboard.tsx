@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow, WheelConfig, WheelSegment, Automation, Automations, PlanKey } from "@/lib/types";
-import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, saveWheel, saveAutomations, sendGuestCampaign, saveEmailSettings, signOut } from "@/app/actions";
+import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, saveWheel, saveAutomations, sendGuestCampaign, saveEmailSettings, uploadLogo, removeLogo, signOut } from "@/app/actions";
 import { PLANS, fmtEur, monthlyEquivalent, chargedAmount, STATUS_LABEL, planFeature, planMaxVenues } from "@/lib/plans";
 import type { Access } from "@/lib/access";
 import Scanner from "@/app/components/Scanner";
@@ -292,6 +292,23 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
     } catch { flash("Napaka povezave."); }
     setBillingBusy(false);
   }
+  // Logo upload
+  const [logoBusy, setLogoBusy] = useState(false);
+  async function onLogoPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setLogoBusy(true);
+    const fd = new FormData();
+    fd.set("file", f);
+    try {
+      const r = await uploadLogo(fd);
+      if (r.error) flash("⚠ " + r.error);
+      else { flash("Logo naložen."); router.refresh(); }
+    } catch (err) { flash(err instanceof Error ? err.message : "Napaka."); }
+    setLogoBusy(false);
+    e.target.value = "";
+  }
+
   // Marketing: pošlji e-pošto kampanjo gostom (z email naslovom)
   const [campaignBusy, setCampaignBusy] = useState(false);
   async function sendCampaign() {
@@ -757,6 +774,21 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                         <input name="points_required" type="number" placeholder="točke" style={{ ...inp, width: 72 }} />
                         <button style={{ height: 46, padding: "0 14px", border: "none", borderRadius: 12, background: AMBER, color: INK, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Dodaj</button>
                       </form>
+                    </div>
+                    {/* logo */}
+                    <div style={{ ...card, display: "flex", flexDirection: "column", gap: 12 }}>
+                      <span style={{ fontWeight: 700, fontSize: 15 }}>Logo lokala</span>
+                      <div className="flex items-center" style={{ gap: 14 }}>
+                        <div className="flex items-center justify-center" style={{ width: 56, height: 56, borderRadius: 14, background: venue.logo_url ? "#fff" : INK, color: PAPER, fontWeight: 800, fontSize: 22, overflow: "hidden", border: `1px solid ${BORD}`, flexShrink: 0 }}>
+                          {venue.logo_url ? <img src={venue.logo_url} alt="logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : venue.name.charAt(0).toUpperCase()}
+                        </div>
+                        <label className="inline-flex items-center" style={{ height: 42, padding: "0 16px", border: "1.5px solid #E4D9C7", borderRadius: 12, background: "#fff", color: INK, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>
+                          {logoBusy ? "Nalagam…" : venue.logo_url ? "Zamenjaj logo" : "Naloži logo"}
+                          <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={onLogoPick} disabled={logoBusy} style={{ display: "none" }} />
+                        </label>
+                        {venue.logo_url && <button onClick={() => run(() => removeLogo(), "Logo odstranjen.")} style={{ height: 42, padding: "0 14px", border: "1px solid #E4D9C7", borderRadius: 12, background: "#fff", color: CORAL, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Odstrani</button>}
+                      </div>
+                      <span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>PNG / JPG / WEBP / SVG do 2 MB. Pokaže se gostom na njihovi strani zvestobe.</span>
                     </div>
                     {/* lokal in točke */}
                     <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>

@@ -606,7 +606,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           <div className="relative flex flex-col justify-center" style={{ background: `linear-gradient(160deg,${tintLight} 0%,${tintMed} 100%)`, padding: "clamp(28px,4vw,48px)", gap: 20, overflow: "hidden" }}>
             <div aria-hidden style={{ position: "absolute", bottom: -50, right: -30, width: 200, height: 200, borderRadius: "50%", background: hexA(brand, 0.22) }} />
             <div className="relative flex items-center" style={{ gap: 12 }}>
-              <div className="flex items-center justify-center" style={{ width: 52, height: 52, borderRadius: 17, background: logoBg, color: PAPER, fontWeight: 800, fontSize: 24 }}>{(venue.name.trim().charAt(0) || "M").toUpperCase()}</div>
+              <div className="flex items-center justify-center" style={{ width: 52, height: 52, borderRadius: 17, background: venue.logo_url ? "#fff" : logoBg, color: PAPER, fontWeight: 800, fontSize: 24, overflow: "hidden" }}>{venue.logo_url ? <img src={venue.logo_url} alt={venue.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : (venue.name.trim().charAt(0) || "M").toUpperCase()}</div>
               <div><div style={{ fontWeight: 800, fontSize: 21 }}>{venue.name}</div>{city && <div style={{ fontSize: 13, color: accentDeep }}>{city}</div>}</div>
             </div>
             <h2 className="relative" style={{ margin: 0, fontWeight: 800, fontSize: "clamp(28px,3vw,36px)", lineHeight: 1.08, letterSpacing: "-0.02em" }}>{t.everyCoffee}</h2>

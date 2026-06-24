@@ -49,6 +49,17 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-24 — seja 53 (CEL monetizacijski flow: backlog 1→7)
+- **1 Per-lastnik billing + limit lokalov**: `bestOwnerPlan`; `createVenue` blokira čez `planMaxVenues`; gating + billing v dashboardu uporabljata LASTNIKOV paket; naročnina živi na primarnem lokalu.
+- **2 14-dnevni trial + POLNI paywall**: `venues.trial_ends_at` (0017, backfill +60d za pilote); [`lib/access.ts`](lib/access.ts) `ownerAccess`; dashboard **paywall zaslon** ob izteku (plan picker → checkout) + **trial countdown banner**; nov lokal = 14d trial.
+- **3 Superadmin trial**: "Na trialu" KPI + "**Podaljšaj trial X dni**" v venue modalu (`adminExtendTrial`).
+- **4 Plan-change s proracijo**: če naročnina obstaja → `PATCH` Polar subscription (prorate), brez nove/dvojnega trganja.
+- **5 E-pošta (Resend)**: [`lib/email.ts`](lib/email.ts) + [`lib/emailTemplate.ts`](lib/emailTemplate.ts) (branded); superadmin **"Sporočila"** tab (→ lastnikom po segmentu, `sendOwnerCampaign`); marketing "Pošlji" zdaj **dejansko pošlje** gostom (`sendGuestCampaign`); **Scale BYO Resend** key (0018 + `saveEmailSettings` + nastavitve kartica). Graceful brez ključa.
+- **6 Logo upload**: Storage bucket `logos` (0019, public); `uploadLogo`/`removeLogo`; nastavitve kartica + gostova stran prikaže logo.
+- **7 Per-lokal dnevnik**: `adminVenueLog` (skeni/unovčenja/ročno/ocene) v superadmin venue modalu.
+- `next build` ✅ vse rute. Webhook trialing/active/revoked preverjen v živo. PrTinu počiščen (free + 60d grace).
+- **Rabi tvoje (sicer prijazno "ni nastavljeno"):** Polar ključi+produkti ([`docs/POLAR.md`](docs/POLAR.md)), Resend ključ + verificirana domena (SPF/DKIM/DMARC). Paywall NE zaklene obstoječih (grace +60d).
+
 ### 2026-06-24 — seja 52b (landing cenik polish)
 - Cenik privzeto na **Letno**; značka "2 meseca gratis" **pod** switchem in **samo pri letnem**.
 - Letna cena = **na mesec velika** (npr. 41,66 €/mes) + majhno zraven prečrtana mesečna + letni total ("49,99/mes · 499,90 na leto") — ne polna letna cena. Mesečno doda namig "X na leto, če plačaš letno".

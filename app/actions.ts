@@ -8,7 +8,7 @@ import { parseFiscalQR } from "@/lib/fiscalQr";
 import type { WheelConfig, Automations } from "@/lib/types";
 import { PLANS, bestOwnerPlan, planMaxVenues } from "@/lib/plans";
 import { sendBatch, emailConfigured } from "@/lib/email";
-import { brandedEmail, textToHtml } from "@/lib/emailTemplate";
+import { emailCampaign } from "@/lib/emailTemplate";
 
 function slugify(s: string): string {
   return (
@@ -249,10 +249,12 @@ export async function sendGuestCampaign(args: { subject: string; message: string
     ? { apiKey: venue.resend_api_key as string, from: (venue.email_from as string) || undefined }
     : null;
   if (!byo && !emailConfigured()) return { sent: 0, failed: 0, total: 0, error: "E-pošta še ni nastavljena (RESEND_API_KEY)." };
+  const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "";
+  const ctaUrl = origin ? `${origin}/p/${venue.public_code}` : "#";
   const items = emails.map((to) => ({
     to,
     subject: args.subject,
-    html: brandedEmail({ brandName: venue.name, brandColor: venue.brand_color, heading: args.subject, bodyHtml: textToHtml(args.message), footer: venue.name }),
+    html: emailCampaign({ venueName: venue.name, brandColor: venue.brand_color, ctaUrl }, { heading: args.subject, message: args.message }),
   }));
   const { sent, failed } = await sendBatch(items, byo ? { apiKey: byo.apiKey, from: byo.from } : undefined);
   return { sent, failed, total: items.length };

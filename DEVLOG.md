@@ -49,6 +49,12 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-24 — seja 54 (EMAIL predloge implementirane — 16 šablon iz dizajna)
+- Claude Design "Email Šablone" prenešen v [`lib/emailTemplate.ts`](lib/emailTemplate.ts): **email-safe HTML** (inline stili, tabele), gostov ovoj (barvna glava z lokalovim brandingom) + admin ovoj (Tally), gradniki (žigi, kupon-blok+koda, stat box, koraki, feature list, notice).
+- **16 predlog**: gost-transakcijski (points / coupon_earned / coupon_redeem / welcome), gost-avtomatizacije (we_miss_you / anniversary / birthday_guest / birthday_venue), kampanje (emailCampaign / review_thanks), admin SaaS (purchase / expiring / renewal / owner_welcome / owner_update / owner_message).
+- **Povezano ZDAJ**: `sendGuestCampaign` → `emailCampaign` (brand + CTA na gostovo stran), `sendOwnerCampaign` → `emailOwnerMessage` (Tally). Ostale pripravljene; wiring na sprožilce (scan/register/webhook + cron za avtomatizacije/opomnike) = naslednji korak, rabi RESEND live.
+- Preverjeno v živo: vseh 16 izrisanih v iframe predogledu (žigi 10/3 v brand barvi, kupon-blok+koda, pravi gost/admin headerji), `next build` ✅. (zip: "Loyalty Card Design-handoff (3)")
+
 ### 2026-06-24 — seja 53 (CEL monetizacijski flow: backlog 1→7)
 - **1 Per-lastnik billing + limit lokalov**: `bestOwnerPlan`; `createVenue` blokira čez `planMaxVenues`; gating + billing v dashboardu uporabljata LASTNIKOV paket; naročnina živi na primarnem lokalu.
 - **2 14-dnevni trial + POLNI paywall**: `venues.trial_ends_at` (0017, backfill +60d za pilote); [`lib/access.ts`](lib/access.ts) `ownerAccess`; dashboard **paywall zaslon** ob izteku (plan picker → checkout) + **trial countdown banner**; nov lokal = 14d trial.

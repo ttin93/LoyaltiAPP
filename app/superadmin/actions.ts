@@ -6,7 +6,7 @@ import { getServiceClient } from "@/lib/supabase/server";
 import { isSuperadmin } from "@/lib/superadmin";
 import { bestOwnerPlan } from "@/lib/plans";
 import { sendBatch, emailConfigured } from "@/lib/email";
-import { brandedEmail, textToHtml } from "@/lib/emailTemplate";
+import { emailOwnerMessage } from "@/lib/emailTemplate";
 import type { PlanKey, LogEntry } from "@/lib/types";
 
 async function assertSuperadmin() {
@@ -114,15 +114,11 @@ export async function sendOwnerCampaign(formData: FormData): Promise<{ sent: num
     if (match) recipients.push(u.email);
   }
 
+  const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "";
   const items = recipients.map((to) => ({
     to,
     subject,
-    html: brandedEmail({
-      brandName: "Tally",
-      brandColor: "#C4623D",
-      heading: subject,
-      bodyHtml: textToHtml(message),
-    }),
+    html: emailOwnerMessage({ heading: subject, message, ctaText: "Odpri Tally", ctaUrl: origin ? `${origin}/dashboard` : "#" }),
   }));
   const { sent, failed } = await sendBatch(items, { from: process.env.RESEND_FROM });
   return { sent, failed, total: items.length };

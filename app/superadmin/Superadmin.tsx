@@ -263,23 +263,80 @@ function Lokali({
   onOpen: (v: SAVenue) => void;
   total: number;
 }) {
+  const [fPlan, setFPlan] = useState<"all" | PlanKey>("all");
+  const [fLang, setFLang] = useState<"all" | string>("all");
+  const [sortKey, setSortKey] = useState<"new" | "old" | "customers" | "scans" | "rating" | "name">("new");
+  const [activeOnly, setActiveOnly] = useState(false);
+  const [noScans, setNoScans] = useState(false);
+
+  const list = useMemo(() => {
+    const l = venues.filter((v) => {
+      if (fPlan !== "all" && (v.plan ?? "free") !== fPlan) return false;
+      if (fLang !== "all" && (v.language || "sl") !== fLang) return false;
+      if (activeOnly && !(v.cScans30 > 0)) return false;
+      if (noScans && v.cScans !== 0) return false;
+      return true;
+    });
+    l.sort((a, b) => {
+      switch (sortKey) {
+        case "old": return (a.created_at || "").localeCompare(b.created_at || "");
+        case "customers": return b.cCustomers - a.cCustomers;
+        case "scans": return b.cScans30 - a.cScans30;
+        case "rating": return (b.reviewAvg ?? -1) - (a.reviewAvg ?? -1);
+        case "name": return a.name.localeCompare(b.name, "sl");
+        default: return (b.created_at || "").localeCompare(a.created_at || "");
+      }
+    });
+    return l;
+  }, [venues, fPlan, fLang, sortKey, activeOnly, noScans]);
+
+  const anyFilter = query.trim() !== "" || fPlan !== "all" || fLang !== "all" || activeOnly || noScans;
+  function clearFilters() { setQuery(""); setFPlan("all"); setFLang("all"); setActiveOnly(false); setNoScans(false); }
+
   return (
     <div className="flex flex-col" style={{ gap: 14 }}>
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Išči po imenu, emailu lastnika ali kodi…"
-        style={{ height: 46, border: `1px solid ${BORD}`, borderRadius: 13, background: CREAM, padding: "0 16px", fontFamily: JAK, fontSize: 14.5, color: INK, outline: "none" }}
-      />
-      <div style={{ fontSize: 12.5, color: MUTED }}>{venues.length} od {total}</div>
+      {/* FILTRI */}
+      <div style={{ background: CREAM, border: `1px solid ${BORD}`, borderRadius: 14, padding: 12 }}>
+        <div className="flex flex-wrap items-center" style={{ gap: 8 }}>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Išči lokal, lastnika ali kodo…"
+            style={{ flex: "1 1 200px", minWidth: 150, height: 38, border: `1px solid ${BORD}`, borderRadius: 10, background: BG, padding: "0 12px", fontFamily: JAK, fontSize: 13.5, color: INK, outline: "none" }}
+          />
+          <select value={fPlan} onChange={(e) => setFPlan(e.target.value as "all" | PlanKey)} style={fsel}>
+            <option value="all">Vsi paketi</option>
+            {PLAN_ORDER.map((p) => <option key={p} value={p}>{PLANS[p].label}</option>)}
+          </select>
+          <select value={fLang} onChange={(e) => setFLang(e.target.value)} style={fsel}>
+            <option value="all">Vsi jeziki</option>
+            {LANGS.map((l) => <option key={l.v} value={l.v}>{l.l}</option>)}
+          </select>
+          <select value={sortKey} onChange={(e) => setSortKey(e.target.value as typeof sortKey)} style={fsel}>
+            <option value="new">Najnovejši</option>
+            <option value="old">Najstarejši</option>
+            <option value="customers">Največ strank</option>
+            <option value="scans">Največ skenov 30d</option>
+            <option value="rating">Najboljša ocena</option>
+            <option value="name">Ime A–Ž</option>
+          </select>
+        </div>
+        <div className="flex flex-wrap items-center" style={{ gap: 8, marginTop: 10 }}>
+          <Chip active={activeOnly} onClick={() => { setActiveOnly((v) => !v); setNoScans(false); }}>Aktivni (sken v 30d)</Chip>
+          <Chip active={noScans} onClick={() => { setNoScans((v) => !v); setActiveOnly(false); }}>Brez skenov</Chip>
+          {anyFilter && <button onClick={clearFilters} style={{ height: 30, padding: "0 12px", borderRadius: 999, border: "none", background: "none", color: CORAL, fontFamily: JAK, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>✕ Počisti filtre</button>}
+        </div>
+      </div>
+
+      <div style={{ fontSize: 12.5, color: MUTED }}>{list.length} {list.length === 1 ? "lokal" : "lokalov"}{anyFilter ? ` od ${total}` : ""}</div>
 
       <div style={{ background: CREAM, border: `1px solid ${BORD}`, borderRadius: 16, overflow: "hidden" }}>
         {/* header */}
         <div className="hidden md:grid" style={{ gridTemplateColumns: "2.2fr 2fr 0.8fr 0.9fr 0.8fr 1fr 40px", gap: 10, padding: "12px 16px", borderBottom: `1px solid ${BORD}`, fontSize: 11.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: MUTED }}>
           <span>Lokal</span><span>Lastnik</span><span>Stranke</span><span>Skeni 30d</span><span>Ocena</span><span>Ustvarjen</span><span />
         </div>
-        {venues.length === 0 && <div style={{ padding: 28 }}><Empty>Ni zadetkov.</Empty></div>}
-        {venues.map((v) => (
+        {list.length === 0 && <div style={{ padding: 28 }}><Empty>Ni zadetkov za te filtre.</Empty></div>}
+        {list.map((v) => (
           <button
             key={v.id}
             onClick={() => onOpen(v)}
@@ -509,13 +566,64 @@ function Narocnine({ revenue: r, venues, onOpen }: { revenue: SARevenue; venues:
 /* ---------------- LASTNIKI ---------------- */
 
 function Lastniki({ owners }: { owners: SAOwner[] }) {
+  const [q, setQ] = useState("");
+  const [vf, setVf] = useState<"all" | "with" | "without">("all");
+  const [sortKey, setSortKey] = useState<"venues" | "new" | "signin" | "email">("venues");
+
+  const list = useMemo(() => {
+    const qq = q.trim().toLowerCase();
+    const l = owners.filter((o) => {
+      if (qq && !((o.email || "").toLowerCase().includes(qq) || o.venueNames.some((n) => n.toLowerCase().includes(qq)))) return false;
+      if (vf === "with" && o.venueNames.length === 0) return false;
+      if (vf === "without" && o.venueNames.length > 0) return false;
+      return true;
+    });
+    l.sort((a, b) => {
+      switch (sortKey) {
+        case "new": return (b.created_at || "").localeCompare(a.created_at || "");
+        case "signin": return (b.last_sign_in_at || "").localeCompare(a.last_sign_in_at || "");
+        case "email": return (a.email || "").localeCompare(b.email || "");
+        default: return b.venueNames.length - a.venueNames.length;
+      }
+    });
+    return l;
+  }, [owners, q, vf, sortKey]);
+  const anyFilter = q.trim() !== "" || vf !== "all";
+
   return (
-    <div style={{ background: CREAM, border: `1px solid ${BORD}`, borderRadius: 16, overflow: "hidden" }}>
-      <div className="hidden md:grid" style={{ gridTemplateColumns: "2fr 2.4fr 1fr 1fr", gap: 10, padding: "12px 16px", borderBottom: `1px solid ${BORD}`, fontSize: 11.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: MUTED }}>
-        <span>Email</span><span>Lokali</span><span>Ustvarjen</span><span>Zadnja prijava</span>
+    <div className="flex flex-col" style={{ gap: 14 }}>
+      {/* FILTRI */}
+      <div style={{ background: CREAM, border: `1px solid ${BORD}`, borderRadius: 14, padding: 12 }}>
+        <div className="flex flex-wrap items-center" style={{ gap: 8 }}>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Išči po emailu ali lokalu…"
+            style={{ flex: "1 1 200px", minWidth: 150, height: 38, border: `1px solid ${BORD}`, borderRadius: 10, background: BG, padding: "0 12px", fontFamily: JAK, fontSize: 13.5, color: INK, outline: "none" }}
+          />
+          <select value={vf} onChange={(e) => setVf(e.target.value as "all" | "with" | "without")} style={fsel}>
+            <option value="all">Vsi uporabniki</option>
+            <option value="with">Samo z lokalom</option>
+            <option value="without">Brez lokala</option>
+          </select>
+          <select value={sortKey} onChange={(e) => setSortKey(e.target.value as typeof sortKey)} style={fsel}>
+            <option value="venues">Največ lokalov</option>
+            <option value="new">Najnovejši</option>
+            <option value="signin">Zadnja prijava</option>
+            <option value="email">Email A–Ž</option>
+          </select>
+          {anyFilter && <button onClick={() => { setQ(""); setVf("all"); }} style={{ height: 30, padding: "0 12px", borderRadius: 999, border: "none", background: "none", color: CORAL, fontFamily: JAK, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>✕ Počisti</button>}
+        </div>
       </div>
-      {owners.length === 0 && <div style={{ padding: 28 }}><Empty>Ni uporabnikov.</Empty></div>}
-      {owners.map((o) => (
+
+      <div style={{ fontSize: 12.5, color: MUTED }}>{list.length} {list.length === 1 ? "uporabnik" : "uporabnikov"}{anyFilter ? ` od ${owners.length}` : ""}</div>
+
+      <div style={{ background: CREAM, border: `1px solid ${BORD}`, borderRadius: 16, overflow: "hidden" }}>
+        <div className="hidden md:grid" style={{ gridTemplateColumns: "2fr 2.4fr 1fr 1fr", gap: 10, padding: "12px 16px", borderBottom: `1px solid ${BORD}`, fontSize: 11.5, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: MUTED }}>
+          <span>Email</span><span>Lokali</span><span>Ustvarjen</span><span>Zadnja prijava</span>
+        </div>
+        {list.length === 0 && <div style={{ padding: 28 }}><Empty>Ni zadetkov.</Empty></div>}
+        {list.map((o) => (
         <div key={o.id} className="grid items-center" style={{ gridTemplateColumns: "2fr 2.4fr 1fr 1fr", gap: 10, padding: "13px 16px", borderBottom: `1px solid ${BORD}` }}>
           <span style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{o.email || "—"}</span>
           <span style={{ fontSize: 13, color: MUTED }}>
@@ -529,6 +637,7 @@ function Lastniki({ owners }: { owners: SAOwner[] }) {
           <span style={{ fontSize: 12.5, color: MUTED }}>{relTime(o.last_sign_in_at)}</span>
         </div>
       ))}
+      </div>
     </div>
   );
 }

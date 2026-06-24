@@ -1,6 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServiceClient } from "@/lib/supabase/server";
 import { verifyPolarSignature, planFromProductId } from "@/lib/polar";
+import { PLANS, chargedAmount, fmtEur } from "@/lib/plans";
+import { notifyAdminPurchase } from "@/lib/notify";
 import type { PlanKey, BillingCycle, SubStatus } from "@/lib/types";
 
 // Polar webhook — sinhronizira stanje naročnine na lokal (venues).
@@ -106,6 +108,27 @@ export async function POST(req: Request) {
     console.error("[polar] update lokala spodletel", error);
     return NextResponse.json({ error: "db update failed" }, { status: 500 });
   }
+
+  // Potrditev nakupa lastniku (ob aktivaciji naročnine) — best-effort
+  if (event.type === "subscription.active") {
+    after(async () => {
+      try {
+        const sb = getServiceClient();
+        const { data: v } = await sb.from("venues").select("name, owner_user_id, plan, billing_cycle, custom_price_eur, current_period_end").eq("id", venue.id).single();
+        if (!v?.owner_user_id) return;
+        const { data: u } = await sb.auth.admin.getUserById(v.owner_user_id);
+        const plan = (v.plan ?? "free") as PlanKey;
+        await notifyAdminPurchase(u?.user?.email, {
+          venueName: v.name as string,
+          plan: PLANS[plan]?.label ?? plan,
+          amount: fmtEur(chargedAmount(plan, v.billing_cycle as BillingCycle, v.custom_price_eur as number | null)),
+          date: new Date().toLocaleDateString("sl-SI"),
+          nextRenewal: v.current_period_end ? new Date(v.current_period_end as string).toLocaleDateString("sl-SI") : "—",
+        });
+      } catch (e) { console.error("[polar] purchase email", e); }
+    });
+  }
+
   return NextResponse.json({ ok: true, venueId: venue.id, type: event.type });
 }
 

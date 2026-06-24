@@ -49,6 +49,13 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-24 — seja 55 (email SPROŽILCI + CRON pripeti)
+- Nov [`lib/notify.ts`](lib/notify.ts) = best-effort senderji (no-op brez RESEND, nikoli ne vržejo v glavni tok), vsi prek `after()` (po odgovoru).
+- **Event sprožilci:** registracija gosta → welcome (`/api/register`); sken → točke (+ kupon ob polni kartici) (`/api/scan`); ocena → hvala (`/api/review`); nov lokal → dobrodošlica lastniku (`createVenue`); Polar `subscription.active` → potrditev nakupa lastniku (webhook).
+- **Cron** [`/api/cron/daily`](app/api/cron/daily/route.ts) ([`vercel.json`](vercel.json), 08:00 UTC): pogrešamo te (po N dneh iz avtomatizacij), obletnica 1 leto, rojstni dan lokala (datum), opomnik za potek naročnine/triala (~3 dni prej). Dedup prek `email_log` (migracija 0020). Gated na RESEND + `CRON_SECRET`.
+- Rojstni dan GOSTA preskočen (ne zbiramo datuma rojstva — rabi polje ob registraciji).
+- Preverjeno: `next build` ✅; cron endpoint vrne "email not configured" (no-op brez ključa). Maili zaživijo ob `RESEND_API_KEY` + `CRON_SECRET` na Vercelu.
+
 ### 2026-06-24 — seja 54 (EMAIL predloge implementirane — 16 šablon iz dizajna)
 - Claude Design "Email Šablone" prenešen v [`lib/emailTemplate.ts`](lib/emailTemplate.ts): **email-safe HTML** (inline stili, tabele), gostov ovoj (barvna glava z lokalovim brandingom) + admin ovoj (Tally), gradniki (žigi, kupon-blok+koda, stat box, koraki, feature list, notice).
 - **16 predlog**: gost-transakcijski (points / coupon_earned / coupon_redeem / welcome), gost-avtomatizacije (we_miss_you / anniversary / birthday_guest / birthday_venue), kampanje (emailCampaign / review_thanks), admin SaaS (purchase / expiring / renewal / owner_welcome / owner_update / owner_message).

@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServiceClient } from "@/lib/supabase/server";
 import { parseFiscalQR, FiscalQRError } from "@/lib/fiscalQr";
 import { nextRewardProgress, errMsg } from "@/lib/loyalty";
+import { notifyPoints, notifyCouponEarned } from "@/lib/notify";
 
 // POST /api/scan  { venueCode, payload, customerId }
 export async function POST(req: Request) {
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
     // stranka mora pripadati temu lokalu
     const { data: customer } = await db
       .from("customers")
-      .select("id, venue_id")
+      .select("id, venue_id, email")
       .eq("id", customerId)
       .single();
     if (!customer || customer.venue_id !== venue.id) {
@@ -111,6 +112,14 @@ export async function POST(req: Request) {
     const stamps = row?.stamps ?? 0;
     const cardCompleted = !!row?.card_completed;
 
+    // best-effort e-pošta (no-op brez RESEND); ne blokira odgovora
+    const cardRewardName = stampReward?.name ?? "Brezplačna kava";
+    const next = nextRewardProgress(Number(total), pointRewards);
+    after(async () => {
+      await notifyPoints(venue, customer.email, { points, total: Number(total), toReward: next?.remaining ?? 0, stampsFilled: Number(stamps), rewardName: cardRewardName });
+      if (cardCompleted) await notifyCouponEarned(venue, customer.email, { rewardName: cardRewardName });
+    });
+
     return NextResponse.json({
       ok: true,
       pointsAwarded: points,
@@ -119,7 +128,7 @@ export async function POST(req: Request) {
       stampGoal,
       cardCompleted,
       cardReward: cardCompleted ? stampReward?.name ?? "Brezplačna kava" : null,
-      nextReward: nextRewardProgress(Number(total), pointRewards),
+      nextReward: next,
     });
   } catch (e) {
     return NextResponse.json({ ok: false, error: errMsg(e) }, { status: 500 });

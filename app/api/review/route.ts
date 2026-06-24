@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServiceClient } from "@/lib/supabase/server";
 import { errMsg } from "@/lib/loyalty";
+import { notifyReviewThanks } from "@/lib/notify";
 
 // POST /api/review  { venueCode, customerId?, stars, comment?, toGoogle? }
 export async function POST(req: Request) {
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
     const db = getServiceClient();
     const { data: venue } = await db
       .from("venues")
-      .select("id")
+      .select("*")
       .eq("public_code", venueCode)
       .single();
     if (!venue) {
@@ -24,19 +25,23 @@ export async function POST(req: Request) {
 
     // customer_id le, če pripada temu lokalu (sicer null)
     let customerId: string | null = null;
+    let customerEmail: string | null = null;
     const cid = String(body.customerId || "");
     if (cid) {
-      const { data: c } = await db.from("customers").select("id, venue_id").eq("id", cid).maybeSingle();
-      if (c && c.venue_id === venue.id) customerId = c.id;
+      const { data: c } = await db.from("customers").select("id, venue_id, email").eq("id", cid).maybeSingle();
+      if (c && c.venue_id === venue.id) { customerId = c.id; customerEmail = c.email; }
     }
 
+    const comment = String(body.comment || "").trim().slice(0, 1000) || null;
     await db.from("reviews").insert({
       venue_id: venue.id,
       customer_id: customerId,
       stars,
-      comment: String(body.comment || "").trim().slice(0, 1000) || null,
+      comment,
       to_google: !!body.toGoogle,
     });
+
+    if (customerEmail) after(() => notifyReviewThanks(venue, customerEmail, { stars, comment: comment || undefined }));
 
     return NextResponse.json({ ok: true });
   } catch (e) {

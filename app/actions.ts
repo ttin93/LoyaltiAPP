@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createSSRClient, getCurrentUser } from "@/lib/supabase/ssrServer";
 import { getServiceClient } from "@/lib/supabase/server";
@@ -9,6 +10,7 @@ import type { WheelConfig, Automations } from "@/lib/types";
 import { PLANS, bestOwnerPlan, planMaxVenues } from "@/lib/plans";
 import { sendBatch, emailConfigured } from "@/lib/email";
 import { emailCampaign } from "@/lib/emailTemplate";
+import { notifyOwnerWelcome } from "@/lib/notify";
 
 function slugify(s: string): string {
   return (
@@ -111,6 +113,7 @@ export async function createVenue(formData: FormData) {
     ...pointRewardRows.map((r) => ({ venue_id: venue.id, name: r.name, points_required: r.points, sort_order: r.sort, kind: "points" })),
   ]);
 
+  after(() => notifyOwnerWelcome(user.email, owner_name, name));
   redirect("/dashboard");
 }
 

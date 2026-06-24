@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServiceClient } from "@/lib/supabase/server";
 import { errMsg } from "@/lib/loyalty";
+import { notifyWelcome } from "@/lib/notify";
 
 // POST /api/register  { venueCode, phone?, email?, password? }
 export async function POST(req: Request) {
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
     const db = getServiceClient();
     const { data: venue } = await db
       .from("venues")
-      .select("id")
+      .select("*")
       .eq("public_code", venueCode)
       .single();
     if (!venue) {
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
       if (!r || !r.ok) {
         return NextResponse.json({ ok: false, error: "Napačno geslo za ta email." }, { status: 401 });
       }
+      if (r.is_new) after(() => notifyWelcome(venue, normalizedEmail));
       return NextResponse.json({ ok: true, customerId: r.customer_id, isNew: r.is_new });
     }
 
@@ -64,6 +66,7 @@ export async function POST(req: Request) {
         .maybeSingle();
       customer = data;
     }
+    let created = false;
     if (!customer) {
       const { data, error } = await db
         .from("customers")
@@ -72,7 +75,9 @@ export async function POST(req: Request) {
         .single();
       if (error) throw error;
       customer = data;
+      created = true;
     }
+    if (created) after(() => notifyWelcome(venue, normalizedEmail));
 
     return NextResponse.json({
       ok: true,

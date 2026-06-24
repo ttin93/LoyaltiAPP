@@ -28,6 +28,11 @@ export interface Venue {
   commitment_months?: number;
   subscribed_at?: string | null;
   custom_price_eur?: number | null;
+  // Polar (Merchant of Record) — sinhronizirano prek webhooka
+  polar_customer_id?: string | null;
+  polar_subscription_id?: string | null;
+  current_period_end?: string | null;
+  cancel_at_period_end?: boolean;
   created_at: string;
 }
 

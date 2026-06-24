@@ -49,6 +49,14 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-24 — seja 50 (BILLING prek Polar.sh — prave naročnine)
+- Owner dashboard **Naročnina** tab = pravi billing: trenutni paket + status + cena, "**Naslednje plačilo: DD.MM.YYYY**" (ali "preklicano — aktivno do …"), mesečno/letno toggle (−20 %), izbira paketa → Polar checkout, "Upravljaj naročnino / Prekliči" → Polar kupčev portal. Sidebar kartica kaže pravi paket.
+- Polar integracija (vzorec iz **AskHerOut**, prirejen za PONAVLJAJOČE naročnine): [`lib/polar.ts`](lib/polar.ts) (checkout, portal, svix-podpis webhooka, paket↔produkt map), `app/api/billing/checkout`, `app/api/billing/portal`, `app/api/webhooks/polar` (`subscription.*` → `venues`).
+- DB: [`0016_polar_billing.sql`](supabase/0016_polar_billing.sql) — venues + `polar_customer_id, polar_subscription_id, current_period_end, cancel_at_period_end`.
+- Opuščen Stripe → **Polar** (Merchant of Record: davek/računi/preklic urejeni).
+- **Setup (ti)**: [`docs/POLAR.md`](docs/POLAR.md) — 4 naročninski produkti + API token + webhook + env. Koda vezana na env, dela takoj ko dodaš ključe.
+- Preverjeno v živo: API rute se naložijo (webhook GET 200, checkout/portal 401 brez prijave), dashboard se prevede (redirect, ne 500). Webhook end-to-end: `subscription.active` → PrTinu espresso/active/next-charge 24.07/polar-id; `subscription.revoked` → nazaj na free (ujemanje prek `polar_subscription_id`, brez metadata). `tsc` čist. PrTinu počiščen na free.
+
 ### 2026-06-24 — seja 49 (fix: RatingChart na landingu razvlečen)
 - `RatingChart` (4,8★ ocena na Googlu, hero) je imel `preserveAspectRatio="none"` → na desktopu razvlečena linija + pikice kot elipse. Fix: uniformno skaliranje (`width:100% height:auto` + viewBox 520×118), gladka Catmull-Rom krivulja, gradientno polnilo, `non-scaling-stroke`. Preverjeno v živo (razmerje 4,41, pikice okrogle 5,2×5,2).
 

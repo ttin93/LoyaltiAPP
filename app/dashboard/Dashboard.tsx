@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow, WheelConfig, WheelSegment, Automation, Automations } from "@/lib/types";
+import { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow, WheelConfig, WheelSegment, Automation, Automations, PlanKey } from "@/lib/types";
 import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, saveWheel, saveAutomations, signOut } from "@/app/actions";
+import { PLANS, fmtEur, monthlyEquivalent, chargedAmount, YEARLY_DISCOUNT, STATUS_LABEL } from "@/lib/plans";
 import Scanner from "@/app/components/Scanner";
 import QrCode from "./QrCode";
 
@@ -244,6 +245,40 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
 
   function flash(t: string) { setMsg(t); setTimeout(() => setMsg(null), 3000); }
   async function run(fn: () => Promise<unknown>, ok?: string) { try { await fn(); if (ok) flash(ok); router.refresh(); } catch (e) { flash(e instanceof Error ? e.message : "Napaka."); } }
+
+  // ── BILLING (Polar) ──────────────────────────────────────────────────────
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(venue.billing_cycle === "yearly" ? "yearly" : "monthly");
+  const [billingBusy, setBillingBusy] = useState(false);
+  async function startCheckout(plan: "espresso" | "doppio") {
+    setBillingBusy(true);
+    try {
+      const r = await fetch("/api/billing/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ venueId: venue.id, plan, cycle: billingCycle }) });
+      const j = await r.json();
+      if (j.url) { window.location.href = j.url; return; }
+      flash(j.error || "Checkouta ni bilo mogoče odpreti.");
+    } catch { flash("Napaka povezave."); }
+    setBillingBusy(false);
+  }
+  async function openPortal() {
+    setBillingBusy(true);
+    try {
+      const r = await fetch("/api/billing/portal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ venueId: venue.id }) });
+      const j = await r.json();
+      if (j.url) { window.location.href = j.url; return; }
+      flash(j.error || "Portala ni bilo mogoče odpreti.");
+    } catch { flash("Napaka povezave."); }
+    setBillingBusy(false);
+  }
+  // Vrnitev s Polar checkouta → potrdi + odpri Naročnino (webhook posodobi v par sekundah)
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("billing") === "success") {
+      flash("Hvala! Naročnina se aktivira v nekaj sekundah.");
+      setSec("narocnina");
+      window.history.replaceState({}, "", "/dashboard");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   async function handleScanResult(payload: string) {
     setScanning(false);
     if (scanMode === "test") {
@@ -277,11 +312,17 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                 )}
               </div>
               <div className="flex flex-col" style={{ gap: 3 }}>{NAV.map(([id, label, icon]) => { const on = id === sec; return <button key={id} onClick={() => setSec(id)} className="flex items-center" style={{ gap: 12, height: 44, padding: "0 12px", border: "none", borderRadius: 12, background: on ? "#FCEFD8" : "transparent", color: on ? INK : MUTED, fontFamily: JAK, fontSize: 14.5, fontWeight: on ? 700 : 600, cursor: "pointer", textAlign: "left" }}><Ic name={icon} color={on ? INK : "#A89B88"} size={20} /><span>{label}</span></button>; })}</div>
-              <button onClick={() => setSec("narocnina")} className="flex flex-col" style={{ marginTop: "auto", gap: 5, textAlign: "left", border: "1px solid #F0D9A8", background: "linear-gradient(160deg,#FCEFD8,#F8E2BD)", borderRadius: 14, padding: "13px 14px", cursor: "pointer", fontFamily: JAK }}>
-                <div className="flex items-center" style={{ gap: 7 }}><Ic name="crown" color="#B4781E" size={16} /><span style={{ fontSize: 13, fontWeight: 800, color: "#7A5E1E" }}>Brezplačni paket</span></div>
-                <span style={{ fontSize: 11.5, color: "#9A7B36", lineHeight: 1.4 }}>Nadgradi za SMS, več lokalov in napredno analitiko.</span>
-                <span style={{ fontSize: 12.5, fontWeight: 800, color: "#B4781E", marginTop: 2 }}>Nadgradi paket →</span>
-              </button>
+              {(() => {
+                const op = (venue.plan ?? "free") as PlanKey;
+                const opPaid = op !== "free" && (venue.subscription_status ?? "active") !== "canceled";
+                return (
+                  <button onClick={() => setSec("narocnina")} className="flex flex-col" style={{ marginTop: "auto", gap: 5, textAlign: "left", border: "1px solid #F0D9A8", background: "linear-gradient(160deg,#FCEFD8,#F8E2BD)", borderRadius: 14, padding: "13px 14px", cursor: "pointer", fontFamily: JAK }}>
+                    <div className="flex items-center" style={{ gap: 7 }}><Ic name="crown" color="#B4781E" size={16} /><span style={{ fontSize: 13, fontWeight: 800, color: "#7A5E1E" }}>{opPaid ? `Paket ${PLANS[op].label}` : "Brezplačni paket"}</span></div>
+                    <span style={{ fontSize: 11.5, color: "#9A7B36", lineHeight: 1.4 }}>{opPaid ? "Upravljaj naročnino, plačilo in preklic." : "Nadgradi za SMS, več lokalov in napredno analitiko."}</span>
+                    <span style={{ fontSize: 12.5, fontWeight: 800, color: "#B4781E", marginTop: 2 }}>{opPaid ? "Naročnina →" : "Nadgradi paket →"}</span>
+                  </button>
+                );
+              })()}
               {isAdmin && <a href="/superadmin" className="flex items-center" style={{ gap: 8, marginTop: 12, height: 42, padding: "0 13px", borderRadius: 12, background: INK, color: PAPER, fontSize: 13.5, fontWeight: 700, textDecoration: "none" }}><span style={{ fontSize: 15 }}>⚡</span> Super Admin</a>}
               <form action={signOut} className="flex items-center" style={{ gap: 10, padding: "12px 8px 0", marginTop: isAdmin ? 8 : 12, borderTop: "1px solid #F1E8D9" }}><button style={{ fontSize: 13, fontWeight: 600, color: "#9A8F80", background: "none", border: "none", cursor: "pointer", fontFamily: JAK }}>Odjava · {ownerEmail}</button></form>
             </div>
@@ -675,29 +716,92 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                   </div>
                 )}
 
-                {sec === "narocnina" && (
-                  <div className="flex flex-col" style={{ gap: 16, maxWidth: 640 }}>
-                    <div style={{ ...card, display: "flex", flexDirection: "column", gap: 6 }}>
-                      <div className="flex items-center justify-between"><span style={{ fontWeight: 800, fontSize: 18 }}>Tvoj paket</span><span className="flex items-center" style={{ height: 26, padding: "0 12px", borderRadius: 999, background: "rgba(94,127,82,0.14)", color: "#3E5536", fontSize: 12, fontWeight: 800 }}>Brezplačni (pilot)</span></div>
-                      <span style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.5 }}>Med pilotom je vse odprto. Plačljivi paketi se vklopijo ob zagonu — obračun je <b>na lokal</b>.</span>
-                    </div>
-                    <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))" }}>
-                      {([["Espresso", "49,99 €", ["1 lokal", "Žigi + točke", "Google ocene", "E-pošta kampanje"], false], ["Doppio", "79,99 €", ["Vse iz Espresso", "Več lokalov", "SMS + WhatsApp", "Napredna analitika"], true], ["Palača", "po dogovoru", ["Veriga lokalov", "Prioritetna podpora", "Integracije / POS", "Lasten dizajn"], false]] as const).map(([name, price, feats, hot]) => (
-                        <div key={name} style={{ ...card, border: hot ? `2px solid ${AMBER}` : `1px solid ${BORD}`, display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>
-                          {hot && <span style={{ position: "absolute", top: -11, left: 18, height: 22, padding: "0 10px", borderRadius: 999, background: AMBER, color: INK, fontSize: 10.5, fontWeight: 800, display: "flex", alignItems: "center" }}>NAJPOGOSTEJE</span>}
-                          <div><div style={{ fontWeight: 800, fontSize: 16 }}>{name}</div><div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em" }}>{price}<span style={{ fontSize: 12.5, fontWeight: 600, color: "#9A8F80" }}>{price.includes("€") ? " / mes" : ""}</span></div></div>
-                          <div className="flex flex-col" style={{ gap: 7 }}>{feats.map((f) => <div key={f} className="flex items-center" style={{ gap: 8, fontSize: 13, color: MUTED }}><svg width="15" height="15" viewBox="0 0 24 24" style={{ fill: "none", stroke: GREEN, strokeWidth: 2.4, strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0 }}><path d="M5 12.5l4.2 4.3L19 7" /></svg>{f}</div>)}</div>
-                          <button onClick={() => flash("Plačljivi paketi se vklopijo ob zagonu — javi se, ko želiš nadgraditi.")} style={{ marginTop: "auto", height: 42, border: hot ? "none" : "1.5px solid #E4D9C7", borderRadius: 12, background: hot ? INK : "#fff", color: hot ? PAPER : INK, fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>Izberi {name}</button>
+                {sec === "narocnina" && (() => {
+                  const plan = (venue.plan ?? "free") as PlanKey;
+                  const status = venue.subscription_status ?? "active";
+                  const paid = plan !== "free" && status !== "canceled";
+                  const cycleNow: "monthly" | "yearly" = venue.billing_cycle === "yearly" ? "yearly" : "monthly";
+                  const monthlyEq = monthlyEquivalent(plan, venue.billing_cycle, venue.custom_price_eur);
+                  const nextCharge = venue.current_period_end ? new Date(venue.current_period_end) : null;
+                  const cancelAtEnd = !!venue.cancel_at_period_end;
+                  const fmtDay = (d: Date) => d.toLocaleDateString("sl-SI", { day: "2-digit", month: "2-digit", year: "numeric" });
+                  const FEATS: Record<string, string[]> = {
+                    espresso: ["1 lokal", "Žigi + točke", "Google ocene", "E-pošta kampanje"],
+                    doppio: ["Vse iz Espresso", "Več lokalov", "SMS + WhatsApp", "Napredna analitika"],
+                    palaca: ["Veriga lokalov", "Prioritetna podpora", "Integracije / POS", "Lasten dizajn"],
+                  };
+                  const cards: [PlanKey, boolean][] = [["espresso", false], ["doppio", true], ["palaca", false]];
+                  const perMonth = (p: PlanKey) => (billingCycle === "yearly" ? monthlyEquivalent(p, "yearly") : PLANS[p].monthly || 0);
+                  return (
+                    <div className="flex flex-col" style={{ gap: 16, maxWidth: 680 }}>
+                      {/* TRENUTNI PAKET */}
+                      <div style={{ ...card, display: "flex", flexDirection: "column", gap: 10 }}>
+                        <div className="flex items-center justify-between">
+                          <span style={{ fontWeight: 800, fontSize: 18 }}>Tvoj paket</span>
+                          <span className="flex items-center" style={{ height: 26, padding: "0 12px", borderRadius: 999, background: paid ? "rgba(94,127,82,0.14)" : "rgba(110,98,83,0.12)", color: paid ? "#3E5536" : MUTED, fontSize: 12, fontWeight: 800 }}>{paid ? STATUS_LABEL[status] || "Aktivna" : "Brezplačni"}</span>
                         </div>
-                      ))}
+                        {paid ? (
+                          <>
+                            <div className="flex items-baseline" style={{ gap: 8 }}>
+                              <span style={{ fontWeight: 800, fontSize: 24 }}>{PLANS[plan].label}</span>
+                              <span style={{ fontSize: 14, color: MUTED }}>{fmtEur(monthlyEq)}/mes · {cycleNow === "yearly" ? "letno" : "mesečno"}</span>
+                            </div>
+                            <span style={{ fontSize: 13.5, color: cancelAtEnd ? CORAL : MUTED, lineHeight: 1.5 }}>
+                              {cancelAtEnd
+                                ? `Naročnina preklicana — aktivna še do ${nextCharge ? fmtDay(nextCharge) : "konca obdobja"}.`
+                                : nextCharge ? `Naslednje plačilo: ${fmtDay(nextCharge)}.` : "Naročnina aktivna."}
+                            </span>
+                            <button onClick={openPortal} disabled={billingBusy} style={{ height: 44, width: "fit-content", padding: "0 18px", border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer", opacity: billingBusy ? 0.6 : 1 }}>Upravljaj naročnino / Prekliči →</button>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.5 }}>Trenutno si na <b>brezplačnem paketu</b>. Izberi paket spodaj — plačilo varno vodi Polar (kartica, računi, DDV). Prekličeš kadarkoli.</span>
+                        )}
+                      </div>
+
+                      {/* CIKEL TOGGLE */}
+                      <div className="flex items-center" style={{ gap: 10 }}>
+                        <div className="flex" style={{ background: "#fff", border: `1px solid ${BORD}`, borderRadius: 12, padding: 4, gap: 4 }}>
+                          {(["monthly", "yearly"] as const).map((c) => (
+                            <button key={c} onClick={() => setBillingCycle(c)} style={{ height: 34, padding: "0 16px", border: "none", borderRadius: 9, background: billingCycle === c ? INK : "transparent", color: billingCycle === c ? PAPER : MUTED, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{c === "monthly" ? "Mesečno" : "Letno"}</button>
+                          ))}
+                        </div>
+                        {billingCycle === "yearly" && <span style={{ fontSize: 12.5, fontWeight: 700, color: GREEN }}>prihraniš {Math.round(YEARLY_DISCOUNT * 100)} %</span>}
+                      </div>
+
+                      {/* PAKETI */}
+                      <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))" }}>
+                        {cards.map(([p, hot]) => {
+                          const isCurrent = p === plan && paid;
+                          const m = PLANS[p].monthly;
+                          return (
+                            <div key={p} style={{ ...card, border: isCurrent ? `2px solid ${GREEN}` : hot ? `2px solid ${AMBER}` : `1px solid ${BORD}`, display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>
+                              {isCurrent ? <span style={{ position: "absolute", top: -11, left: 18, height: 22, padding: "0 10px", borderRadius: 999, background: GREEN, color: "#F4F0E4", fontSize: 10.5, fontWeight: 800, display: "flex", alignItems: "center" }}>TRENUTNI</span> : hot ? <span style={{ position: "absolute", top: -11, left: 18, height: 22, padding: "0 10px", borderRadius: 999, background: AMBER, color: INK, fontSize: 10.5, fontWeight: 800, display: "flex", alignItems: "center" }}>NAJPOGOSTEJE</span> : null}
+                              <div>
+                                <div style={{ fontWeight: 800, fontSize: 16 }}>{PLANS[p].label}</div>
+                                {m == null ? (
+                                  <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em" }}>po dogovoru</div>
+                                ) : (
+                                  <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em" }}>{fmtEur(perMonth(p))}<span style={{ fontSize: 12.5, fontWeight: 600, color: "#9A8F80" }}> / mes</span></div>
+                                )}
+                                {m != null && billingCycle === "yearly" && <div style={{ fontSize: 11.5, color: "#9A8F80" }}>obračunano letno ({fmtEur(chargedAmount(p, "yearly"))})</div>}
+                              </div>
+                              <div className="flex flex-col" style={{ gap: 7 }}>{(FEATS[p] || []).map((f) => <div key={f} className="flex items-center" style={{ gap: 8, fontSize: 13, color: MUTED }}><svg width="15" height="15" viewBox="0 0 24 24" style={{ fill: "none", stroke: GREEN, strokeWidth: 2.4, strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0 }}><path d="M5 12.5l4.2 4.3L19 7" /></svg>{f}</div>)}</div>
+                              {isCurrent ? (
+                                <button disabled style={{ marginTop: "auto", height: 42, border: `1.5px solid ${GREEN}`, borderRadius: 12, background: "rgba(94,127,82,0.1)", color: "#3E5536", fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "default" }}>Trenutni paket</button>
+                              ) : p === "palaca" ? (
+                                <a href="/kontakt" style={{ marginTop: "auto", height: 42, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #E4D9C7", borderRadius: 12, background: "#fff", color: INK, fontFamily: JAK, fontSize: 13.5, fontWeight: 700, textDecoration: "none" }}>Pogovorimo se</a>
+                              ) : (
+                                <button onClick={() => startCheckout(p as "espresso" | "doppio")} disabled={billingBusy} style={{ marginTop: "auto", height: 42, border: hot ? "none" : "1.5px solid #E4D9C7", borderRadius: 12, background: hot ? INK : "#fff", color: hot ? PAPER : INK, fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer", opacity: billingBusy ? 0.6 : 1 }}>{paid ? `Preklopi na ${PLANS[p].label}` : `Izberi ${PLANS[p].label}`}</button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <span style={{ fontSize: 12, color: "#9A8F80", lineHeight: 1.5 }}>Plačila varno vodi <b>Polar</b> (Merchant of Record) — kartica, računi in DDV so urejeni. Obračun je na lokal, prekličeš kadarkoli prek „Upravljaj naročnino&quot;.</span>
                     </div>
-                    <div style={{ ...card, display: "flex", flexDirection: "column", gap: 10 }}>
-                      <span style={{ fontWeight: 700, fontSize: 15 }}>Naročnina & računi</span>
-                      <span style={{ fontSize: 13, color: MUTED, lineHeight: 1.5 }}>Upravljanje plačila, računov in obračuna po lokalih dodamo ob vklopu plačil (Stripe). Zaenkrat brez stroškov.</span>
-                      <button onClick={() => flash("Upravljanje naročnine pride z vklopom plačil.")} style={{ height: 42, width: "fit-content", padding: "0 18px", border: "1.5px solid #E4D9C7", borderRadius: 12, background: "#fff", color: INK, fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>Upravljaj naročnino</button>
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           </div>

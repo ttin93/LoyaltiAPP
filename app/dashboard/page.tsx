@@ -3,6 +3,7 @@ import { isSupabaseConfigured, getServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/ssrServer";
 import { isSuperadmin } from "@/lib/superadmin";
 import { bestOwnerPlan } from "@/lib/plans";
+import { ownerAccess } from "@/lib/access";
 import Dashboard, { type ReviewRow } from "./Dashboard";
 import DashboardDemo from "./DashboardDemo";
 import type { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow } from "@/lib/types";
@@ -70,6 +71,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       isAdmin={isSuperadmin(user.email)}
       ownerPlan={bestOwnerPlan(venues)}
       billingVenue={venues[0] as Venue}
+      access={ownerAccess(bestOwnerPlan(venues), venues[0] as Venue, Date.now())}
     />
   );
 }

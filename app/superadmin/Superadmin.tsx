@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { SAVenue, SAOwner, SATotals, SADay, SARevenue } from "./page";
-import { adminUpdateVenue } from "./actions";
+import { adminUpdateVenue, adminExtendTrial } from "./actions";
 import type { PlanKey, SubStatus } from "@/lib/types";
 import { PLANS, PLAN_ORDER, STATUS_LABEL, fmtEur, chargedAmount, monthlyEquivalent, isPaying } from "@/lib/plans";
 
@@ -125,7 +125,7 @@ export default function Superadmin({
         {tab === "lokali" && (
           <Lokali venues={filtered} query={query} setQuery={setQuery} onOpen={setSelected} total={venues.length} />
         )}
-        {tab === "narocnine" && <Narocnine revenue={revenue} venues={venues} onOpen={setSelected} />}
+        {tab === "narocnine" && <Narocnine revenue={revenue} venues={venues} onOpen={setSelected} onTrial={totals.onTrial} />}
         {tab === "lastniki" && <Lastniki owners={owners} />}
       </div>
 
@@ -377,7 +377,7 @@ function PlanBadge({ plan }: { plan: PlanKey }) {
   );
 }
 
-function Narocnine({ revenue: r, venues, onOpen }: { revenue: SARevenue; venues: SAVenue[]; onOpen: (v: SAVenue) => void }) {
+function Narocnine({ revenue: r, venues, onOpen, onTrial }: { revenue: SARevenue; venues: SAVenue[]; onOpen: (v: SAVenue) => void; onTrial: number }) {
   const maxPlanMrr = Math.max(1, ...r.byPlan.map((p) => p.mrr));
   // primer letnega popusta na Doppio
   const dMonthly = PLANS.doppio.monthly || 0;
@@ -439,7 +439,7 @@ function Narocnine({ revenue: r, venues, onOpen }: { revenue: SARevenue; venues:
         <Kpi label="Plačujoči lokali" value={String(r.paying)} sub={`${r.free} brezplačnih`} accent={CORAL} />
         <Kpi label="Povpr. / lokal" value={fmtEur(r.avgPerPaying)} sub="med plačujočimi" />
         <Kpi label="Mesečno / letno" value={`${r.monthlyCount} / ${r.yearlyCount}`} sub={`${r.committed} z vezavo`} />
-        <Kpi label="Poskusni" value={String(r.trialing)} accent={AMBER} />
+        <Kpi label="Na trialu" value={String(onTrial)} sub="brezplačni preizkus" accent={AMBER} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18 }}>
@@ -669,6 +669,25 @@ function VenueModal({ venue, onClose }: { venue: SAVenue; onClose: () => void })
   const meNow = monthlyEquivalent(plan, cycle, cp);
   const yearlyNow = chargedAmount(plan, "yearly", cp);
 
+  const [trialDays, setTrialDays] = useState("14");
+  const [trialMsg, setTrialMsg] = useState("");
+  function extendTrial() {
+    setTrialMsg("");
+    const fd = new FormData();
+    fd.set("venue_id", venue.id);
+    fd.set("days", trialDays);
+    startTransition(async () => {
+      try {
+        await adminExtendTrial(fd);
+        setTrialMsg("✓ Trial podaljšan");
+        router.refresh();
+        setTimeout(() => setTrialMsg(""), 2200);
+      } catch (e) {
+        setTrialMsg(e instanceof Error ? e.message : "Napaka.");
+      }
+    });
+  }
+
   function save() {
     setErr("");
     setSaved(false);
@@ -732,9 +751,20 @@ function VenueModal({ venue, onClose }: { venue: SAVenue; onClose: () => void })
           </div>
 
           {/* links */}
-          <div className="flex" style={{ gap: 8, marginBottom: 20 }}>
+          <div className="flex" style={{ gap: 8, marginBottom: 16 }}>
             <a href={`/p/${venue.public_code}`} target="_blank" rel="noreferrer" style={linkBtn}>Gostova stran ↗</a>
             <a href={`/p/${venue.public_code}/spin`} target="_blank" rel="noreferrer" style={linkBtn}>Kolo ↗</a>
+          </div>
+
+          {/* TRIAL */}
+          <div style={{ marginBottom: 20, background: PAPER, borderRadius: 12, padding: "12px 14px" }}>
+            <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 8 }}>Trial do: <strong style={{ color: INK }}>{venue.trial_ends_at ? fmtDate(venue.trial_ends_at) : "—"}</strong></div>
+            <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
+              <input value={trialDays} onChange={(e) => setTrialDays(e.target.value)} type="number" style={{ ...inp, width: 76, height: 38 }} />
+              <span style={{ fontSize: 13, color: MUTED }}>dni</span>
+              <button onClick={extendTrial} disabled={pending} style={{ height: 38, padding: "0 14px", border: "none", borderRadius: 10, background: GREEN, color: "#F4F0E4", fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: pending ? 0.6 : 1 }}>+ Podaljšaj trial</button>
+              {trialMsg && <span style={{ fontSize: 12.5, color: GREEN, fontWeight: 700 }}>{trialMsg}</span>}
+            </div>
           </div>
 
           {/* EDIT */}

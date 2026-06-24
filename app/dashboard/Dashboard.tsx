@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow, WheelConfig, WheelSegment, Automation, Automations, PlanKey } from "@/lib/types";
 import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, saveWheel, saveAutomations, signOut } from "@/app/actions";
 import { PLANS, fmtEur, monthlyEquivalent, chargedAmount, STATUS_LABEL, planFeature, planMaxVenues } from "@/lib/plans";
+import type { Access } from "@/lib/access";
 import Scanner from "@/app/components/Scanner";
 import QrCode from "./QrCode";
 
@@ -105,7 +106,7 @@ function WheelMini({ segments, winner, accent }: { segments: WheelSegment[]; win
   );
 }
 
-export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail, isAdmin = false, ownerPlan, billingVenue }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string; isAdmin?: boolean; ownerPlan: PlanKey; billingVenue: Venue }) {
+export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail, isAdmin = false, ownerPlan, billingVenue, access }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string; isAdmin?: boolean; ownerPlan: PlanKey; billingVenue: Venue; access: Access }) {
   const router = useRouter();
   const [sec, setSec] = useState("pregled");
   const [switchOpen, setSwitchOpen] = useState(false);
@@ -311,6 +312,32 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   function openScan(mode: "activate" | "test") { setScanMode(mode); setScanning(true); }
 
   const Kpi = ({ l, v, d, dc }: { l: string; v: React.ReactNode; d?: string; dc?: string }) => <div style={{ ...card, padding: 18, display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontSize: 12.5, fontWeight: 600, color: "#9A8F80" }}>{l}</span><span style={{ fontWeight: 800, fontSize: 28, letterSpacing: "-0.01em" }}>{v}</span>{d && <span style={{ fontSize: 12, fontWeight: 700, color: dc || "#9A8F80" }}>{d}</span>}</div>;
+
+  // ── PAYWALL: brez aktivne naročnine / triala ni dostopa (var. 3) ──
+  if (!access.ok) {
+    return (
+      <main className="flex items-center justify-center" style={{ background: "#E9E2D6", fontFamily: JAK, color: INK, minHeight: "100dvh", padding: 20 }}>
+        <div className="flex flex-col items-center text-center" style={{ background: CREAM, border: `1px solid ${BORD}`, borderRadius: 24, padding: "34px 28px", maxWidth: 460, gap: 14 }}>
+          <div className="flex items-center justify-center" style={{ width: 60, height: 60, borderRadius: 17, background: "#FCEFD8", fontSize: 28 }}>🔒</div>
+          <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: "-0.01em" }}>Tvoj brezplačni dostop je potekel</div>
+          <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.5 }}>Za nadaljevanje izberi paket. Plačilo varno vodi <b>Polar</b> — kartica, računi in DDV urejeni, prekličeš kadarkoli.</div>
+          <div className="flex" style={{ background: "#fff", border: `1px solid ${BORD}`, borderRadius: 999, padding: 4, marginTop: 4 }}>
+            {(["monthly", "yearly"] as const).map((c) => <button key={c} onClick={() => setBillingCycle(c)} style={{ height: 34, padding: "0 16px", border: "none", borderRadius: 999, background: billingCycle === c ? INK : "transparent", color: billingCycle === c ? PAPER : MUTED, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{c === "monthly" ? "Mesečno" : "Letno −2 mes"}</button>)}
+          </div>
+          <div className="flex w-full" style={{ gap: 10, marginTop: 4 }}>
+            {(["espresso", "doppio"] as const).map((p) => { const m = PLANS[p].monthly || 0; const per = billingCycle === "yearly" ? (m * 10) / 12 : m; return (
+              <button key={p} onClick={() => startCheckout(p)} disabled={billingBusy} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "14px 10px", border: p === "doppio" ? "none" : `1.5px solid ${BORD}`, borderRadius: 14, background: p === "doppio" ? INK : "#fff", color: p === "doppio" ? PAPER : INK, fontFamily: JAK, cursor: "pointer", opacity: billingBusy ? 0.6 : 1 }}>
+                <span style={{ fontSize: 14, fontWeight: 800 }}>{PLANS[p].label}</span>
+                <span style={{ fontSize: 16, fontWeight: 800 }}>{fmtEur(per)}<span style={{ fontSize: 11, fontWeight: 600, opacity: 0.7 }}>/mes</span></span>
+              </button>
+            ); })}
+          </div>
+          <a href="/kontakt" style={{ fontSize: 12.5, color: MUTED, marginTop: 2 }}>Veriga lokalov? Pogovorimo se →</a>
+          <form action={signOut}><button style={{ fontSize: 12.5, fontWeight: 600, color: "#9A8F80", background: "none", border: "none", cursor: "pointer", fontFamily: JAK }}>Odjava · {ownerEmail}</button></form>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main style={{ background: "#E9E2D6", fontFamily: JAK, color: INK, minHeight: "100dvh", overflowX: "hidden" }}>
@@ -762,8 +789,23 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                   };
                   const cards: [PlanKey, boolean][] = [["espresso", false], ["doppio", true], ["palaca", false]];
                   const perMonth = (p: PlanKey) => (billingCycle === "yearly" ? monthlyEquivalent(p, "yearly") : PLANS[p].monthly || 0);
+                  const trialUntil = access.until ? new Date(access.until) : null;
                   return (
                     <div className="flex flex-col" style={{ gap: 16, maxWidth: 680 }}>
+                      {/* TRIAL ODŠTEVANJE */}
+                      {(access.state === "trial" || access.state === "trialing") && (
+                        <div className="flex items-center" style={{ gap: 12, background: "linear-gradient(135deg,#FCEFD8,#F8E2BD)", border: "1px solid #F0D9A8", borderRadius: 16, padding: "14px 16px" }}>
+                          <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 12, background: "#fff", fontSize: 20, flexShrink: 0 }}>⏳</div>
+                          <div>
+                            <div style={{ fontWeight: 800, fontSize: 15, color: "#7A5E1E" }}>Brezplačno še {access.daysLeft} {access.daysLeft === 1 ? "dan" : access.daysLeft === 2 ? "dneva" : "dni"}</div>
+                            <div style={{ fontSize: 12.5, color: "#9A7B36", lineHeight: 1.4 }}>
+                              {access.state === "trialing" && trialUntil
+                                ? `${fmtDay(trialUntil)} se prične obračun ${fmtEur(monthlyEq)}/mes.`
+                                : trialUntil ? `Preizkus traja do ${fmtDay(trialUntil)} — nato izberi paket za nadaljevanje.` : "Izberi paket za nadaljevanje."}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       {/* TRENUTNI PAKET */}
                       <div style={{ ...card, display: "flex", flexDirection: "column", gap: 10 }}>
                         <div className="flex items-center justify-between">

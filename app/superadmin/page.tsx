@@ -38,6 +38,7 @@ export type SATotals = {
   newCustomers7: number;
   reviewAvg: number | null;
   reviewCount: number;
+  onTrial: number;
 };
 
 export type SADay = { date: string; label: string; count: number };
@@ -148,6 +149,10 @@ export default async function SuperadminPage() {
     newCustomers7: customers.filter((c) => new Date(c.created_at) >= d7).length,
     reviewAvg: reviewAvgAll,
     reviewCount: reviews.length,
+    onTrial: venues.filter((v) => {
+      const t = v.trial_ends_at ? new Date(v.trial_ends_at).getTime() : 0;
+      return t > now.getTime() && isPaying(v.plan, v.subscription_status) === false;
+    }).length,
   };
 
   // 30-dnevna platformna serija skenov

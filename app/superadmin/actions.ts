@@ -68,3 +68,18 @@ export async function adminUpdateVenue(formData: FormData) {
   if (error) throw error;
   revalidatePath("/superadmin");
 }
+
+/** Podaljšaj (ali zaženi) brezplačni trial lokalu za N dni — comp/test escape hatch. */
+export async function adminExtendTrial(formData: FormData) {
+  const db = await assertSuperadmin();
+  const venueId = String(formData.get("venue_id") || "");
+  const days = Math.max(1, Math.min(365, Number(formData.get("days")) || 14));
+  if (!venueId) throw new Error("Manjka lokal.");
+  const { data: cur } = await db.from("venues").select("trial_ends_at").eq("id", venueId).maybeSingle();
+  const curMs = cur?.trial_ends_at ? new Date(cur.trial_ends_at as string).getTime() : 0;
+  const base = curMs > Date.now() ? curMs : Date.now(); // podaljšaj od konca, sicer od danes
+  const next = new Date(base + days * 864e5).toISOString();
+  const { error } = await db.from("venues").update({ trial_ends_at: next }).eq("id", venueId);
+  if (error) throw error;
+  revalidatePath("/superadmin");
+}

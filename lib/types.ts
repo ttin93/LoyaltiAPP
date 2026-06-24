@@ -33,6 +33,7 @@ export interface Venue {
   polar_subscription_id?: string | null;
   current_period_end?: string | null;
   cancel_at_period_end?: boolean;
+  trial_ends_at?: string | null; // do kdaj ima dostop brez plačila (trial / grace / superadmin)
   created_at: string;
 }
 

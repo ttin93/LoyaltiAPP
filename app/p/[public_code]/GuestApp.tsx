@@ -61,6 +61,7 @@ function StampGrid({ stamps, count = 10, animateNew, accent = CORAL }: { stamps:
         const filled = i < stamps;
         const isNew = animateNew && filled && i === stamps - 1;
         const isReward = i === count - 1;
+        const cupSize = count <= 10 ? 38 : 28; // velike kavice
         return (
           <div
             key={i}
@@ -75,7 +76,7 @@ function StampGrid({ stamps, count = 10, animateNew, accent = CORAL }: { stamps:
               animation: isNew ? "stampIn 0.55s cubic-bezier(0.2,1.4,0.5,1) both 0.3s" : undefined,
             }}
           >
-            {filled ? <Cup stroke={accent} size={count <= 10 ? 15 : 13} /> : isReward ? <Cup stroke={accent} size={count <= 10 ? 15 : 13} /> : null}
+            <Cup stroke={filled || isReward ? accent : "#CFC2AC"} size={cupSize} />
           </div>
         );
       })}

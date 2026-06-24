@@ -31,32 +31,40 @@ const PLANS: Plan[] = [
 ];
 
 export default function Pricing() {
-  const [yearly, setYearly] = useState(false);
+  const [yearly, setYearly] = useState(true); // privzeto letno (ugodneje)
   return (
     <>
-      {/* MESEČNO / LETNO toggle */}
-      <div className="flex items-center justify-center flex-wrap" style={{ gap: 12, marginBottom: 32 }}>
+      {/* MESEČNO / LETNO toggle + (samo pri letnem) značka pod switchem */}
+      <div className="flex flex-col items-center" style={{ gap: 10, marginBottom: 32 }}>
         <div className="flex" style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 999, padding: 5 }}>
           {([["Mesečno", false], ["Letno", true]] as const).map(([label, y]) => (
             <button key={label} onClick={() => setYearly(y)} style={{ height: 40, padding: "0 24px", border: "none", borderRadius: 999, background: yearly === y ? INK : "transparent", color: yearly === y ? "#F8F3EA" : MUTED, fontFamily: "inherit", fontWeight: 700, fontSize: 14.5, cursor: "pointer", transition: "background 0.15s" }}>{label}</button>
           ))}
         </div>
-        <span className="flex items-center" style={{ height: 32, padding: "0 13px", borderRadius: 999, background: "rgba(94,127,82,0.14)", color: GREEN, fontSize: 12.5, fontWeight: 800 }}>2 meseca gratis 🎉</span>
+        <span className="flex items-center" style={{ height: 28, padding: "0 13px", borderRadius: 999, background: "rgba(94,127,82,0.14)", color: GREEN, fontSize: 12.5, fontWeight: 800, opacity: yearly ? 1 : 0, transition: "opacity 0.15s" }}>2 meseca gratis 🎉</span>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(290px,1fr))", gap: 20, alignItems: "stretch" }}>
         {PLANS.map((p) => {
           const yr = p.monthly != null ? p.monthly * YEARLY_MONTHS : null;
+          const perMo = yr != null ? yr / 12 : null;
           return (
             <div key={p.name} style={p.featured ? { background: INK, borderRadius: 24, padding: 30, display: "flex", flexDirection: "column", gap: 18, position: "relative", boxShadow: "0 26px 60px rgba(42,36,29,0.3)", transform: "translateY(-8px)" } : { background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 24, padding: 30, display: "flex", flexDirection: "column", gap: 18 }}>
               {p.featured && <div style={{ position: "absolute", top: 22, right: 24, height: 28, padding: "0 12px", borderRadius: 999, background: AMBER, color: INK, fontSize: 11.5, fontWeight: 800, display: "flex", alignItems: "center" }}>Najbolj priljubljeno</div>}
               <div><div style={{ fontWeight: 800, fontSize: 21, color: p.featured ? "#F8F3EA" : INK }}>{p.name}</div><div style={{ fontSize: 14, color: p.featured ? "#B7A488" : "#9A8F80" }}>{p.tag}</div></div>
               <div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                  <span style={{ fontWeight: 800, fontSize: 38, letterSpacing: "-0.02em", color: p.featured ? "#F8F3EA" : INK, whiteSpace: "nowrap" }}>{p.monthly == null ? "Po dogovoru" : yearly ? fmtEur(yr as number) : fmtEur(p.monthly)}</span>
-                  {p.monthly != null && <span style={{ fontSize: 15, color: p.featured ? "#B7A488" : "#9A8F80" }}>{yearly ? "/ leto" : "/ mesec"}</span>}
+                  <span style={{ fontWeight: 800, fontSize: 38, letterSpacing: "-0.02em", color: p.featured ? "#F8F3EA" : INK, whiteSpace: "nowrap" }}>{p.monthly == null ? "Po dogovoru" : yearly ? fmtEur(perMo as number) : fmtEur(p.monthly)}</span>
+                  {p.monthly != null && <span style={{ fontSize: 15, color: p.featured ? "#B7A488" : "#9A8F80" }}>/ mes</span>}
                 </div>
-                {p.monthly != null && yearly && <div style={{ fontSize: 12.5, color: p.featured ? "#B7A488" : "#9A8F80", marginTop: 4 }}>2 meseca gratis · {fmtEur((yr as number) / 12)}/mes</div>}
+                {p.monthly != null && yearly && (
+                  <div style={{ fontSize: 12.5, color: p.featured ? "#B7A488" : "#9A8F80", marginTop: 4 }}>
+                    <s>{fmtEur(p.monthly)}/mes</s> · {fmtEur(yr as number)} na leto
+                  </div>
+                )}
+                {p.monthly != null && !yearly && (
+                  <div style={{ fontSize: 12.5, color: p.featured ? "#B7A488" : "#9A8F80", marginTop: 4 }}>{fmtEur(p.monthly * YEARLY_MONTHS)} na leto, če plačaš letno</div>
+                )}
               </div>
               <Link href={p.name === "Palača" ? DEMO_DASH : PARTNER} style={p.featured ? { height: 50, borderRadius: 14, background: AMBER, color: INK, fontSize: 15, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" } : { height: 50, borderRadius: 14, border: `1.5px solid ${INK}`, color: INK, fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{p.cta}</Link>
               <div className="flex flex-col" style={{ gap: 11, borderTop: p.featured ? "1px solid rgba(248,243,234,0.14)" : "1px solid #F1E8D9", paddingTop: 18 }}>

@@ -49,6 +49,10 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-24 — seja 52b (landing cenik polish)
+- Cenik privzeto na **Letno**; značka "2 meseca gratis" **pod** switchem in **samo pri letnem**.
+- Letna cena = **na mesec velika** (npr. 41,66 €/mes) + majhno zraven prečrtana mesečna + letni total ("49,99/mes · 499,90 na leto") — ne polna letna cena. Mesečno doda namig "X na leto, če plačaš letno".
+
 ### 2026-06-24 — seja 52 (paketi Start/Grow/Scale + DEJANSKI gating)
 - **Imena**: Espresso→**Start**, Doppio→**Grow**, Palača→**Scale** (samo labeli v `PLANS`; DB/Polar ključi ostajajo `espresso/doppio/palaca` → brez migracije).
 - **`PLAN_FEATURES` + `PLAN_MAX_VENUES`** v [`lib/plans.ts`](lib/plans.ts) = en vir resnice. Start = žigi/točke/kuponi/ocene/kolo/e-pošta-na-prednastavljene-segmente/osnovna analitika/1 lokal. Grow doda: do 5 lokalov, segmenti po meri, avtomatizacije, napredna analitika + časovni filtri, embed. `free` = pilot/grandfather (vse odprto).

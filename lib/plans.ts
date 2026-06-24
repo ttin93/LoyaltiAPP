@@ -51,6 +51,25 @@ export function planFeature(plan: PlanKey | undefined, f: PlanFeature): boolean 
 export function planMaxVenues(plan: PlanKey | undefined): number {
   return PLAN_MAX_VENUES[plan ?? "free"] ?? 1;
 }
+export function rankPlan(p: PlanKey | undefined): number {
+  return PLAN_ORDER.indexOf(p ?? "free");
+}
+/**
+ * PER-LASTNIK model: ena naročnina pokrije lastnika + do N lokalov.
+ * Vrne NAJBOLJŠI aktiven paket med lastnikovimi lokali (canceled ne šteje).
+ * Če nima plačljivega → "free" (pilot = neomejeno).
+ */
+export function bestOwnerPlan(
+  venues: { plan?: PlanKey | null; subscription_status?: string | null }[],
+): PlanKey {
+  let best: PlanKey = "free";
+  for (const v of venues) {
+    const p = (v.plan ?? "free") as PlanKey;
+    const active = p !== "free" && v.subscription_status !== "canceled";
+    if (active && rankPlan(p) > rankPlan(best)) best = p;
+  }
+  return best;
+}
 
 /** Osnovna mesečna cena za lokal (custom_price_eur povozi paketno ceno; npr. za Palačo). */
 export function baseMonthly(plan: PlanKey | undefined, customPrice?: number | null): number {

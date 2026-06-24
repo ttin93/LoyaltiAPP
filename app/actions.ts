@@ -6,6 +6,7 @@ import { createSSRClient, getCurrentUser } from "@/lib/supabase/ssrServer";
 import { getServiceClient } from "@/lib/supabase/server";
 import { parseFiscalQR } from "@/lib/fiscalQr";
 import type { WheelConfig, Automations } from "@/lib/types";
+import { PLANS, bestOwnerPlan, planMaxVenues } from "@/lib/plans";
 
 function slugify(s: string): string {
   return (
@@ -40,7 +41,19 @@ export async function createVenue(formData: FormData) {
   if (!user) throw new Error("Nisi prijavljen.");
   const db = getServiceClient();
 
-  // lastnik ima lahko VEČ lokalov (vsak svoj loyalty + naročnina)
+  // PER-LASTNIK limit: koliko lokalov že ima + njegov najboljši aktiven paket
+  const { data: owned } = await db
+    .from("venues")
+    .select("plan, subscription_status")
+    .eq("owner_user_id", user.id);
+  const ownerPlan = bestOwnerPlan(owned ?? []);
+  const maxVenues = planMaxVenues(ownerPlan);
+  if ((owned?.length ?? 0) >= maxVenues) {
+    throw new Error(
+      `Tvoj paket (${PLANS[ownerPlan].label}) dovoljuje ${maxVenues} ${maxVenues === 1 ? "lokal" : "lokalov"}. Nadgradi za več.`,
+    );
+  }
+
   const name = String(formData.get("name") || "").trim();
   const brand = String(formData.get("brand_color") || "#16a34a");
   if (!name) throw new Error("Vpiši ime lokala.");

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { isSupabaseConfigured, getServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/ssrServer";
 import { isSuperadmin } from "@/lib/superadmin";
+import { bestOwnerPlan } from "@/lib/plans";
 import Dashboard, { type ReviewRow } from "./Dashboard";
 import DashboardDemo from "./DashboardDemo";
 import type { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow } from "@/lib/types";
@@ -67,6 +68,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       grants={(grants ?? []) as unknown as GrantRow[]}
       ownerEmail={user.email ?? ""}
       isAdmin={isSuperadmin(user.email)}
+      ownerPlan={bestOwnerPlan(venues)}
+      billingVenue={venues[0] as Venue}
     />
   );
 }

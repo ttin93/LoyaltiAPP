@@ -105,7 +105,7 @@ function WheelMini({ segments, winner, accent }: { segments: WheelSegment[]; win
   );
 }
 
-export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail, isAdmin = false }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string; isAdmin?: boolean }) {
+export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail, isAdmin = false, ownerPlan, billingVenue }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string; isAdmin?: boolean; ownerPlan: PlanKey; billingVenue: Venue }) {
   const router = useRouter();
   const [sec, setSec] = useState("pregled");
   const [switchOpen, setSwitchOpen] = useState(false);
@@ -133,8 +133,8 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   const totalW = wheel.segments.reduce((a, s) => a + (Number(s.weight) || 0), 0);
   const title = NAV.find((n) => n[0] === sec)?.[1] || "Pregled";
 
-  // ── Gating po paketu (kaj plačaš to dobiš). free = pilot/grandfather = vse. ──
-  const curPlan = (venue.plan ?? "free") as PlanKey;
+  // ── Gating po paketu (PER-LASTNIK: najboljši paket med vsemi lokali). free = pilot = vse. ──
+  const curPlan = ownerPlan;
   const gate = {
     segments: planFeature(curPlan, "customSegments"),
     automations: planFeature(curPlan, "automations"),
@@ -268,12 +268,12 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   async function run(fn: () => Promise<unknown>, ok?: string) { try { await fn(); if (ok) flash(ok); router.refresh(); } catch (e) { flash(e instanceof Error ? e.message : "Napaka."); } }
 
   // ── BILLING (Polar) ──────────────────────────────────────────────────────
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(venue.billing_cycle === "yearly" ? "yearly" : "monthly");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(billingVenue.billing_cycle === "yearly" ? "yearly" : "monthly");
   const [billingBusy, setBillingBusy] = useState(false);
   async function startCheckout(plan: "espresso" | "doppio") {
     setBillingBusy(true);
     try {
-      const r = await fetch("/api/billing/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ venueId: venue.id, plan, cycle: billingCycle }) });
+      const r = await fetch("/api/billing/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ venueId: billingVenue.id, plan, cycle: billingCycle }) });
       const j = await r.json();
       if (j.url) { window.location.href = j.url; return; }
       flash(j.error || "Checkouta ni bilo mogoče odpreti.");
@@ -283,7 +283,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   async function openPortal() {
     setBillingBusy(true);
     try {
-      const r = await fetch("/api/billing/portal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ venueId: venue.id }) });
+      const r = await fetch("/api/billing/portal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ venueId: billingVenue.id }) });
       const j = await r.json();
       if (j.url) { window.location.href = j.url; return; }
       flash(j.error || "Portala ni bilo mogoče odpreti.");
@@ -338,8 +338,8 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
               </div>
               <div className="flex flex-col" style={{ gap: 3 }}>{NAV.map(([id, label, icon]) => { const on = id === sec; return <button key={id} onClick={() => setSec(id)} className="flex items-center" style={{ gap: 12, height: 44, padding: "0 12px", border: "none", borderRadius: 12, background: on ? "#FCEFD8" : "transparent", color: on ? INK : MUTED, fontFamily: JAK, fontSize: 14.5, fontWeight: on ? 700 : 600, cursor: "pointer", textAlign: "left" }}><Ic name={icon} color={on ? INK : "#A89B88"} size={20} /><span>{label}</span></button>; })}</div>
               {(() => {
-                const op = (venue.plan ?? "free") as PlanKey;
-                const opPaid = op !== "free" && (venue.subscription_status ?? "active") !== "canceled";
+                const op = ownerPlan;
+                const opPaid = op !== "free" && (billingVenue.subscription_status ?? "active") !== "canceled";
                 return (
                   <button onClick={() => setSec("narocnina")} className="flex flex-col" style={{ marginTop: "auto", gap: 5, textAlign: "left", border: "1px solid #F0D9A8", background: "linear-gradient(160deg,#FCEFD8,#F8E2BD)", borderRadius: 14, padding: "13px 14px", cursor: "pointer", fontFamily: JAK }}>
                     <div className="flex items-center" style={{ gap: 7 }}><Ic name="crown" color="#B4781E" size={16} /><span style={{ fontSize: 13, fontWeight: 800, color: "#7A5E1E" }}>{opPaid ? `Paket ${PLANS[op].label}` : "Brezplačni paket"}</span></div>
@@ -747,13 +747,13 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                 )}
 
                 {sec === "narocnina" && (() => {
-                  const plan = (venue.plan ?? "free") as PlanKey;
-                  const status = venue.subscription_status ?? "active";
+                  const plan = (billingVenue.plan ?? "free") as PlanKey;
+                  const status = billingVenue.subscription_status ?? "active";
                   const paid = plan !== "free" && status !== "canceled";
-                  const cycleNow: "monthly" | "yearly" = venue.billing_cycle === "yearly" ? "yearly" : "monthly";
-                  const monthlyEq = monthlyEquivalent(plan, venue.billing_cycle, venue.custom_price_eur);
-                  const nextCharge = venue.current_period_end ? new Date(venue.current_period_end) : null;
-                  const cancelAtEnd = !!venue.cancel_at_period_end;
+                  const cycleNow: "monthly" | "yearly" = billingVenue.billing_cycle === "yearly" ? "yearly" : "monthly";
+                  const monthlyEq = monthlyEquivalent(plan, billingVenue.billing_cycle, billingVenue.custom_price_eur);
+                  const nextCharge = billingVenue.current_period_end ? new Date(billingVenue.current_period_end) : null;
+                  const cancelAtEnd = !!billingVenue.cancel_at_period_end;
                   const fmtDay = (d: Date) => d.toLocaleDateString("sl-SI", { day: "2-digit", month: "2-digit", year: "numeric" });
                   const FEATS: Record<string, string[]> = {
                     espresso: ["1 lokal", "Žigi, točke, kuponi", "Google ocene", "Kolo sreče", "E-pošta na segmente", "Osnovna analitika"],

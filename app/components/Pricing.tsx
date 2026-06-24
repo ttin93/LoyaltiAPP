@@ -23,10 +23,11 @@ function Check({ stroke = GREEN, size = 17 }: { stroke?: string; size?: number }
 }
 
 type Plan = { name: string; tag: string; monthly: number | null; featured: boolean; cta: string; feats: string[] };
+// "· kmalu" sufiks = funkcija še ne deluje → prikažemo zatemnjeno z značko "kmalu" (obljubljaj samo kar teče)
 const PLANS: Plan[] = [
-  { name: "Espresso", tag: "Za en lokal, ki začenja", monthly: 49.99, featured: false, cta: "Izberi Espresso", feats: ["1 lokal", "QR stran za goste", "Žigi, točke in nagrade", "Neomejeno strank", "Stroj za Google ocene", "Osnovna analitika"] },
-  { name: "Doppio", tag: "Cel marketinški stroj", monthly: 79.99, featured: true, cta: "Izberi Doppio", feats: ["Vse iz Espresso", "Sporočila + kuponi + segmenti", "Avtomatizacije (rojstni dan, reaktivacija)", "Kolo sreče + vgradni widget", "Polna analitika in izvoz", "Prednostna podpora"] },
-  { name: "Palača", tag: "Veriga & zasloni po meri", monthly: null, featured: false, cta: "Pogovorimo se", feats: ["Vse iz Doppio", "Več lokalov, en dashboard", "Zasloni gosta po meri", "Dostop do API", "Namenski skrbnik"] },
+  { name: "Start", tag: "Vse za en lokal", monthly: 49.99, featured: false, cta: "Začni s Start", feats: ["1 lokal", "Žigi, točke, kuponi", "Google ocene (autopilot)", "Kolo sreče", "E-pošta na segmente (vsi / neaktivni / skoraj polna)", "Osnovna analitika"] },
+  { name: "Grow", tag: "Rast & avtomatizacija", monthly: 79.99, featured: true, cta: "Izberi Grow", feats: ["Vse iz Start", "Do 5 lokalov", "Segmentacija strank po meri", "Marketing avtomatizacije", "Napredna analitika + časovni filtri", "Embed widget (kolo na tvoj web)", "SMS · kmalu", "WhatsApp · kmalu", "CSV izvoz · kmalu"] },
+  { name: "Scale", tag: "Veriga, po dogovoru", monthly: null, featured: false, cta: "Pogovorimo se", feats: ["Vse iz Grow", "Veriga lokalov, en dashboard", "POS / API integracija", "Zasloni gosta po meri", "Namenski skrbnik"] },
 ];
 
 export default function Pricing() {
@@ -59,9 +60,18 @@ export default function Pricing() {
               </div>
               <Link href={p.name === "Palača" ? DEMO_DASH : PARTNER} style={p.featured ? { height: 50, borderRadius: 14, background: AMBER, color: INK, fontSize: 15, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" } : { height: 50, borderRadius: 14, border: `1.5px solid ${INK}`, color: INK, fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{p.cta}</Link>
               <div className="flex flex-col" style={{ gap: 11, borderTop: p.featured ? "1px solid rgba(248,243,234,0.14)" : "1px solid #F1E8D9", paddingTop: 18 }}>
-                {p.feats.map((f) => (
-                  <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14, color: p.featured ? "#E9E0D2" : "#41382C", lineHeight: 1.4 }}><Check stroke={p.featured ? AMBER : GREEN} size={17} />{f}</div>
-                ))}
+                {p.feats.map((f) => {
+                  const soon = f.endsWith("· kmalu");
+                  const label = soon ? f.replace(" · kmalu", "") : f;
+                  return (
+                    <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14, color: soon ? (p.featured ? "#9A8A72" : "#A89B88") : p.featured ? "#E9E0D2" : "#41382C", lineHeight: 1.4 }}>
+                      {soon
+                        ? <span style={{ width: 17, height: 17, flexShrink: 0, marginTop: 2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: p.featured ? "#9A8A72" : "#C3B6A2" }}>○</span>
+                        : <Check stroke={p.featured ? AMBER : GREEN} size={17} />}
+                      <span>{label}{soon && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, letterSpacing: "0.04em", textTransform: "uppercase", color: p.featured ? AMBER : "#B4781E", border: `1px solid ${p.featured ? "rgba(226,160,74,0.4)" : "#E9D9B8"}`, borderRadius: 6, padding: "1px 5px" }}>kmalu</span>}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );

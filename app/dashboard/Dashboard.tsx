@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow, WheelConfig, WheelSegment, Automation, Automations, PlanKey } from "@/lib/types";
 import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, saveWheel, saveAutomations, signOut } from "@/app/actions";
-import { PLANS, fmtEur, monthlyEquivalent, chargedAmount, STATUS_LABEL } from "@/lib/plans";
+import { PLANS, fmtEur, monthlyEquivalent, chargedAmount, STATUS_LABEL, planFeature, planMaxVenues } from "@/lib/plans";
 import Scanner from "@/app/components/Scanner";
 import QrCode from "./QrCode";
 
@@ -132,6 +132,27 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   function setSeg(i: number, p: Partial<WheelSegment>) { setWheel((w) => ({ ...w, segments: w.segments.map((s, j) => (j === i ? { ...s, ...p } : s)) })); }
   const totalW = wheel.segments.reduce((a, s) => a + (Number(s.weight) || 0), 0);
   const title = NAV.find((n) => n[0] === sec)?.[1] || "Pregled";
+
+  // ── Gating po paketu (kaj plačaš to dobiš). free = pilot/grandfather = vse. ──
+  const curPlan = (venue.plan ?? "free") as PlanKey;
+  const gate = {
+    segments: planFeature(curPlan, "customSegments"),
+    automations: planFeature(curPlan, "automations"),
+    analytics: planFeature(curPlan, "advancedAnalytics"),
+    embed: planFeature(curPlan, "embedWidget"),
+  };
+  const maxVenues = planMaxVenues(curPlan);
+  const canAddVenue = venues.length < maxVenues;
+  function lockCard(t: string, d: string) {
+    return (
+      <div className="flex flex-col items-start" style={{ background: "#fff", border: `1px solid ${BORD}`, borderRadius: 18, gap: 10, padding: "26px 24px", maxWidth: 460 }}>
+        <div className="flex items-center justify-center" style={{ width: 48, height: 48, borderRadius: 14, background: "#FCEFD8", fontSize: 22 }}>🔒</div>
+        <div style={{ fontWeight: 800, fontSize: 17 }}>{t}</div>
+        <div style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.5 }}>{d}</div>
+        <button onClick={() => setSec("narocnina")} style={{ marginTop: 4, height: 44, padding: "0 22px", border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Nadgradi na Grow →</button>
+      </div>
+    );
+  }
 
   const stats = useMemo(() => {
     const pointsAwarded = scans.reduce((a, s) => a + s.points_awarded, 0);
@@ -307,7 +328,11 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                 {switchOpen && (
                   <div className="absolute" style={{ top: "calc(100% - 8px)", left: 4, right: 4, background: "#fff", border: "1px solid #E4D9C7", borderRadius: 12, boxShadow: "0 14px 34px rgba(42,36,29,0.16)", zIndex: 30, padding: 6 }}>
                     {venues.map((v) => <a key={v.id} href={`/dashboard?v=${v.id}`} className="flex items-center truncate" style={{ height: 38, padding: "0 10px", borderRadius: 9, fontSize: 13.5, fontWeight: v.id === venue.id ? 700 : 600, color: INK, textDecoration: "none", background: v.id === venue.id ? "#FCEFD8" : "transparent" }}>{v.name}</a>)}
-                    <a href="/partner?new=1" className="flex items-center" style={{ height: 38, padding: "0 10px", borderRadius: 9, fontSize: 13.5, fontWeight: 700, color: "#B4781E", textDecoration: "none", borderTop: "1px solid #F1E8D9", marginTop: 4 }}>+ Nov lokal</a>
+                    {canAddVenue ? (
+                      <a href="/partner?new=1" className="flex items-center" style={{ height: 38, padding: "0 10px", borderRadius: 9, fontSize: 13.5, fontWeight: 700, color: "#B4781E", textDecoration: "none", borderTop: "1px solid #F1E8D9", marginTop: 4 }}>+ Nov lokal</a>
+                    ) : (
+                      <button onClick={() => { setSwitchOpen(false); setSec("narocnina"); }} className="flex flex-col items-start" style={{ width: "100%", padding: "8px 10px", borderRadius: 9, background: "none", border: "none", borderTop: "1px solid #F1E8D9", marginTop: 4, cursor: "pointer", textAlign: "left", fontFamily: JAK }}><span style={{ fontSize: 12.5, fontWeight: 700, color: "#B4781E" }}>🔒 Limit lokalov ({venues.length}/{maxVenues})</span><span style={{ fontSize: 11.5, color: "#9A8F80" }}>Nadgradi za več lokalov →</span></button>
+                    )}
                   </div>
                 )}
               </div>
@@ -379,7 +404,11 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                     {/* časovni filter */}
                     <div className="flex items-center justify-between" style={{ flexWrap: "wrap", gap: 10 }}>
                       <span style={{ fontSize: 13.5, color: MUTED }}>Obdobje</span>
-                      <div className="flex" style={{ background: "#F1E8D9", borderRadius: 12, padding: 4 }}>{([[7, "7 dni"], [30, "30 dni"], [90, "90 dni"], [365, "Leto"]] as const).map(([d, l]) => <button key={d} onClick={() => setRange(d)} style={{ height: 32, padding: "0 14px", border: "none", borderRadius: 9, background: range === d ? "#fff" : "transparent", color: range === d ? INK : "#9A8F80", fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{l}</button>)}</div>
+                      {gate.analytics ? (
+                        <div className="flex" style={{ background: "#F1E8D9", borderRadius: 12, padding: 4 }}>{([[7, "7 dni"], [30, "30 dni"], [90, "90 dni"], [365, "Leto"]] as const).map(([d, l]) => <button key={d} onClick={() => setRange(d)} style={{ height: 32, padding: "0 14px", border: "none", borderRadius: 9, background: range === d ? "#fff" : "transparent", color: range === d ? INK : "#9A8F80", fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{l}</button>)}</div>
+                      ) : (
+                        <button onClick={() => setSec("narocnina")} className="flex items-center" style={{ gap: 7, height: 36, padding: "0 14px", border: `1px solid ${BORD}`, borderRadius: 10, background: "#fff", color: MUTED, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Zadnjih 30 dni <span style={{ fontSize: 11, fontWeight: 800, color: "#B4781E" }}>🔒 časovni filtri v Grow</span></button>
+                      )}
                     </div>
                     <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))" }}>
                       <Kpi l="Skeniranja" v={ana.scans} d={`${ana.ptsAw} podarjenih točk`} dc={GREEN} />
@@ -445,7 +474,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
 
                 {sec === "marketing" && (
                   <div className="flex flex-col" style={{ gap: 16 }}>
-                    <div className="flex" style={{ background: "#F1E8D9", borderRadius: 12, padding: 4, maxWidth: 380 }}>{([["campaign", "Enkratna kampanja"], ["auto", `Avtomatizacije${autoCount ? ` · ${autoCount}` : ""}`]] as const).map(([k, l]) => <button key={k} onClick={() => setMktTab(k)} style={{ flex: 1, height: 38, border: "none", borderRadius: 9, background: mktTab === k ? "#fff" : "transparent", color: mktTab === k ? INK : "#9A8F80", fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{l}</button>)}</div>
+                    <div className="flex" style={{ background: "#F1E8D9", borderRadius: 12, padding: 4, maxWidth: 380 }}>{([["campaign", "Enkratna kampanja"], ["auto", `Avtomatizacije${autoCount ? ` · ${autoCount}` : ""}`]] as const).map(([k, l]) => { const locked = k === "auto" && !gate.automations; return <button key={k} onClick={() => (locked ? setSec("narocnina") : setMktTab(k))} style={{ flex: 1, height: 38, border: "none", borderRadius: 9, background: mktTab === k && !locked ? "#fff" : "transparent", color: locked ? "#B4781E" : mktTab === k ? INK : "#9A8F80", fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{locked ? "🔒 " : ""}{l}</button>; })}</div>
                     {mktTab === "campaign" && (
                   <div className="grid gap-3.5 lg:grid-cols-[1.4fr_1fr]">
                     <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -469,8 +498,9 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                           </div>
                         )}
                       </div>
-                      <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Komu pošljem (segment)</span><select value={segSel} onChange={(e) => { setSegSel(e.target.value); setRemoved(new Set()); }} style={inp}>{["Najboljši", "Aktivni", "Neaktivni 21+ dni", "Vsi gostje", "Po meri"].map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
-                      {segSel === "Po meri" && <label className="flex items-center justify-between" style={{ background: CREAM, borderRadius: 12, padding: "9px 14px" }}><span style={{ fontSize: 13, color: MUTED }}>Pravilo: vsaj točk</span><input value={segMinPts} onChange={(e) => { setSegMinPts(Math.max(0, Number(e.target.value) || 0)); setRemoved(new Set()); }} type="number" min={0} style={{ ...inp, width: 90 }} /></label>}
+                      <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Komu pošljem (segment)</span><select value={segSel} onChange={(e) => { setSegSel(e.target.value); setRemoved(new Set()); }} style={inp}>{["Najboljši", "Aktivni", "Neaktivni 21+ dni", "Vsi gostje", ...(gate.segments ? ["Po meri"] : [])].map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
+                      {!gate.segments && <button onClick={() => setSec("narocnina")} style={{ alignSelf: "flex-start", background: "none", border: "none", padding: 0, fontSize: 12.5, fontWeight: 700, color: "#B4781E", cursor: "pointer" }}>🔒 Segmenti po meri (prag točk) v Grow →</button>}
+                      {gate.segments && segSel === "Po meri" && <label className="flex items-center justify-between" style={{ background: CREAM, borderRadius: 12, padding: "9px 14px" }}><span style={{ fontSize: 13, color: MUTED }}>Pravilo: vsaj točk</span><input value={segMinPts} onChange={(e) => { setSegMinPts(Math.max(0, Number(e.target.value) || 0)); setRemoved(new Set()); }} type="number" min={0} style={{ ...inp, width: 90 }} /></label>}
                       {/* seznam prejemnikov */}
                       <div className="flex flex-col" style={{ gap: 8 }}>
                         <div className="flex items-center justify-between"><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Prejemniki</span><span style={{ fontSize: 13.5, fontWeight: 800, color: "#B4862F" }}>{recipients.length}</span></div>
@@ -489,7 +519,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                     </div>
                   </div>
                     )}
-                    {mktTab === "auto" && (
+                    {mktTab === "auto" && gate.automations && (
                       <div className="flex flex-col" style={{ gap: 14, maxWidth: 760 }}>
                         <div style={{ background: "#FCEFD8", borderRadius: 14, padding: "14px 16px", fontSize: 13, lineHeight: 1.5, color: "#7A5E1E" }}>Avtomatizacije pošljejo e-pošto <b>same</b>, ko se zgodi sprožilec — vklopiš jih enkrat. (Dejansko pošiljanje se vklopi z e-poštnim providerjem.)</div>
                         {AUTO_DEFS.map((d) => {
@@ -726,9 +756,9 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                   const cancelAtEnd = !!venue.cancel_at_period_end;
                   const fmtDay = (d: Date) => d.toLocaleDateString("sl-SI", { day: "2-digit", month: "2-digit", year: "numeric" });
                   const FEATS: Record<string, string[]> = {
-                    espresso: ["1 lokal", "Žigi + točke", "Google ocene", "E-pošta kampanje"],
-                    doppio: ["Vse iz Espresso", "Več lokalov", "SMS + WhatsApp", "Napredna analitika"],
-                    palaca: ["Veriga lokalov", "Prioritetna podpora", "Integracije / POS", "Lasten dizajn"],
+                    espresso: ["1 lokal", "Žigi, točke, kuponi", "Google ocene", "Kolo sreče", "E-pošta na segmente", "Osnovna analitika"],
+                    doppio: ["Vse iz Start", "Do 5 lokalov", "Segmentacija po meri", "Marketing avtomatizacije", "Napredna analitika", "Embed widget"],
+                    palaca: ["Vse iz Grow", "Veriga lokalov", "POS / API integracija", "Namenski skrbnik"],
                   };
                   const cards: [PlanKey, boolean][] = [["espresso", false], ["doppio", true], ["palaca", false]];
                   const perMonth = (p: PlanKey) => (billingCycle === "yearly" ? monthlyEquivalent(p, "yearly") : PLANS[p].monthly || 0);

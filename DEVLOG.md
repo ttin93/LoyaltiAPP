@@ -49,6 +49,14 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-24 — seja 52 (paketi Start/Grow/Scale + DEJANSKI gating)
+- **Imena**: Espresso→**Start**, Doppio→**Grow**, Palača→**Scale** (samo labeli v `PLANS`; DB/Polar ključi ostajajo `espresso/doppio/palaca` → brez migracije).
+- **`PLAN_FEATURES` + `PLAN_MAX_VENUES`** v [`lib/plans.ts`](lib/plans.ts) = en vir resnice. Start = žigi/točke/kuponi/ocene/kolo/e-pošta-na-prednastavljene-segmente/osnovna analitika/1 lokal. Grow doda: do 5 lokalov, segmenti po meri, avtomatizacije, napredna analitika + časovni filtri, embed. `free` = pilot/grandfather (vse odprto).
+- **Dejanski gating v dashboardu** (kaj plačaš to dobiš): časovni filtri (Start→fiksno 30 dni), segment "Po meri" (Start→samo prednastavljeni), Avtomatizacije sub-tab (Grow), +Nov lokal (limit po paketu) — vsi z "Nadgradi na Grow" pozivom (`lockCard`). `planFeature`/`planMaxVenues` helperja.
+- **Landing cenik**: nova imena + pravi split; SMS/WhatsApp/CSV = **"kmalu"** (ne kljukica — obljubljamo samo kar teče); Kolo v Start, Embed v Grow.
+- Preverjeno v živo: cenik (Start/Grow/Scale, 3× kmalu, toggle). `tsc` čist.
+- **Še odprto (stage):** per-venue vs per-owner billing model (vpliva na "do 5 lokalov" + hard limit v createVenue); plan-change z proracijo (Polar); super-admin e-pošta lastnikom + custom branded maili + deliverability (Resend + domena SPF/DKIM/DMARC); logo upload (Storage); 14-dnevni trial + paywall enforcement.
+
 ### 2026-06-24 — seja 51 (letni model ×10 + landing toggle + seznam funkcij)
 - **Letni model**: bilo −20 %, zdaj **letno = mesečna × 10 (2 meseca gratis)** — `YEARLY_MONTHS=10` v [`lib/plans.ts`](lib/plans.ts). Posodobljeno v billingu (dashboard), superadminu (Naročnine), wording "2 meseca gratis".
 - **Landing cenik**: nov client island [`app/components/Pricing.tsx`](app/components/Pricing.tsx) z **Mesečno/Letno toggle** (letno = ×10, "/leto" + /mes ekvivalent). Lokalni `PLANS` v `page.tsx` odstranjen.

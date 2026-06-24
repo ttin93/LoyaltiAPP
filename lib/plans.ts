@@ -9,14 +9,48 @@ export const YEARLY_FREE_MONTHS = 12 - YEARLY_MONTHS;
 /** Izpeljani % popust (za prikaze, ki želijo odstotek). */
 export const YEARLY_DISCOUNT = YEARLY_FREE_MONTHS / 12;
 
+// Ključi v bazi/Polarju ostajajo espresso/doppio/palaca; spremenila so se le IMENA.
 export const PLANS: Record<PlanKey, { label: string; tag: string; monthly: number | null }> = {
   free: { label: "Brezplačni", tag: "Začetni", monthly: 0 },
-  espresso: { label: "Espresso", tag: "En lokal", monthly: 49.99 },
-  doppio: { label: "Doppio", tag: "Marketinški stroj", monthly: 79.99 },
-  palaca: { label: "Palača", tag: "Po dogovoru", monthly: null }, // cena po dogovoru → custom_price_eur
+  espresso: { label: "Start", tag: "Vse za en lokal", monthly: 49.99 },
+  doppio: { label: "Grow", tag: "Rast & avtomatizacija", monthly: 79.99 },
+  palaca: { label: "Scale", tag: "Veriga, po dogovoru", monthly: null }, // cena po dogovoru → custom_price_eur
 };
 
 export const PLAN_ORDER: PlanKey[] = ["free", "espresso", "doppio", "palaca"];
+
+// ── Zmožnosti po paketu (en vir resnice za gating) ───────────────────────────
+// Start = vse za en lokal + ocene + osnovni win-back. Grow doda rast/avtomatizacijo.
+// free = pilot/grandfather (vse odprto, dokler ni paywalla). sms/whatsapp/export
+// še niso funkcionalni → na ceniku "kmalu", v appu jih ne izpostavljamo.
+export type PlanFeature =
+  | "wheel" | "emailBasic" | "customSegments" | "automations"
+  | "advancedAnalytics" | "embedWidget" | "sms" | "whatsapp" | "export";
+
+const ALL_FEATURES: Record<PlanFeature, boolean> = {
+  wheel: true, emailBasic: true, customSegments: true, automations: true,
+  advancedAnalytics: true, embedWidget: true, sms: true, whatsapp: true, export: true,
+};
+
+export const PLAN_FEATURES: Record<PlanKey, Record<PlanFeature, boolean>> = {
+  free: { ...ALL_FEATURES }, // pilot: vse odprto
+  espresso: {
+    wheel: true, emailBasic: true,
+    customSegments: false, automations: false, advancedAnalytics: false, embedWidget: false,
+    sms: false, whatsapp: false, export: false,
+  },
+  doppio: { ...ALL_FEATURES }, // Grow: vse
+  palaca: { ...ALL_FEATURES }, // Scale: vse
+};
+
+export const PLAN_MAX_VENUES: Record<PlanKey, number> = { free: 99, espresso: 1, doppio: 5, palaca: 999 };
+
+export function planFeature(plan: PlanKey | undefined, f: PlanFeature): boolean {
+  return PLAN_FEATURES[plan ?? "free"]?.[f] ?? false;
+}
+export function planMaxVenues(plan: PlanKey | undefined): number {
+  return PLAN_MAX_VENUES[plan ?? "free"] ?? 1;
+}
 
 /** Osnovna mesečna cena za lokal (custom_price_eur povozi paketno ceno; npr. za Palačo). */
 export function baseMonthly(plan: PlanKey | undefined, customPrice?: number | null): number {

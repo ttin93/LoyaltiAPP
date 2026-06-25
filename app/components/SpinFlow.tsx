@@ -223,6 +223,19 @@ export default function SpinFlow({
     const hi = cfg && cfg.mode === "weighted" ? -1 : wonIndex; // ne razkrij zmagovalca pri naključnem
     const paths: React.ReactNode[] = [];
     const labels: React.ReactNode[] = [];
+    // dolg label razdeli v ≤2 vrstici po besedah (npr. "Brezplačna kava" → "Brezplačna" / "kava")
+    const wrapLabel = (s: string): string[] => {
+      const txt = (s || "").trim();
+      const words = txt.split(/\s+/);
+      if (words.length <= 1 || txt.length <= 12) return [txt.slice(0, 13)]; // kratki ostanejo 1 vrstica
+      let best = 1, bestDiff = Infinity;
+      for (let k = 1; k < words.length; k++) {
+        const l1 = words.slice(0, k).join(" ").length;
+        const diff = Math.abs(l1 - (txt.length - l1));
+        if (diff < bestDiff) { bestDiff = diff; best = k; }
+      }
+      return [words.slice(0, best).join(" ").slice(0, 13), words.slice(best).join(" ").slice(0, 13)];
+    };
     for (let i = 0; i < N; i++) {
       const [x0, y0] = polar(i * segA);
       const [x1, y1] = polar((i + 1) * segA);
@@ -233,9 +246,15 @@ export default function SpinFlow({
       const a = ((mid - 90) * Math.PI) / 180;
       const lx = r2(cx + r * 0.62 * Math.cos(a));
       const ly = r2(cy + r * 0.62 * Math.sin(a));
+      const lines = wrapLabel(segs[i] || "");
       labels.push(
         <text key={"t" + i} x={lx} y={ly} transform={`rotate(${mid} ${lx} ${ly})`} textAnchor="middle" dominantBaseline="middle" style={{ fontFamily: "var(--font-jakarta), sans-serif", fontWeight: win ? 800 : 700, fontSize: N > 7 ? 7.5 : N > 6 ? 8 : 9, fill: win ? "#FFFFFF" : "#7A6A50" }}>
-          {(segs[i] || "").slice(0, 13)}
+          {lines.length === 1 ? lines[0] : (
+            <>
+              <tspan x={lx} dy="-0.42em">{lines[0]}</tspan>
+              <tspan x={lx} dy="0.95em">{lines[1]}</tspan>
+            </>
+          )}
         </text>,
       );
     }

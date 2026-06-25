@@ -74,6 +74,12 @@ export default function SpinFlow({
   lang?: string;
 }) {
   const t = gt(lang);
+  // lastnikova barva tematizira CEL spin flow (kot gostova domača stran)
+  const brand = /^#[0-9a-fA-F]{6}$/.test(brandColor) ? brandColor : "#C4623D";
+  const hx = (c: string) => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+  const hexA = (c: string, al: number) => { const [r, g, b] = hx(c); return `rgba(${r},${g},${b},${al})`; };
+  const mixc = (c1: string, c2: string, tt: number) => { const a = hx(c1), b = hx(c2); return `#${a.map((v, i) => Math.round(v + (b[i] - v) * tt).toString(16).padStart(2, "0")).join("")}`; };
+  const brandDeep = mixc(brand, INK, 0.45);
   // konfiguracija kolesa (lastnik jo nastavi v dashboardu); fallback = privzeti segmenti
   const cfg = wheel && Array.isArray(wheel.segments) && wheel.segments.length >= 2 ? wheel : null;
   const enabled = cfg ? cfg.enabled !== false : true;
@@ -277,7 +283,7 @@ export default function SpinFlow({
         minHeight: "100dvh",
         fontFamily: "var(--font-jakarta), sans-serif",
         color: INK,
-        background: "linear-gradient(170deg,#FCEFD8 0%,#F6E0BE 42%,#FBF7F0 42%,#FBF7F0 100%)",
+        background: `linear-gradient(170deg,${hexA(brand, 0.20)} 0%,${hexA(brand, 0.34)} 42%,#FBF7F0 42%,#FBF7F0 100%)`,
         boxSizing: "border-box",
         padding: "44px 18px 32px",
         display: "flex",
@@ -287,10 +293,10 @@ export default function SpinFlow({
     >
       {/* brand header */}
       <div className="flex flex-col items-center gap-2.5" style={{ marginBottom: 16 }}>
-        <div className="flex items-center justify-center" style={{ width: 58, height: 58, borderRadius: 18, background: INK, color: CREAM, fontWeight: 800, fontSize: 26, boxShadow: "0 10px 24px rgba(42,36,29,0.18)" }}>{venueInitial}</div>
+        <div className="flex items-center justify-center" style={{ width: 58, height: 58, borderRadius: 18, background: brand, color: "#FFFFFF", fontWeight: 800, fontSize: 26, boxShadow: `0 10px 24px ${hexA(brand, 0.32)}` }}>{venueInitial}</div>
         <div className="text-center">
           <div style={{ fontWeight: 800, fontSize: 21, letterSpacing: "-0.01em" }}>{t.welcomeTo(venueName)}</div>
-          <div style={{ fontSize: 13.5, color: "#9A7A3A", marginTop: 2 }}>{tagline || t.firstVisitReward}</div>
+          <div style={{ fontSize: 13.5, color: brandDeep, marginTop: 2 }}>{tagline || t.firstVisitReward}</div>
         </div>
       </div>
 
@@ -298,7 +304,7 @@ export default function SpinFlow({
       <div style={{ width: "100%", maxWidth: 404, background: "#FFFFFF", borderRadius: 28, boxShadow: "0 2px 8px rgba(42,36,29,0.05),0 24px 50px rgba(42,36,29,0.12)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div className="flex items-center justify-between" style={{ padding: "22px 22px 0" }}>
           <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "#9A8F80" }}>{kicker}</span>
-          <span className="flex items-center" style={{ height: 26, padding: "0 11px", borderRadius: 999, background: "#FCEFD8", color: "#B4781E", fontSize: 11, fontWeight: 800 }}>{t.oneSpin}</span>
+          <span className="flex items-center" style={{ height: 26, padding: "0 11px", borderRadius: 999, background: hexA(brand, 0.16), color: brandDeep, fontSize: 11, fontWeight: 800 }}>{t.oneSpin}</span>
         </div>
 
         <div style={{ padding: "14px 22px 24px" }}>
@@ -321,18 +327,18 @@ export default function SpinFlow({
           {/* WON */}
           {step === "won" && (
             <div className="flex flex-col items-center text-center" style={{ gap: 16, padding: "6px 0" }}>
-              <div className="flex items-center justify-center" style={{ width: 92, height: 92, borderRadius: 28, background: `linear-gradient(150deg,#EBB05F,${brandColor})`, boxShadow: "0 14px 30px rgba(226,160,74,0.4)", animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
+              <div className="flex items-center justify-center" style={{ width: 92, height: 92, borderRadius: 28, background: `linear-gradient(150deg,${mixc(brand, "#FFFFFF", 0.32)},${brand})`, boxShadow: `0 14px 30px ${hexA(brand, 0.4)}`, animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
                 <CoffeeIcon size={44} />
               </div>
               <div className="flex flex-col" style={{ gap: 6 }}>
                 <div style={{ fontWeight: 800, fontSize: 27, letterSpacing: "-0.01em" }}>{t.hit}</div>
                 <div style={{ fontSize: 15, color: MUTED, lineHeight: 1.5, maxWidth: 270 }}>{t.youWon(wonLabel)}</div>
               </div>
-              <div className="flex items-center" style={{ width: "100%", background: "linear-gradient(135deg,#FCEFD8,#F8E3C2)", borderRadius: 16, padding: 14, gap: 12 }}>
+              <div className="flex items-center" style={{ width: "100%", background: `linear-gradient(135deg,${hexA(brand, 0.13)},${hexA(brand, 0.22)})`, borderRadius: 16, padding: 14, gap: 12 }}>
                 <div className="flex items-center justify-center" style={{ width: 42, height: 42, borderRadius: 12, background: "#FFFFFF", flexShrink: 0 }}><CoffeeIcon size={22} stroke={brandColor} w={1.8} /></div>
                 <div style={{ textAlign: "left" }}>
                   <div style={{ fontWeight: 800, fontSize: 15 }}>{wonLabel}</div>
-                  <div style={{ fontSize: 12, color: "#B4862F", fontWeight: 600 }}>{t.validDaysFirst}</div>
+                  <div style={{ fontSize: 12, color: brandDeep, fontWeight: 600 }}>{t.validDaysFirst}</div>
                 </div>
               </div>
               <button onClick={() => setStep("register")} className="flex items-center justify-center" style={{ width: "100%", height: 56, border: "none", borderRadius: 18, background: INK, color: CREAM, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 16, fontWeight: 700, cursor: "pointer", gap: 8 }}>

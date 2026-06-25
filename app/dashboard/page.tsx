@@ -27,7 +27,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const venue = venues.find((v) => v.id === sp?.v) || venues[0];
 
-  const [{ data: rewards }, { data: customers }, { data: scans }, { data: redemptions }, { data: reviews }, { data: grants }] =
+  const [{ data: rewards }, { data: customers }, { data: scans }, { data: redemptions }, { data: reviews }, { data: grants }, scanCountRes, customerCountRes, { data: dailyScans }, { data: hourlyScans }] =
     await Promise.all([
       db.from("rewards").select("*").eq("venue_id", venue.id).order("points_required"),
       db.from("customers").select("*").eq("venue_id", venue.id).order("points", { ascending: false }),
@@ -55,7 +55,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         .eq("venue_id", venue.id)
         .order("created_at", { ascending: false })
         .limit(200),
+      // KPI-ji + grafi prek strežniške agregacije (mimo 1000-row PostgREST limita)
+      db.from("scans").select("id", { count: "exact", head: true }).eq("venue_id", venue.id),
+      db.from("customers").select("id", { count: "exact", head: true }).eq("venue_id", venue.id),
+      db.rpc("venue_daily_scans", { p_venue_id: venue.id, p_days: 365 }),
+      db.rpc("venue_hourly_scans", { p_venue_id: venue.id, p_days: 365 }),
     ]);
+  const scanCount = scanCountRes.count ?? (scans?.length ?? 0);
+  const customerCount = customerCountRes.count ?? (customers?.length ?? 0);
 
   return (
     <Dashboard
@@ -72,6 +79,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       ownerPlan={bestOwnerPlan(venues)}
       billingVenue={venues[0] as Venue}
       access={ownerAccess(bestOwnerPlan(venues), venues[0] as Venue, Date.now())}
+      scanCount={scanCount}
+      customerCount={customerCount}
+      dailyScans={(dailyScans ?? []) as { day: string; cnt: number }[]}
+      hourlyScans={(hourlyScans ?? []) as { hour: number; cnt: number }[]}
     />
   );
 }

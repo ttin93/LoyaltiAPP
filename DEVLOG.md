@@ -49,6 +49,11 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-25 — seja 56 (FIX: analitika napačna pri prometnih lokalih — 1000-row cap)
+- **Bug:** dashboard je KPI-je/grafe računal iz nalozenih scans (`limit(200)`, + PostgREST caplja na **1000**) → "Skeniranja", "Povp. obiski/stranko" (200/501 = **0,4** wtf), 14-dnevni graf (le zadnjih ~5 dni) so bili napačni za lokale z veliko prometa.
+- **Fix:** strežniška agregacija — migracija [`0021_analytics_rpc.sql`](supabase/0021_analytics_rpc.sql) (`venue_daily_scans` + `venue_hourly_scans`); `dashboard/page.tsx` doda exact `scanCount` + `customerCount` + RPC dnevne/urne podatke; `Dashboard` `stats`/`ana` + KPI-ji (Skeniranja, Stranke, povp. obiski, dnevni/urni grafi) berejo iz štetja/agregacije, ne iz cappanih vrstic.
+- Demo PrTinu: 501 strank, **1855 skenov čez 14 dni → povp. 3,7**; ocene **4,23★ / 78 % 4★+**; setup dokončan → "Za dokončat" checklist + opozorila izginejo. `next build` ✅.
+
 ### 2026-06-24 — seja 55b (demo lokal preimenovan)
 - Demo ime lokala **Mora → Kavarna Lipa** (bolj prijazno/univerzalno) na landingu (mockup kartica, review popup, kampanja, „Kavarna Lipa · Ljubljana"), v demo dashboardu in onboarding placeholderju. Avatar „M"→„L", „pri Mora"→„pri Lipi". FAQ beseda „mora" (=must) ostala.
 

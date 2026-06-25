@@ -106,7 +106,7 @@ function WheelMini({ segments, winner, accent }: { segments: WheelSegment[]; win
   );
 }
 
-export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail, isAdmin = false, ownerPlan, billingVenue, access }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string; isAdmin?: boolean; ownerPlan: PlanKey; billingVenue: Venue; access: Access }) {
+export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail, isAdmin = false, ownerPlan, billingVenue, access, scanCount = 0, customerCount = 0, dailyScans = [], hourlyScans = [] }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string; isAdmin?: boolean; ownerPlan: PlanKey; billingVenue: Venue; access: Access; scanCount?: number; customerCount?: number; dailyScans?: { day: string; cnt: number }[]; hourlyScans?: { hour: number; cnt: number }[] }) {
   const router = useRouter();
   const [sec, setSec] = useState("pregled");
   const [switchOpen, setSwitchOpen] = useState(false);
@@ -156,15 +156,16 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   }
 
   const stats = useMemo(() => {
-    const pointsAwarded = scans.reduce((a, s) => a + s.points_awarded, 0);
+    const pointsAwarded = scanCount * (venue.points_per_visit || 0);
     const pointsRedeemed = redemptions.reduce((a, r) => a + r.points_spent, 0);
     const visits = new Map<string, { visits: number; last: string }>();
     for (const s of scans) { const cur = visits.get(s.customer_id) ?? { visits: 0, last: s.created_at }; cur.visits += 1; if (s.created_at > cur.last) cur.last = s.created_at; visits.set(s.customer_id, cur); }
+    const dmap = new Map(dailyScans.map((d) => [d.day, Number(d.cnt)]));
     const days: { label: string; count: number }[] = [];
-    for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); const key = d.toISOString().slice(0, 10); days.push({ label: key.slice(5), count: scans.filter((s) => s.created_at.slice(0, 10) === key).length }); }
+    for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); const key = d.toISOString().slice(0, 10); days.push({ label: key.slice(5), count: dmap.get(key) ?? 0 }); }
     const maxDay = Math.max(1, ...days.map((d) => d.count));
-    return { pointsAwarded, pointsRedeemed, avgVisits: customers.length ? (scans.length / customers.length).toFixed(1) : "0", visits, days, maxDay };
-  }, [scans, redemptions, customers]);
+    return { pointsAwarded, pointsRedeemed, avgVisits: customerCount ? (scanCount / customerCount).toFixed(1) : "0", visits, days, maxDay };
+  }, [scans, redemptions, scanCount, customerCount, dailyScans, venue.points_per_visit]);
 
   const topCustomers = useMemo(() => [...customers].sort((a, b) => b.points - a.points).slice(0, 4), [customers]);
 
@@ -211,23 +212,28 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   const ana = useMemo(() => {
     const now = Date.now();
     const since = now - range * 864e5;
-    const inRange = scans.filter((s) => new Date(s.created_at).getTime() >= since);
-    const redIn = redemptions.filter((r) => new Date(r.created_at).getTime() >= since);
-    const buckets = Math.min(range, 30);
-    const step = range / buckets;
-    const days: { label: string; count: number }[] = [];
-    for (let i = buckets - 1; i >= 0; i--) {
-      const d0 = now - (i + 1) * step * 864e5, d1 = now - i * step * 864e5, lab = new Date(d1);
-      days.push({ label: `${String(lab.getDate()).padStart(2, "0")}.${String(lab.getMonth() + 1).padStart(2, "0")}`, count: inRange.filter((s) => { const t = new Date(s.created_at).getTime(); return t >= d0 && t < d1; }).length });
+    const dmap = new Map(dailyScans.map((d) => [d.day, Number(d.cnt)]));
+    // dnevna štetja za zadnjih `range` dni (strežniško, mimo 1000-limita)
+    const perDay: { label: string; count: number }[] = [];
+    for (let i = range - 1; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      perDay.push({ label: `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}`, count: dmap.get(key) ?? 0 });
     }
+    const buckets = Math.min(range, 30);
+    const size = Math.max(1, Math.ceil(perDay.length / buckets));
+    const days: { label: string; count: number }[] = [];
+    for (let i = 0; i < perDay.length; i += size) { const chunk = perDay.slice(i, i + size); days.push({ label: chunk[chunk.length - 1].label, count: chunk.reduce((a, c) => a + c.count, 0) }); }
+    const scansInRange = perDay.reduce((a, c) => a + c.count, 0);
     const hours = Array.from({ length: 24 }, () => 0);
-    for (const s of inRange) hours[new Date(s.created_at).getHours()]++;
+    for (const h of hourlyScans) hours[h.hour] = Number(h.cnt);
+    const redIn = redemptions.filter((r) => new Date(r.created_at).getTime() >= since);
     const newCust = customers.filter((c) => new Date(c.created_at).getTime() >= since).length;
     const pop = new Map<string, number>();
     for (const r of redIn) { const n = r.rewards?.name || "nagrada"; pop.set(n, (pop.get(n) || 0) + 1); }
     const topRewards = [...pop.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
-    return { scans: inRange.length, redemptions: redIn.length, newCust, ptsAw: inRange.reduce((a, s) => a + s.points_awarded, 0), ptsRe: redIn.reduce((a, r) => a + r.points_spent, 0), days, maxDay: Math.max(1, ...days.map((d) => d.count)), hours, maxHour: Math.max(1, ...hours), topRewards };
-  }, [scans, redemptions, customers, range]);
+    return { scans: scansInRange, redemptions: redIn.length, newCust, ptsAw: scansInRange * (venue.points_per_visit || 0), ptsRe: redIn.reduce((a, r) => a + r.points_spent, 0), days, maxDay: Math.max(1, ...days.map((d) => d.count)), hours, maxHour: Math.max(1, ...hours), topRewards };
+  }, [dailyScans, hourlyScans, redemptions, customers, range, venue.points_per_visit]);
 
   // OCENE — Google-review statistika
   const rev = useMemo(() => {
@@ -448,8 +454,8 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                       );
                     })()}
                     <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))" }}>
-                      <Kpi l="Skeniranja" v={scans.length} d={`${stats.pointsAwarded} podarjenih točk`} dc={GREEN} />
-                      <Kpi l="Stranke" v={customers.length} />
+                      <Kpi l="Skeniranja" v={scanCount} d={`${stats.pointsAwarded} podarjenih točk`} dc={GREEN} />
+                      <Kpi l="Stranke" v={customerCount} />
                       <Kpi l="Povp. obiski / stranko" v={stats.avgVisits} />
                       <Kpi l="Unovčene točke" v={stats.pointsRedeemed} dc={CORAL} />
                     </div>

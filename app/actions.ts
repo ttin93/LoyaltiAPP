@@ -102,7 +102,7 @@ export async function createVenue(formData: FormData) {
 
   const { data: venue, error } = await db
     .from("venues")
-    .insert({ owner_user_id: user.id, name, brand_color: brand, public_code: code, owner_name, phone, venue_type, city, points_model, points_per_visit: pointsPerVisit, stamp_goal: stampGoal, trial_ends_at: new Date(Date.now() + 14 * 864e5).toISOString() })
+    .insert({ owner_user_id: user.id, name, brand_color: brand, public_code: code, owner_name, phone, venue_type, city, points_model, points_per_visit: pointsPerVisit, stamp_goal: stampGoal, trial_ends_at: new Date(Date.now() + 30 * 864e5).toISOString() })
     .select("*")
     .single();
   if (error) throw error;

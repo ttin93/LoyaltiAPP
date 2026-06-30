@@ -14,8 +14,8 @@ export default function DemoHub() {
   return (
     <main className="min-h-dvh bg-[#EAE2D3] px-5 py-12">
       <div className="mx-auto flex max-w-md flex-col items-center text-center">
-        <div className="font-display flex h-14 w-14 items-center justify-center rounded-2xl bg-[#2B1D17] text-2xl font-extrabold text-[#F5EFE6]">Ž</div>
-        <div className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[#8A7A66]">Žig · demo</div>
+        <div className="font-display flex h-14 w-14 items-center justify-center rounded-2xl bg-[#2B1D17] text-2xl font-extrabold text-[#F5EFE6]">L</div>
+        <div className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[#8A7A66]">Loyavi · demo</div>
         <h1 className="font-display mt-2 text-[30px] font-extrabold leading-[1.1] text-[#2B1D17]">Poglej, kaj dobiš</h1>
         <p className="mt-2 max-w-[320px] text-[15px] leading-relaxed text-[#5C4C3E]">
           Več rednih gostov in več ocen — brez tvojega truda. Tukaj vidiš, kako izgleda za tvoje goste in zate.

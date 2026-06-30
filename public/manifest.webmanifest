@@ -1,13 +1,13 @@
 {
-  "name": "Zvestoba",
-  "short_name": "Zvestoba",
+  "name": "Loyavi",
+  "short_name": "Loyavi",
   "description": "Skeniraj račun, zbiraj točke, prejmi nagrade.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#ffffff",
-  "theme_color": "#16a34a",
+  "background_color": "#FBF7F0",
+  "theme_color": "#2A241D",
   "icons": [
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/icon.svg?v=2", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }

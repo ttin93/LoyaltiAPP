@@ -22,11 +22,11 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Žig — zbiraj žige",
-  description: "Skeniraj QR z računa in dobi žig. Brez aplikacije, brez gesla.",
+  title: "Loyavi — kartica zvestobe za lokale",
+  description: "Skeniraj QR z računa in zbiraj žige, točke in nagrade. Brez aplikacije, brez gesla.",
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/icon.svg", apple: "/icon.svg" },
-  appleWebApp: { capable: true, title: "Žig", statusBarStyle: "default" },
+  icons: { icon: "/icon.svg?v=2", apple: "/icon.svg?v=2" },
+  appleWebApp: { capable: true, title: "Loyavi", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

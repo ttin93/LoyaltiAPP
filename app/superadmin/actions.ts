@@ -118,7 +118,7 @@ export async function sendOwnerCampaign(formData: FormData): Promise<{ sent: num
   const items = recipients.map((to) => ({
     to,
     subject,
-    html: emailOwnerMessage({ heading: subject, message, ctaText: "Odpri Tally", ctaUrl: origin ? `${origin}/dashboard` : "#" }),
+    html: emailOwnerMessage({ heading: subject, message, ctaText: "Odpri Loyavi", ctaUrl: origin ? `${origin}/dashboard` : "#" }),
   }));
   const { sent, failed } = await sendBatch(items, { from: process.env.RESEND_FROM });
   return { sent, failed, total: items.length };

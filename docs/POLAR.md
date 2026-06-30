@@ -4,7 +4,7 @@ Koda je **že narejena** (checkout, webhook, kupčev portal, billing tab v dashb
 Da gre v živo, je treba enkratno nastaviti Polar. ~15 min.
 
 ## 1. Polar račun + organizacija
-1. Naredi račun na <https://polar.sh> in organizacijo (npr. "Tally").
+1. Naredi račun na <https://polar.sh> in organizacijo (npr. "Loyavi").
 2. Začni v **Sandbox** načinu (<https://sandbox.polar.sh>) za test, kasneje produkcija.
    - Sandbox ima **ločen račun, organizacijo, produkte in token** od produkcije.
    - V kodi nastaviš `POLAR_API_BASE=https://sandbox-api.polar.sh` (glej točko 5).
@@ -16,10 +16,10 @@ Naredi štiri (cena = brez DDV; Polar kot MoR davek doda sam):
 
 | Produkt (ime je tvoje) | Interval | Cena      | Env var                              |
 |------------------------|----------|-----------|--------------------------------------|
-| Tally Start (mes)      | monthly  | 49,99 €   | `POLAR_PRODUCT_ESPRESSO_MONTHLY_ID`  |
-| Tally Start (let)      | yearly   | 499,90 €  | `POLAR_PRODUCT_ESPRESSO_YEARLY_ID`   |
-| Tally Grow (mes)       | monthly  | 79,99 €   | `POLAR_PRODUCT_DOPPIO_MONTHLY_ID`    |
-| Tally Grow (let)       | yearly   | 799,90 €  | `POLAR_PRODUCT_DOPPIO_YEARLY_ID`     |
+| Loyavi Start (mes)      | monthly  | 49,99 €   | `POLAR_PRODUCT_ESPRESSO_MONTHLY_ID`  |
+| Loyavi Start (let)      | yearly   | 499,90 €  | `POLAR_PRODUCT_ESPRESSO_YEARLY_ID`   |
+| Loyavi Grow (mes)       | monthly  | 79,99 €   | `POLAR_PRODUCT_DOPPIO_MONTHLY_ID`    |
+| Loyavi Grow (let)       | yearly   | 799,90 €  | `POLAR_PRODUCT_DOPPIO_YEARLY_ID`     |
 
 > Letno = **mesečna × 10** (2 meseca gratis). Imena paketov so Start/Grow/Scale,
 > a env ključi ostajajo `ESPRESSO`/`DOPPIO` (notranji ključi). Scale = "po dogovoru"

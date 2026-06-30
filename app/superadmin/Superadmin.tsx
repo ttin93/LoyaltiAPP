@@ -84,7 +84,7 @@ export default function Superadmin({
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: "0 20px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div className="flex items-center" style={{ gap: 10 }}>
             <span style={{ width: 30, height: 30, borderRadius: 9, background: AMBER, color: INK, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 16 }}>⚡</span>
-            <span style={{ fontWeight: 800, fontSize: 16, letterSpacing: "-0.01em" }}>Tally</span>
+            <span style={{ fontWeight: 800, fontSize: 16, letterSpacing: "-0.01em" }}>Loyavi</span>
             <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: AMBER, marginLeft: 2 }}>Super Admin</span>
           </div>
           <div className="flex items-center" style={{ gap: 14 }}>
@@ -671,7 +671,7 @@ function Sporocila() {
   return (
     <div className="flex flex-col" style={{ gap: 16, maxWidth: 620 }}>
       <div style={{ background: "#FBF1DD", border: "1px solid #F0DDB4", borderRadius: 12, padding: "10px 14px", fontSize: 12.5, color: "#8A6A1E" }}>
-        Pošlji ponudbo / novico <strong>lastnikom lokalov</strong> (ne gostom). Maili gredo prek Resend iz Tally domene — rabi <span style={{ fontFamily: "monospace", fontSize: 12 }}>RESEND_API_KEY</span> + verificirano domeno (SPF/DKIM/DMARC).
+        Pošlji ponudbo / novico <strong>lastnikom lokalov</strong> (ne gostom). Maili gredo prek Resend iz Loyavi domene — rabi <span style={{ fontFamily: "monospace", fontSize: 12 }}>RESEND_API_KEY</span> + verificirano domeno (SPF/DKIM/DMARC).
       </div>
       <Card>
         <div className="flex flex-col" style={{ gap: 12 }}>

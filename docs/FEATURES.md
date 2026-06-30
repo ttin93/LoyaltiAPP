@@ -1,4 +1,4 @@
-# Tally — popoln seznam funkcij (za razdelitev po paketih)
+# Loyavi — popoln seznam funkcij (za razdelitev po paketih)
 
 Legenda statusa: ✅ dela danes · 🟡 UI je, dejansko pošiljanje/izvedba rabi še provider/gradnjo · 🔢 stvar limita (število) · 🚧 še ni, treba zgraditi
 

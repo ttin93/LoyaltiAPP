@@ -3,7 +3,7 @@ import type { PlanKey, BillingCycle } from "@/lib/types";
 
 // ── Polar (Merchant of Record) helper ────────────────────────────────────────
 // Vzorec prevzet iz AskHerOut: surov Polar REST + svix-style podpis webhooka.
-// Tally prodaja PONAVLJAJOČE naročnine (en Polar produkt na paket × cikel).
+// Loyavi prodaja PONAVLJAJOČE naročnine (en Polar produkt na paket × cikel).
 
 // Privzeto produkcija; za testiranje nastavi POLAR_API_BASE=https://sandbox-api.polar.sh
 const POLAR_BASE = (process.env.POLAR_API_BASE || "https://api.polar.sh").replace(/\/$/, "");

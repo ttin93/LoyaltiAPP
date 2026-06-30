@@ -1,5 +1,5 @@
 // Email predloge (HTML, inline stili — email-safe). Prenešeno iz Claude Design
-// "Email Šablone": gostov ovoj (barvna glava) + admin ovoj (Tally glava) + 16 predlog.
+// "Email Šablone": gostov ovoj (barvna glava) + admin ovoj (Loyavi glava) + 16 predlog.
 // Vsi vrnejo cel HTML string za Resend.
 
 const FONT = "'Plus Jakarta Sans',-apple-system,'Segoe UI',Arial,sans-serif";
@@ -105,20 +105,20 @@ function guestShell(base: GuestBase, subject: string, body: string): string {
   const header = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${c}"><tr><td style="padding:26px 40px">
     <table role="presentation" cellpadding="0" cellspacing="0"><tr>
       <td style="width:46px"><div style="width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,0.18);text-align:center;line-height:46px;color:#fff;font-weight:800;font-size:20px">${esc(ini)}</div></td>
-      <td style="padding-left:14px"><div style="color:#fff;font-weight:700;font-size:16px;line-height:1.2">${esc(base.venueName)}</div><div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:2px">Kartica zvestobe · tally</div></td>
+      <td style="padding-left:14px"><div style="color:#fff;font-weight:700;font-size:16px;line-height:1.2">${esc(base.venueName)}</div><div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:2px">Kartica zvestobe · Loyavi</div></td>
     </tr></table>
   </td></tr></table>`;
-  return shell(header, body, `${base.venueName} · Kartica zvestobe · Powered by Tally`, base.unsubUrl) + `<!--${esc(subject)}-->`;
+  return shell(header, body, `${base.venueName} · Kartica zvestobe · Powered by Loyavi`, base.unsubUrl) + `<!--${esc(subject)}-->`;
 }
 
 function adminShell(subject: string, body: string, unsubUrl?: string): string {
   const header = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${INK}"><tr><td style="padding:26px 40px">
     <table role="presentation" cellpadding="0" cellspacing="0"><tr>
       <td style="width:46px"><div style="width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,0.15);text-align:center;line-height:46px;color:#fff;font-weight:800;font-size:22px">T</div></td>
-      <td style="padding-left:14px"><div style="color:#fff;font-weight:800;font-size:18px">Tally</div><div style="color:rgba(255,255,255,0.55);font-size:12px;margin-top:2px">Kartica zvestobe · SaaS platforma</div></td>
+      <td style="padding-left:14px"><div style="color:#fff;font-weight:800;font-size:18px">Loyavi</div><div style="color:rgba(255,255,255,0.55);font-size:12px;margin-top:2px">Kartica zvestobe · SaaS platforma</div></td>
     </tr></table>
   </td></tr></table>`;
-  return shell(header, body, "© Tally · Kartica zvestobe platforma", unsubUrl) + `<!--${esc(subject)}-->`;
+  return shell(header, body, "© Loyavi · Kartica zvestobe platforma", unsubUrl) + `<!--${esc(subject)}-->`;
 }
 
 // ─────────────────────────── GOSTJE · TRANSAKCIJSKI ───────────────────────────
@@ -234,7 +234,7 @@ export function emailReviewThanks(b: GuestBase, d: { guestName?: string; stars: 
 export type AdminBase = { ctaUrl?: string; unsubUrl?: string };
 
 export function emailAdminPurchase(d: AdminBase & { venueName: string; plan: string; amount: string; date: string; nextRenewal: string }): string {
-  return adminShell("✅ Hvala za naročnino Tally · Potrditev plačila",
+  return adminShell("✅ Hvala za naročnino Loyavi · Potrditev plačila",
     `<div style="text-align:center;margin-bottom:24px">${big("✅")}${h1("Hvala za nakup!")}${p(`Vaša naročnina za <b>${esc(d.venueName)}</b> je aktivna. Dostop do vseh funkcij je takoj na voljo.`)}</div>` +
     kvRows("PODROBNOSTI NAROČNINE", [["Paket", d.plan], ["Znesek", d.amount], ["Datum naročnine", d.date], ["Naslednje podaljšanje", d.nextRenewal]]) +
     ctaCenter("Odpri nadzorno ploščo →", d.ctaUrl || "#", INK),
@@ -243,7 +243,7 @@ export function emailAdminPurchase(d: AdminBase & { venueName: string; plan: str
 }
 
 export function emailAdminExpiring(d: AdminBase & { venueName: string; plan: string; expiresOn: string }): string {
-  return adminShell("⏰ Vaša Tally naročnina kmalu poteče — ukrepajte",
+  return adminShell("⏰ Vaša Loyavi naročnina kmalu poteče — ukrepajte",
     `${big("⏰")}${h1("Naročnina kmalu poteče")}${p(`Vaša naročnina za <b>${esc(d.venueName)}</b> poteče <b>${esc(d.expiresOn)}</b>. Da bi ohranili neprekinjen dostop, prosimo podaljšajte naročnino.`)}` +
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FDF8EE;border-radius:14px;border:1px solid #E8D9A0;margin-bottom:8px"><tr><td style="width:44px;padding:18px 0 18px 20px;font-size:22px;vertical-align:top">⚠️</td><td style="padding:18px 20px"><div style="font-weight:700;font-size:15px;color:#7A5500">Opozorilo</div><div style="font-size:13.5px;color:#7A5500;margin-top:4px;line-height:1.55">Po poteku gostje ne bodo mogli skenirati računov in kartice bodo neaktivne.</div></td></tr></table>` +
     kvRows("NAROČNINA", [["Paket", d.plan], ["Datum poteka", d.expiresOn, "#8B3030"]]) +
@@ -253,7 +253,7 @@ export function emailAdminExpiring(d: AdminBase & { venueName: string; plan: str
 }
 
 export function emailAdminRenewal(d: AdminBase & { venueName: string; plan: string; amount: string; date: string; method?: string }): string {
-  return adminShell("🔄 Tally naročnina se samodejno podaljša",
+  return adminShell("🔄 Loyavi naročnina se samodejno podaljša",
     `${big("🔄")}${h1("Samodejno podaljšanje")}${p(`Vaša naročnina za <b>${esc(d.venueName)}</b> se bo samodejno podaljšala <b>${esc(d.date)}</b>. Zaračunali bomo <b>${esc(d.amount)}</b> na shranjeno plačilno sredstvo.`)}` +
     kvRows("PODROBNOSTI PODALJŠANJA", [["Paket", d.plan], ["Znesek", d.amount], ["Datum zaračunavanja", d.date], ["Plačilno sredstvo", d.method || "kartica"]]) +
     notice("Če ne želite podaljšanja, ga preklicite vsaj 24 ur pred datumom zaračunavanja.", "neutral") +
@@ -263,8 +263,8 @@ export function emailAdminRenewal(d: AdminBase & { venueName: string; plan: stri
 }
 
 export function emailOwnerWelcome(d: AdminBase & { ownerName?: string; venueName: string }): string {
-  return adminShell("🏪 Dobrodošli v Tally! Začnite z nastavitvijo.",
-    `<div style="text-align:center;margin-bottom:28px">${big("👋")}${h1(`Dobrodošli${d.ownerName ? ", " + esc(d.ownerName) : ""}!`)}${p(`Veseli smo, da ste izbrali Tally za kartico zvestobe lokala <b>${esc(d.venueName)}</b>. Vse je pripravljeno za začetek.`)}</div>` +
+  return adminShell("🏪 Dobrodošli v Loyavi! Začnite z nastavitvijo.",
+    `<div style="text-align:center;margin-bottom:28px">${big("👋")}${h1(`Dobrodošli${d.ownerName ? ", " + esc(d.ownerName) : ""}!`)}${p(`Veseli smo, da ste izbrali Loyavi za kartico zvestobe lokala <b>${esc(d.venueName)}</b>. Vse je pripravljeno za začetek.`)}</div>` +
     stepList([
       { title: "Nastavi kartico", sub: "Določi ime lokala, barvo, logo in število žigov za nagrado." },
       { title: "Deli z gosti", sub: "Gostje skenirajo QR ali obiščejo tvojo stran in se prijavijo." },

@@ -1,4 +1,4 @@
-/* Tally — vgradljiv wheel widget.
+/* Loyavi — vgradljiv wheel widget.
    Uporaba na poljubnem websiteu:
    <script src="https://TVOJ-DOMAIN/widget.js" data-venue="moka" defer></script>
 */

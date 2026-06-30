@@ -10,7 +10,7 @@ Naredi račun na <https://resend.com>.
 Resend brez verificirane domene pošilja **SAMO na tvoj lasten email** (sandbox).
 Za pošiljanje kavarnam in gostom rabiš **svojo domeno**.
 
-1. Resend → **Domains → Add Domain** → vpiši domeno (npr. `tally.si`, `getally.si`, karkoli imaš).
+1. Resend → **Domains → Add Domain** → vpiši domeno (npr. `loyavi.app`, karkoli imaš).
 2. Resend ti pokaže DNS zapise:
    - **SPF** (TXT)
    - **DKIM** (3× CNAME ali TXT)
@@ -27,7 +27,7 @@ Resend → **API Keys → Create API Key** → kopiraj (`re_...`).
 ## 4. Env spremenljivke (Vercel → Settings → Environment Variables → Production)
 ```
 RESEND_API_KEY=re_...
-RESEND_FROM="Tally <pozdrav@tvojadomena.si>"   ← from MORA biti na verificirani domeni
+RESEND_FROM="Loyavi <pozdrav@loyavi.app>"   ← from MORA biti na verificirani domeni
 NEXT_PUBLIC_SITE_URL=https://<tvoja-domena ali vercel url>
 CRON_SECRET=<poljuben dolg niz>                 ← za dnevne avtomatizacije (pogrešamo te ipd.)
 ```

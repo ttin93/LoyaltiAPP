@@ -11,7 +11,7 @@ import { gt } from "@/lib/guestI18n";
 const ROTS = [-5, 3, -2, 6, -4, 2, -6, 4, -3, 5];
 const REWARD_ICONS = ["cup", "croissant", "cake"];
 
-// Tally tema
+// Loyavi tema
 const INK = "#2A241D";
 const CREAM = "#FBF7F0";
 const PAPER = "#FBF3E6";

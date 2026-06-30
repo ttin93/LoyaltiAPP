@@ -81,12 +81,12 @@ export async function notifyBirthdayVenue(v: V, email: string | null | undefined
   } catch (e) { console.error("[notify bday-venue]", e); }
 }
 
-// ── ADMIN (Tally → lastnik) — samo platformni ključ ─────────────────────────
+// ── ADMIN (Loyavi → lastnik) — samo platformni ključ ─────────────────────────
 export async function notifyOwnerWelcome(email: string | null | undefined, ownerName: string | null | undefined, venueName: string) {
   if (!email || !emailConfigured()) return;
   try {
     const html = T.emailOwnerWelcome({ ownerName: ownerName || undefined, venueName, ctaUrl: `${origin()}/dashboard` });
-    await sendEmail({ to: email, subject: "🏪 Dobrodošli v Tally!", html });
+    await sendEmail({ to: email, subject: "🏪 Dobrodošli v Loyavi!", html });
   } catch (e) { console.error("[notify owner-welcome]", e); }
 }
 
@@ -94,7 +94,7 @@ export async function notifyAdminPurchase(email: string | null | undefined, d: {
   if (!email || !emailConfigured()) return;
   try {
     const html = T.emailAdminPurchase({ ...d, ctaUrl: `${origin()}/dashboard` });
-    await sendEmail({ to: email, subject: "✅ Hvala za naročnino Tally", html });
+    await sendEmail({ to: email, subject: "✅ Hvala za naročnino Loyavi", html });
   } catch (e) { console.error("[notify admin-purchase]", e); }
 }
 
@@ -102,6 +102,6 @@ export async function notifyAdminExpiring(email: string | null | undefined, d: {
   if (!email || !emailConfigured()) return;
   try {
     const html = T.emailAdminExpiring({ ...d, ctaUrl: `${origin()}/dashboard` });
-    await sendEmail({ to: email, subject: "⏰ Tvoja Tally naročnina kmalu poteče", html });
+    await sendEmail({ to: email, subject: "⏰ Tvoja Loyavi naročnina kmalu poteče", html });
   } catch (e) { console.error("[notify admin-expiring]", e); }
 }

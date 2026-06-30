@@ -9,7 +9,7 @@
 ---
 
 ## Aplikacija
-"Žig" — zvestobeni (loyalty) SaaS za slovenske kavarne / fast-food. Gost skenira fiskalni
+"Loyavi" — zvestobeni (loyalty) SaaS za slovenske kavarne / fast-food. Gost skenira fiskalni
 račun (QR), dobi žige/točke, unovči nagrade. Lokal ima nadzorno ploščo. Topel "kartonček" dizajn.
 Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
@@ -48,6 +48,13 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
   `time_closed`, `additional.zoi`+`eor` → kasnejša integracija za zanesljiv znesek.
 
 ## Dnevnik (najnovejše na vrhu)
+
+### 2026-06-30 — seja 57 (REBRAND Tally → Loyavi + go-live priprava)
+- **Ime znamke: Tally → Loyavi.** Domena **loyavi.app** (loyavi.com je squatter za $3.499, ni konkurent — ime čisto). Rebrand v ~20 mestih: [`lib/brand.ts`](lib/brand.ts) (`BRAND`, `BRAND_EMAIL=info@loyavi.app`), email šablone, notify, superadmin wordmark, gostov mail footer, demo dashboard (`tally.app`→`loyavi.app`), docs, `.env.example`. Interni `tallyFloaty`/`tally-wheel-height` v `public/widget.js` ostali (postMessage protokol, neviden). Preverjeno: `/api/email-preview` renderira **Loyavi=✓, Tally=0** za owner_welcome/welcome/admin_purchase/campaign. `tsc` ✅.
+- **Pilot trial 14 → 30 dni** za nove lokale ([`app/actions.ts`](app/actions.ts), free launch).
+- **Polar sandbox podpora:** `POLAR_API_BASE` env (privzeto prod, za test `https://sandbox-api.polar.sh`) v [`lib/polar.ts`](lib/polar.ts) + docs.
+- **Email-preview route** ([`app/api/email-preview/route.ts`](app/api/email-preview/route.ts)): render katerekoli od 16 šablon v brskalniku brez Resend/pošiljanja (`?type=&venue=&color=&name=`) — za screenshote v promo video.
+- **Go-live vodiča:** [`docs/RESEND.md`](docs/RESEND.md) (domena + DNS SPF/DKIM/DMARC + env) in [`docs/POLAR.md`](docs/POLAR.md) (4 produkti + 14d trial + webhook). **Naslednji korak:** kupi loyavi.app → Resend domena → nato Polar.
 
 ### 2026-06-25 — seja 56 (FIX: analitika napačna pri prometnih lokalih — 1000-row cap)
 - **Bug:** dashboard je KPI-je/grafe računal iz nalozenih scans (`limit(200)`, + PostgREST caplja na **1000**) → "Skeniranja", "Povp. obiski/stranko" (200/501 = **0,4** wtf), 14-dnevni graf (le zadnjih ~5 dni) so bili napačni za lokale z veliko prometa.

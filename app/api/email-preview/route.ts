@@ -29,7 +29,7 @@ export function GET(req: Request) {
     case "admin_expiring": html = T.emailAdminExpiring({ venueName, plan: "Grow", expiresOn: "01.07.2026" }); break;
     case "admin_renewal": html = T.emailAdminRenewal({ venueName, plan: "Grow", amount: "79,99 €", date: "25.07.2026" }); break;
     case "owner_welcome": html = T.emailOwnerWelcome({ ownerName: "Tin", venueName }); break;
-    case "owner_update": html = T.emailOwnerUpdate({ heading: "Novosti v Tally", intro: "Novi avtomatizirani maili, napredna analitika in več.", features: [{ icon: "📊", title: "Napredna analitika", sub: "Skeni po dnevih in urah." }, { icon: "✉️", title: "Avtomatski win-back", sub: "Kupon neaktivnim gostom." }], outro: "Preizkusi v nadzorni plošči." }); break;
+    case "owner_update": html = T.emailOwnerUpdate({ heading: "Novosti v Loyavi", intro: "Novi avtomatizirani maili, napredna analitika in več.", features: [{ icon: "📊", title: "Napredna analitika", sub: "Skeni po dnevih in urah." }, { icon: "✉️", title: "Avtomatski win-back", sub: "Kupon neaktivnim gostom." }], outro: "Preizkusi v nadzorni plošči." }); break;
     default: html = T.emailWeMissYou(b, { guestName: name, days: 30, lastVisit: "24.05.2026" });
   }
   return new NextResponse(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });

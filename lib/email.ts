@@ -6,7 +6,7 @@ export function emailConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY);
 }
 
-const DEFAULT_FROM = process.env.RESEND_FROM || "Tally <onboarding@resend.dev>";
+const DEFAULT_FROM = process.env.RESEND_FROM || "Loyavi <onboarding@resend.dev>";
 
 export async function sendEmail(args: {
   to: string;

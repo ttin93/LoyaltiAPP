@@ -11,6 +11,15 @@ const INK = "#2A241D";
 const AMBER = "#E2A04A";
 const PAPER = "#FBF3E6";
 
+function Cup({ stroke, size }: { stroke: string; size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", fill: "none", stroke, strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" }}>
+      <path d="M5 9h10v5.5A4.5 4.5 0 0 1 10.5 19h-1A4.5 4.5 0 0 1 5 14.5V9Z" />
+      <path d="M15 10.5h1.6a2.4 2.4 0 0 1 0 4.8H15" />
+    </svg>
+  );
+}
+
 function GoogleLogo({ size = 19 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
@@ -110,7 +119,7 @@ export default function AuthForm() {
         <div className="relative hidden flex-col justify-center gap-6 md:flex" style={{ background: "radial-gradient(130% 100% at 0% 0%, #34281E 0%, #2A241D 60%)", padding: "54px 48px", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: -50, right: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(226,160,74,0.16)" }} />
           <Link href="/" className="relative flex items-center gap-2.5">
-            <div className="flex items-center justify-center" style={{ width: 38, height: 38, borderRadius: 11, background: AMBER, color: INK, fontWeight: 800, fontSize: 19 }}>{BRAND.charAt(0)}</div>
+            <div className="flex items-center justify-center" style={{ width: 38, height: 38, borderRadius: 11, background: AMBER, color: INK, fontWeight: 800, fontSize: 19 }}><Cup stroke={INK} size={21} /></div>
             <span style={{ fontWeight: 800, fontSize: 20, color: PAPER, letterSpacing: "-0.01em" }}>{BRAND}</span>
           </Link>
           <h2 style={{ position: "relative", margin: 0, fontWeight: 800, fontSize: 38, lineHeight: 1.05, letterSpacing: "-0.02em", color: "#F8F3EA" }}>Zvestoba na<br />fiskalni račun.</h2>
@@ -130,7 +139,7 @@ export default function AuthForm() {
         <div className="flex flex-col justify-center gap-5" style={{ padding: "44px 36px" }}>
           {/* mobilni logo */}
           <Link href="/" className="flex items-center gap-2.5 md:hidden">
-            <div className="flex items-center justify-center" style={{ width: 36, height: 36, borderRadius: 10, background: AMBER, color: INK, fontWeight: 800, fontSize: 18 }}>{BRAND.charAt(0)}</div>
+            <div className="flex items-center justify-center" style={{ width: 36, height: 36, borderRadius: 10, background: AMBER, color: INK, fontWeight: 800, fontSize: 18 }}><Cup stroke={INK} size={20} /></div>
             <span style={{ fontWeight: 800, fontSize: 19 }}>{BRAND}</span>
           </Link>
 

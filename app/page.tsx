@@ -113,7 +113,7 @@ const FAQS = [
 function Logo({ size = 34, fs = 20 }: { size?: number; fs?: number }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-      <div style={{ width: size, height: size, borderRadius: 11, background: INK, color: PAPER, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: Math.round(size * 0.5) }}>{BRAND.charAt(0)}</div>
+      <div style={{ width: size, height: size, borderRadius: 11, background: INK, color: PAPER, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: Math.round(size * 0.5) }}><Cup stroke={PAPER} size={Math.round(size * 0.56)} /></div>
       <span style={{ fontWeight: 800, fontSize: fs, letterSpacing: "-0.01em" }}>{BRAND}</span>
     </div>
   );

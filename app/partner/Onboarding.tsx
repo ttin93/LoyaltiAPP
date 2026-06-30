@@ -90,7 +90,7 @@ export default function Onboarding() {
   return (
     <main style={{ background: "#E9E2D6", fontFamily: JAK, color: INK, minHeight: "100dvh", overflowX: "hidden" }}>
       <div className="mx-auto flex items-center justify-between" style={{ maxWidth: 1000, height: 64, padding: "0 24px" }}>
-        <div className="flex items-center" style={{ gap: 9 }}><div className="flex items-center justify-center" style={{ width: 34, height: 34, borderRadius: 11, background: INK, color: PAPER, fontWeight: 800, fontSize: 17 }}>{BRAND.charAt(0)}</div><span style={{ fontWeight: 800, fontSize: 20 }}>{BRAND}</span></div>
+        <div className="flex items-center" style={{ gap: 9 }}><div className="flex items-center justify-center" style={{ width: 34, height: 34, borderRadius: 11, background: INK, color: PAPER, fontWeight: 800, fontSize: 17 }}><Cup stroke={PAPER} size={19} /></div><span style={{ fontWeight: 800, fontSize: 20 }}>{BRAND}</span></div>
         <form action={signOut}><button style={{ fontSize: 13.5, fontWeight: 600, color: "#9A8F80", background: "none", border: "none", cursor: "pointer", fontFamily: JAK }}>Odjava</button></form>
       </div>
 

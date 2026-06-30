@@ -28,6 +28,7 @@ Resend → **API Keys → Create API Key** → kopiraj (`re_...`).
 ```
 RESEND_API_KEY=re_...
 RESEND_FROM="Loyavi <pozdrav@loyavi.app>"   ← from MORA biti na verificirani domeni
+RESEND_REPLY_TO=tin.suklje93@gmail.com      ← kam pridejo odgovori (from nima inboxa)
 NEXT_PUBLIC_SITE_URL=https://<tvoja-domena ali vercel url>
 CRON_SECRET=<poljuben dolg niz>                 ← za dnevne avtomatizacije (pogrešamo te ipd.)
 ```

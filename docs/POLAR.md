@@ -5,7 +5,10 @@ Da gre v živo, je treba enkratno nastaviti Polar. ~15 min.
 
 ## 1. Polar račun + organizacija
 1. Naredi račun na <https://polar.sh> in organizacijo (npr. "Tally").
-2. Začni v **Sandbox** načinu za test, kasneje preklopi na produkcijo.
+2. Začni v **Sandbox** načinu (<https://sandbox.polar.sh>) za test, kasneje produkcija.
+   - Sandbox ima **ločen račun, organizacijo, produkte in token** od produkcije.
+   - V kodi nastaviš `POLAR_API_BASE=https://sandbox-api.polar.sh` (glej točko 5).
+   - Ko vse dela, ponoviš produkte v produkciji in odstraniš `POLAR_API_BASE`.
 
 ## 2. Ustvari 4 naročninske produkte (recurring) + 14-dnevni trial
 Polar dashboard → **Products** → New → tip **Subscription**.
@@ -48,6 +51,8 @@ Polar → Settings → **Webhooks** → Add endpoint:
 
 ## 5. Env spremenljivke (Vercel → Project → Settings → Environment Variables, Production)
 ```
+# Samo za SANDBOX testiranje (odstrani/zakomentiraj za produkcijo):
+# POLAR_API_BASE=https://sandbox-api.polar.sh
 POLAR_API_TOKEN=polar_oat_...
 POLAR_WEBHOOK_SECRET=polar_whs_...
 POLAR_PRODUCT_ESPRESSO_MONTHLY_ID=...

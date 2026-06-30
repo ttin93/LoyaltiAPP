@@ -5,7 +5,8 @@ import type { PlanKey, BillingCycle } from "@/lib/types";
 // Vzorec prevzet iz AskHerOut: surov Polar REST + svix-style podpis webhooka.
 // Tally prodaja PONAVLJAJOČE naročnine (en Polar produkt na paket × cikel).
 
-const POLAR_BASE = "https://api.polar.sh";
+// Privzeto produkcija; za testiranje nastavi POLAR_API_BASE=https://sandbox-api.polar.sh
+const POLAR_BASE = (process.env.POLAR_API_BASE || "https://api.polar.sh").replace(/\/$/, "");
 
 export function polarConfigured(): boolean {
   return Boolean(process.env.POLAR_API_TOKEN);

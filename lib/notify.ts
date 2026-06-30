@@ -27,8 +27,11 @@ function gBase(v: V) {
 export async function notifyWelcome(v: V, email?: string | null) {
   if (!email || !canGuest(v)) return;
   try {
-    const { data: rw } = await getServiceClient().from("rewards").select("name").eq("venue_id", v.id).eq("kind", "stamp").maybeSingle();
-    const html = T.emailWelcome(gBase(v), { rewardName: (rw?.name as string) || "Brezplačna kava", stampsTotal: v.stamp_goal || 10 });
+    const db = getServiceClient();
+    const { data: rw } = await db.from("rewards").select("name").eq("venue_id", v.id).eq("kind", "stamp").maybeSingle();
+    const { data: prs } = await db.from("rewards").select("name, points_required, image_url").eq("venue_id", v.id).eq("kind", "points").order("points_required", { ascending: true }).limit(5);
+    const pointRewards = (prs || []).map((r) => ({ name: r.name as string, points: r.points_required as number, image: (r.image_url as string | null) || null }));
+    const html = T.emailWelcome(gBase(v), { rewardName: (rw?.name as string) || "Brezplačna kava", stampsTotal: v.stamp_goal || 10, pointRewards });
     await sendEmail({ to: email, subject: `Dobrodošel pri ${v.name}! 👋`, html, ...guestSender(v) });
   } catch (e) { console.error("[notify welcome]", e); }
 }

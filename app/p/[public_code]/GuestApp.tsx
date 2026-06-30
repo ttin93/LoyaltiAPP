@@ -703,7 +703,11 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
                 const pct = Math.min(100, Math.round((points / r.points_required) * 100));
                 return (
                   <div key={r.id} className="flex items-center" style={{ gap: 14, borderRadius: 18, border: ready ? `1.5px solid ${GREEN}` : "1px solid #EFE6D6", background: ready ? "rgba(94,127,82,0.07)" : "#fff", padding: 14 }}>
-                    <div className="flex items-center justify-center" style={{ width: 50, height: 50, borderRadius: 14, background: ready ? "rgba(94,127,82,0.14)" : tintLight, flexShrink: 0 }}><Icon name={REWARD_ICONS[idx % REWARD_ICONS.length]} color={ready ? GREEN : accentDeep} size={24} /></div>
+                    {r.image_url ? (
+                      <img src={r.image_url} alt={r.name} style={{ width: 50, height: 50, borderRadius: 14, objectFit: "cover", flexShrink: 0 }} />
+                    ) : (
+                      <div className="flex items-center justify-center" style={{ width: 50, height: 50, borderRadius: 14, background: ready ? "rgba(94,127,82,0.14)" : tintLight, flexShrink: 0 }}><Icon name={REWARD_ICONS[idx % REWARD_ICONS.length]} color={ready ? GREEN : accentDeep} size={24} /></div>
+                    )}
                     <div className="flex min-w-0 flex-1 flex-col" style={{ gap: 7 }}>
                       <div className="flex items-center justify-between" style={{ gap: 8 }}>
                         <span style={{ fontSize: 15, fontWeight: 700 }}>{r.name}</span>

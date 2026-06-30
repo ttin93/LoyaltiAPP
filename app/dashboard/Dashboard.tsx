@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow, WheelConfig, WheelSegment, Automation, Automations, PlanKey } from "@/lib/types";
-import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, saveWheel, saveAutomations, sendGuestCampaign, saveEmailSettings, uploadLogo, removeLogo, signOut } from "@/app/actions";
+import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteReward, addManualPoints, saveWheel, saveAutomations, sendGuestCampaign, saveEmailSettings, uploadLogo, removeLogo, uploadRewardImage, removeRewardImage, signOut } from "@/app/actions";
 import { PLANS, fmtEur, monthlyEquivalent, chargedAmount, STATUS_LABEL, planFeature, planMaxVenues } from "@/lib/plans";
 import type { Access } from "@/lib/access";
 import Scanner from "@/app/components/Scanner";
@@ -314,6 +314,32 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
     setLogoBusy(false);
     e.target.value = "";
   }
+
+  const [rwImgBusy, setRwImgBusy] = useState<string | null>(null);
+  async function onRewardImagePick(e: React.ChangeEvent<HTMLInputElement>, rewardId: string) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setRwImgBusy(rewardId);
+    const fd = new FormData();
+    fd.set("file", f);
+    fd.set("rewardId", rewardId);
+    try {
+      const r = await uploadRewardImage(fd);
+      if (r.error) flash("⚠ " + r.error);
+      else { flash("Slika nagrade naložena."); router.refresh(); }
+    } catch (err) { flash(err instanceof Error ? err.message : "Napaka."); }
+    setRwImgBusy(null);
+    e.target.value = "";
+  }
+  const rewardThumb = (r: Reward) => (
+    <div className="flex items-center" style={{ gap: 4, flexShrink: 0 }}>
+      <label title={r.image_url ? "Zamenjaj sliko" : "Naloži sliko"} className="flex items-center justify-center" style={{ width: 46, height: 46, borderRadius: 11, overflow: "hidden", border: `1px solid ${BORD}`, background: r.image_url ? "#fff" : CREAM, cursor: "pointer", flexShrink: 0 }}>
+        {r.image_url ? <img src={r.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 17, opacity: 0.45 }}>{rwImgBusy === r.id ? "…" : "🖼"}</span>}
+        <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => onRewardImagePick(e, r.id)} disabled={rwImgBusy === r.id} style={{ display: "none" }} />
+      </label>
+      {r.image_url && <button type="button" title="Odstrani sliko" onClick={() => run(() => removeRewardImage(r.id), "Slika odstranjena.")} style={{ width: 22, height: 22, borderRadius: 7, border: "1px solid #E4D9C7", background: "#fff", color: CORAL, cursor: "pointer", fontSize: 11, lineHeight: 1, fontFamily: JAK, padding: 0, flexShrink: 0 }}>✕</button>}
+    </div>
+  );
 
   // Marketing: pošlji e-pošto kampanjo gostom (z email naslovom)
   const [campaignBusy, setCampaignBusy] = useState(false);
@@ -743,6 +769,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                         <form key={r.id} action={async (fd) => { await saveReward(fd); router.refresh(); flash("Nagrada shranjena."); }} className="flex items-center" style={{ gap: 8 }}>
                           <input type="hidden" name="id" value={r.id} />
                           <input type="hidden" name="kind" value="stamp" />
+                          {rewardThumb(r)}
                           <input name="name" defaultValue={r.name} style={{ ...inp, flex: 1 }} />
                           <input name="points_required" type="number" defaultValue={String(r.points_required)} title="žigov" style={{ ...inp, width: 72 }} />
                           <span style={{ fontSize: 12, color: "#9A8F80" }}>žig.</span>
@@ -767,6 +794,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                         <form key={r.id} action={async (fd) => { await saveReward(fd); router.refresh(); flash("Nagrada shranjena."); }} className="flex items-center" style={{ gap: 8 }}>
                           <input type="hidden" name="id" value={r.id} />
                           <input type="hidden" name="kind" value="points" />
+                          {rewardThumb(r)}
                           <input name="name" defaultValue={r.name} style={{ ...inp, flex: 1 }} />
                           <input name="points_required" type="number" defaultValue={String(r.points_required)} style={{ ...inp, width: 72 }} />
                           <span style={{ fontSize: 12, color: "#9A8F80" }}>t</span>

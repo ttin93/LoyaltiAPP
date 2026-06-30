@@ -15,7 +15,7 @@ export function GET(req: Request) {
 
   let html = "";
   switch (type) {
-    case "welcome": html = T.emailWelcome(b, { guestName: name, rewardName: "Brezplačna kava", stampsTotal: 10 }); break;
+    case "welcome": html = T.emailWelcome(b, { guestName: name, rewardName: "Brezplačna kava", stampsTotal: 10, pointRewards: [{ name: "Cappuccino", points: 120 }, { name: "Kos domače torte", points: 250 }, { name: "Sendvič po izbiri", points: 300 }] }); break;
     case "points": html = T.emailPoints(b, { points: 15, totalPoints: 320, toReward: 40, stampsFilled: 7, stampsTotal: 10, rewardName: "Brezplačna kava" }); break;
     case "coupon_earned": html = T.emailCouponEarned(b, { guestName: name, rewardName: "Brezplačna kava", couponCode: "LIPA-9F3A", stampsTotal: 10, expires: "08.07.2026" }); break;
     case "coupon_redeem": html = T.emailCouponRedeem(b, { guestName: name, rewardName: "Brezplačna kava", couponCode: "LIPA-9F3A", expires: "08.07.2026", daysLeft: 5 }); break;

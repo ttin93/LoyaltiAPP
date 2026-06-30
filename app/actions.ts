@@ -300,6 +300,38 @@ export async function removeLogo() {
   revalidatePath("/dashboard");
 }
 
+/** Naloži sliko nagrade v Storage (bucket "logos") + shrani URL na nagrado. */
+export async function uploadRewardImage(formData: FormData): Promise<{ url?: string; error?: string }> {
+  const { db, venue } = await ownerVenue();
+  if (!venue) throw new Error("Nimaš lokala.");
+  const rewardId = String(formData.get("rewardId") || "");
+  if (!rewardId) return { error: "Manjka nagrada." };
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return { error: "Ni datoteke." };
+  if (file.size > 2 * 1024 * 1024) return { error: "Slika naj bo manjša od 2 MB." };
+  if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) return { error: "Dovoljeni: PNG, JPG, WEBP." };
+  // varnost: nagrada mora pripadati lokalu lastnika
+  const { data: rw } = await db.from("rewards").select("id").eq("id", rewardId).eq("venue_id", venue.id).maybeSingle();
+  if (!rw) return { error: "Nagrada ne obstaja." };
+  const ext = file.type.includes("png") ? "png" : file.type.includes("webp") ? "webp" : "jpg";
+  const path = `${venue.id}/reward-${rewardId}-${Date.now()}.${ext}`;
+  const buf = Buffer.from(await file.arrayBuffer());
+  const { error: upErr } = await db.storage.from("logos").upload(path, buf, { contentType: file.type, upsert: true });
+  if (upErr) return { error: "Nalaganje ni uspelo: " + upErr.message };
+  const url = db.storage.from("logos").getPublicUrl(path).data.publicUrl;
+  const { error } = await db.from("rewards").update({ image_url: url }).eq("id", rewardId).eq("venue_id", venue.id);
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard");
+  return { url };
+}
+
+export async function removeRewardImage(rewardId: string) {
+  const { db, venue } = await ownerVenue();
+  if (!venue) throw new Error("Nimaš lokala.");
+  await db.from("rewards").update({ image_url: null }).eq("id", rewardId).eq("venue_id", venue.id);
+  revalidatePath("/dashboard");
+}
+
 export async function signOut() {
   const supabase = await createSSRClient();
   await supabase.auth.signOut();

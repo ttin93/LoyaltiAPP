@@ -49,6 +49,11 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-30 — seja 58 (slike nagrad + točkovne nagrade v welcome mailu + Resend LIVE)
+- **Resend LIVE:** domena `loyavi.app` (kupljena prek Vercela) verificirana v Resendu; testni mail prišel v **inbox** (ne spam). Env na Vercelu: `RESEND_API_KEY`, `RESEND_FROM=Loyavi <pozdrav@loyavi.app>`, `RESEND_REPLY_TO` (Gmail), `CRON_SECRET`. Reply-To podpora v [`lib/email.ts`](lib/email.ts) (`RESEND_REPLY_TO`).
+- **Slike nagrad:** lastnik lahko naloži sliko na nagrado namesto ikone. `rewards.image_url` (že v shemi; migracija [`0022_reward_images.sql`](supabase/0022_reward_images.sql) zagotovi na živi bazi). Akciji `uploadRewardImage`/`removeRewardImage` ([`app/actions.ts`](app/actions.ts), bucket "logos", varnost: nagrada mora pripadati lokalu). Dashboard urejevalnik: thumbnail + upload (PNG/JPG/WEBP ≤2 MB) na žig- in točkovnih nagradah. Gostova kartica: če `image_url` → slika, sicer ikona.
+- **Welcome mail kaže točkovne nagrade lokala:** `emailWelcome` ([`lib/emailTemplate.ts`](lib/emailTemplate.ts)) dobi `pointRewards` (ime + točke + slika) → sekcija "UNOVČI S TOČKAMI". `notifyWelcome` ([`lib/notify.ts`](lib/notify.ts)) potegne kind=points (top 5) iz baze. `tsc` ✅, preverjeno na dev (sekcija + Cappuccino/torte/120 renderira).
+
 ### 2026-06-30 — seja 57 (REBRAND Tally → Loyavi + go-live priprava)
 - **Ime znamke: Tally → Loyavi.** Domena **loyavi.app** (loyavi.com je squatter za $3.499, ni konkurent — ime čisto). Rebrand v ~20 mestih: [`lib/brand.ts`](lib/brand.ts) (`BRAND`, `BRAND_EMAIL=info@loyavi.app`), email šablone, notify, superadmin wordmark, gostov mail footer, demo dashboard (`tally.app`→`loyavi.app`), docs, `.env.example`. Interni `tallyFloaty`/`tally-wheel-height` v `public/widget.js` ostali (postMessage protokol, neviden). Preverjeno: `/api/email-preview` renderira **Loyavi=✓, Tally=0** za owner_welcome/welcome/admin_purchase/campaign. `tsc` ✅.
 - **Pilot trial 14 → 30 dni** za nove lokale ([`app/actions.ts`](app/actions.ts), free launch).

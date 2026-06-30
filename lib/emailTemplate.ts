@@ -155,8 +155,14 @@ export function emailCouponRedeem(b: GuestBase, d: { guestName?: string; rewardN
   );
 }
 
-export function emailWelcome(b: GuestBase, d: { guestName?: string; rewardName: string; stampsTotal: number }): string {
+export function emailWelcome(b: GuestBase, d: { guestName?: string; rewardName: string; stampsTotal: number; pointRewards?: { name: string; points: number; image?: string | null }[] }): string {
   const c = color(b.brandColor);
+  const rewards = (d.pointRewards || []).slice(0, 5);
+  const rewardsBlock = rewards.length
+    ? `<div style="margin:18px 0 4px"><div style="font-size:11px;font-weight:700;color:#9A8F80;letter-spacing:0.06em;margin-bottom:10px">UNOVČI S TOČKAMI</div>` +
+      rewards.map((r) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px"><tr><td valign="middle" style="width:46px">${r.image ? `<img src="${esc(r.image)}" width="44" height="44" alt="" style="width:44px;height:44px;border-radius:11px;object-fit:cover;display:block">` : `<div style="width:44px;height:44px;border-radius:11px;background:#F0E8DC;text-align:center;line-height:44px;font-size:22px">🎁</div>`}</td><td valign="middle" style="padding-left:12px"><div style="font-weight:700;font-size:15px;color:${INK}">${esc(r.name)}</div></td><td valign="middle" align="right" style="white-space:nowrap"><span style="display:inline-block;background:#FCEFD8;color:#B4781E;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:800">${esc(String(r.points))} točk</span></td></tr></table>`).join("") +
+      `</div>`
+    : "";
   return guestShell(b, `Dobrodošel pri ${b.venueName}! 👋`,
     `${big("👋")}${h1(`Dobrodošel${d.guestName ? ", " + esc(d.guestName) : ""}!`)}${p(`Veselimo se, da si del naše skupnosti pri <b>${esc(b.venueName)}</b>. Vsak obisk zdaj prinaša žig in točke — zberi jih in unovči nagrado!`)}` +
     stepList([
@@ -165,6 +171,7 @@ export function emailWelcome(b: GuestBase, d: { guestName?: string; rewardName: 
       { title: "Unovči nagrade", sub: "Pokaži kupon pri blagajni in si privošči zasluženo." },
     ]) +
     `<div style="background:#F8F2EA;border-radius:12px;padding:18px 20px;margin:16px 0"><div style="font-size:11px;font-weight:700;color:#9A8F80;letter-spacing:0.06em;margin-bottom:6px">TVOJA KARTICA</div>${stamps(0, d.stampsTotal, c)}<p style="margin:10px 0 0;font-size:13px;color:${MUTED}">Zberi ${esc(String(d.stampsTotal))} žigov in zasluži: <b>${esc(d.rewardName)}</b></p></div>` +
+    rewardsBlock +
     ctaCenter("Odpri svojo kartico →", b.ctaUrl || "#", INK),
   );
 }

@@ -3,6 +3,11 @@ import Pricing from "@/app/components/Pricing";
 import { BRAND } from "@/lib/brand";
 import NavAuth from "@/app/components/NavAuth";
 import TrialPopup from "@/app/components/TrialPopup";
+import ExitIntentPopup from "@/app/components/ExitIntentPopup";
+import StickyCta from "@/app/components/StickyCta";
+import SetupTimeline from "@/app/components/SetupTimeline";
+import RoiCalculator from "@/app/components/RoiCalculator";
+import Testimonials from "@/app/components/Testimonials";
 
 const INK = "#2A241D";
 const CREAM = "#FBF7F0";
@@ -124,6 +129,8 @@ export default function Home() {
   return (
     <div style={{ background: CREAM, fontFamily: JAK, color: INK, minHeight: "100vh", overflowX: "hidden" }}>
       <TrialPopup />
+      <ExitIntentPopup />
+      <StickyCta />
       {/* NAV */}
       <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(251,247,240,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", borderBottom: "1px solid rgba(42,36,29,0.07)" }}>
         <div className="mx-auto flex items-center gap-3.5" style={{ maxWidth: 1200, height: 68, padding: "0 24px" }}>
@@ -153,6 +160,7 @@ export default function Home() {
           <div className="flex flex-wrap items-center" style={{ gap: 20, marginTop: 6 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: MUTED }}><Check size={18} />Postavljeno v 5 minutah</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: MUTED }}><Check size={18} />Brez aplikacije za gosta</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: MUTED }}><Check size={18} />Brez kartice</div>
           </div>
         </div>
         {/* hero visual */}
@@ -169,6 +177,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* 5-MIN POSTAVITEV */}
+      <SetupTimeline />
 
       {/* TRUST */}
       <div style={{ borderTop: "1px solid rgba(42,36,29,0.08)", borderBottom: "1px solid rgba(42,36,29,0.08)", background: "rgba(255,255,255,0.5)", padding: "30px 0" }}>
@@ -316,6 +327,12 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* ROI KALKULATOR */}
+      <RoiCalculator />
+
+      {/* GARANCIJE / PRIČEVANJA */}
+      <Testimonials />
 
       {/* CENE */}
       <div id="cene" className="mx-auto" style={{ maxWidth: 1200, padding: "72px 24px 40px" }}>

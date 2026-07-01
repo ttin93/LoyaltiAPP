@@ -9,7 +9,6 @@ const GREEN = "#5E7F52";
 const BORDER = "#EFE6D6";
 const MUTED = "#6E6253";
 const PARTNER = "/partner";
-const DEMO_DASH = "/demo/dashboard";
 const YEARLY_MONTHS = 10; // letno = mesečna × 10 (2 meseca gratis)
 
 const fmtEur = (n: number) => `${n.toLocaleString("sl-SI", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
@@ -22,12 +21,12 @@ function Check({ stroke = GREEN, size = 17 }: { stroke?: string; size?: number }
   );
 }
 
-type Plan = { name: string; tag: string; monthly: number | null; featured: boolean; cta: string; feats: string[] };
+type Plan = { name: string; tag: string; fit: string; monthly: number | null; featured: boolean; cta: string; feats: string[] };
 // "· kmalu" sufiks = funkcija še ne deluje → prikažemo zatemnjeno z značko "kmalu" (obljubljaj samo kar teče)
 const PLANS: Plan[] = [
-  { name: "Start", tag: "Vse za en lokal", monthly: 49.99, featured: false, cta: "Začni s Start", feats: ["1 lokal", "Žigi, točke, kuponi", "Google ocene (autopilot)", "Kolo sreče", "E-pošta na segmente (vsi / neaktivni / skoraj polna)", "Osnovna analitika"] },
-  { name: "Grow", tag: "Rast & avtomatizacija", monthly: 79.99, featured: true, cta: "Izberi Grow", feats: ["Vse iz Start", "Do 5 lokalov", "Segmentacija strank po meri", "Marketing avtomatizacije", "Napredna analitika + časovni filtri", "Embed widget (kolo na tvoj web)", "SMS · kmalu", "WhatsApp · kmalu", "CSV izvoz · kmalu"] },
-  { name: "Scale", tag: "Veriga, po dogovoru", monthly: null, featured: false, cta: "Pogovorimo se", feats: ["Vse iz Grow", "Veriga lokalov, en dashboard", "POS / API integracija", "Zasloni gosta po meri", "Namenski skrbnik"] },
+  { name: "Start", tag: "Vse za en lokal", fit: "Za posamezno kavarno ali lokal", monthly: 49.99, featured: false, cta: "Začni s Start", feats: ["1 lokal", "Žigi, točke, kuponi", "Google ocene (autopilot)", "Kolo sreče", "E-pošta na segmente (vsi / neaktivni / skoraj polna)", "Osnovna analitika"] },
+  { name: "Grow", tag: "Rast & avtomatizacija", fit: "Za rastoč lokal ali do 5 enot", monthly: 79.99, featured: true, cta: "Izberi Grow", feats: ["Vse iz Start", "Do 5 lokalov", "Segmentacija strank po meri", "Marketing avtomatizacije", "Napredna analitika + časovni filtri", "Embed widget (kolo na tvoj web)", "SMS · kmalu", "WhatsApp · kmalu", "CSV izvoz · kmalu"] },
+  { name: "Scale", tag: "Veriga, po dogovoru", fit: "Za verige in franšize", monthly: null, featured: false, cta: "Pogovorimo se", feats: ["Vse iz Grow", "Veriga lokalov, en dashboard", "POS / API integracija", "Zasloni gosta po meri", "Namenski skrbnik"] },
 ];
 
 export default function Pricing() {
@@ -66,7 +65,10 @@ export default function Pricing() {
                   <div style={{ fontSize: 12.5, color: p.featured ? "#B7A488" : "#9A8F80", marginTop: 4 }}>{fmtEur(p.monthly * YEARLY_MONTHS)} na leto, če plačaš letno</div>
                 )}
               </div>
-              <Link href={p.name === "Palača" ? DEMO_DASH : PARTNER} style={p.featured ? { height: 50, borderRadius: 14, background: AMBER, color: INK, fontSize: 15, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" } : { height: 50, borderRadius: 14, border: `1.5px solid ${INK}`, color: INK, fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{p.cta}</Link>
+              <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, fontWeight: 700, color: p.featured ? "#B7A488" : "#8A7A66", marginTop: -4 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.featured ? AMBER : GREEN, flexShrink: 0 }} />{p.fit}
+              </div>
+              <Link href={p.name === "Scale" ? "/kontakt" : PARTNER} style={p.featured ? { height: 50, borderRadius: 14, background: AMBER, color: INK, fontSize: 15, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" } : { height: 50, borderRadius: 14, border: `1.5px solid ${INK}`, color: INK, fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{p.cta}</Link>
               <div className="flex flex-col" style={{ gap: 11, borderTop: p.featured ? "1px solid rgba(248,243,234,0.14)" : "1px solid #F1E8D9", paddingTop: 18 }}>
                 {p.feats.map((f) => {
                   const soon = f.endsWith("· kmalu");

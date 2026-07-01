@@ -49,6 +49,11 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-07-01 — seja 61 (landing konverzijski paket)
+- 5 novih komponent na landingu (vse `app/components/`): **StickyCta** (lepljiva mobilna CTA ob scrollu), **RoiCalculator** (drsnika računi/dan + povp. račun → ocenjeni dodatni obiski + €; konzervativne predpostavke ~30 % vključenih, +0,6 obiska, JASNO označeno kot ocena), **ExitIntentPopup** (mouseleave-top, enkrat/sejo prek sessionStorage, samo neprijavljeni), **Testimonials** (POŠTENO: prazen `TESTIMONIALS` array za prave citate po pilotih; dokler prazen → garancijska sekcija, nič izmišljenih pričevanj/"120+ lokalov"), **SetupTimeline** ("V 5 min do prve kartice" časovnica).
+- Hero: dodan "Brez kartice" znak. Pricing: "primerno za" vrstica pod paketi + fix zastarelega `p.name === "Palača"` → Scale CTA na `/kontakt` (odstranjen neuporabljen DEMO_DASH).
+- `tsc` ✅, preverjeno v preview (vse sekcije v DOM, ROI računa, sticky CTA vidna). **Namerno lahko preveč** — user bo prunal po okusu.
+
 ### 2026-07-01 — seja 60 (14-dnevni trial popup na landingu)
 - Nova komponenta [`app/components/TrialPopup.tsx`](app/components/TrialPopup.tsx) (dizajn iz Landing.dc.html handoff-a). Prikaže se **ob vsakem obisku** (brez localStorage), a **SAMO neprijavljenim** (auth check prek `createBrowserSupabase().auth.getUser()` kot NavAuth; prijavljen → return). 900ms zamik po auth. CTA → `/partner`, "Mogoče kasneje"/X/backdrop zaprejo. Besedilo "paketa Grow" (posodobljeno z renameom). Vključen v [`app/page.tsx`](app/page.tsx). `tsc` ✅, preverjeno v preview (overlay se pojavi neprijavljenemu).
 

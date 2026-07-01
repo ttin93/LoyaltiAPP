@@ -49,6 +49,9 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-07-01 — seja 62 (Postavitev + ROI iz Landing v2 dizajna)
+- Iz handoff-a "Landing v2" prevzeta dva dizajna, zamenjala prejšnji verziji: **SetupTimeline → [`SetupSection.tsx`](app/components/SetupSection.tsx)** (animiran 4-koračni timeline: Ime&barva/Nastavi nagrado/Aktiviraj davčno/Natisni QR + "kartica v živo" preview, scroll-reveal prek IntersectionObserver, naši podatki Kavarna Lipa). **Temni ROI → svetli [`RoiCalculator.tsx`](app/components/RoiCalculator.tsx)** (gradient kartica + primerjalni stolpci "Zdaj vs Z Loyavi" + 2 rezultat kartici; Slider hoisted na modul zaradi drag remount-a; predpostavke nespremenjene, "Z Loyavi" namesto "Z Tally"). SetupTimeline.tsx zbrisan. `tsc` ✅, DOM + brez console napak.
+
 ### 2026-07-01 — seja 61 (landing konverzijski paket)
 - 5 novih komponent na landingu (vse `app/components/`): **StickyCta** (lepljiva mobilna CTA ob scrollu), **RoiCalculator** (drsnika računi/dan + povp. račun → ocenjeni dodatni obiski + €; konzervativne predpostavke ~30 % vključenih, +0,6 obiska, JASNO označeno kot ocena), **ExitIntentPopup** (mouseleave-top, enkrat/sejo prek sessionStorage, samo neprijavljeni), **Testimonials** (POŠTENO: prazen `TESTIMONIALS` array za prave citate po pilotih; dokler prazen → garancijska sekcija, nič izmišljenih pričevanj/"120+ lokalov"), **SetupTimeline** ("V 5 min do prve kartice" časovnica).
 - Hero: dodan "Brez kartice" znak. Pricing: "primerno za" vrstica pod paketi + fix zastarelega `p.name === "Palača"` → Scale CTA na `/kontakt` (odstranjen neuporabljen DEMO_DASH).

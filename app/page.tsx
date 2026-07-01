@@ -5,7 +5,7 @@ import NavAuth from "@/app/components/NavAuth";
 import TrialPopup from "@/app/components/TrialPopup";
 import ExitIntentPopup from "@/app/components/ExitIntentPopup";
 import StickyCta from "@/app/components/StickyCta";
-import SetupTimeline from "@/app/components/SetupTimeline";
+import SetupSection from "@/app/components/SetupSection";
 import RoiCalculator from "@/app/components/RoiCalculator";
 import Testimonials from "@/app/components/Testimonials";
 
@@ -178,9 +178,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 5-MIN POSTAVITEV */}
-      <SetupTimeline />
-
       {/* TRUST */}
       <div style={{ borderTop: "1px solid rgba(42,36,29,0.08)", borderBottom: "1px solid rgba(42,36,29,0.08)", background: "rgba(255,255,255,0.5)", padding: "30px 0" }}>
         <div className="mx-auto flex flex-col items-center" style={{ maxWidth: 1100, padding: "0 24px", gap: 16 }}>
@@ -330,6 +327,9 @@ export default function Home() {
 
       {/* ROI KALKULATOR */}
       <RoiCalculator />
+
+      {/* POSTAVITEV */}
+      <SetupSection />
 
       {/* GARANCIJE / PRIČEVANJA */}
       <Testimonials />

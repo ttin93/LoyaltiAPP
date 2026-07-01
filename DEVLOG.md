@@ -49,6 +49,9 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-07-01 — seja 60 (14-dnevni trial popup na landingu)
+- Nova komponenta [`app/components/TrialPopup.tsx`](app/components/TrialPopup.tsx) (dizajn iz Landing.dc.html handoff-a). Prikaže se **ob vsakem obisku** (brez localStorage), a **SAMO neprijavljenim** (auth check prek `createBrowserSupabase().auth.getUser()` kot NavAuth; prijavljen → return). 900ms zamik po auth. CTA → `/partner`, "Mogoče kasneje"/X/backdrop zaprejo. Besedilo "paketa Grow" (posodobljeno z renameom). Vključen v [`app/page.tsx`](app/page.tsx). `tsc` ✅, preverjeno v preview (overlay se pojavi neprijavljenemu).
+
 ### 2026-06-30 — seja 59 (Polar LIVE + plan ključi start/grow/scale + info@ email)
 - **Polar dokončan:** 4 produkti (Start/Grow, mes+let) s 14-dnevnim trialom, API token + webhook (`https://loyavi.app/api/webhooks/polar`). Preverjeno prek Polar API: token dela, vsak produkt ima 14d trial, checkout se ustvari (HTTP 201). Env na Vercelu: `POLAR_API_TOKEN`, `POLAR_WEBHOOK_SECRET`, 4× `POLAR_PRODUCT_*`.
 - **Plan ključi preimenovani** `espresso/doppio/palaca` → **`start/grow/scale`** povsod (11 datotek + DB migracija [`0023_rename_plan_keys.sql`](supabase/0023_rename_plan_keys.sql); `plan` je text brez constrainta). Env vars zdaj `POLAR_PRODUCT_START_*` / `GROW_*`. Uporabniške oznake Start/Grow/Scale nespremenjene. `tsc` ✅.

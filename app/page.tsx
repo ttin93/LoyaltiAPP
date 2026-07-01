@@ -2,6 +2,7 @@ import Link from "next/link";
 import Pricing from "@/app/components/Pricing";
 import { BRAND } from "@/lib/brand";
 import NavAuth from "@/app/components/NavAuth";
+import TrialPopup from "@/app/components/TrialPopup";
 
 const INK = "#2A241D";
 const CREAM = "#FBF7F0";
@@ -122,6 +123,7 @@ function Logo({ size = 34, fs = 20 }: { size?: number; fs?: number }) {
 export default function Home() {
   return (
     <div style={{ background: CREAM, fontFamily: JAK, color: INK, minHeight: "100vh", overflowX: "hidden" }}>
+      <TrialPopup />
       {/* NAV */}
       <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(251,247,240,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", borderBottom: "1px solid rgba(42,36,29,0.07)" }}>
         <div className="mx-auto flex items-center gap-3.5" style={{ maxWidth: 1200, height: 68, padding: "0 24px" }}>

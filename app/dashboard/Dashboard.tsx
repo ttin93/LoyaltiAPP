@@ -277,7 +277,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   // ── BILLING (Polar) ──────────────────────────────────────────────────────
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(billingVenue.billing_cycle === "yearly" ? "yearly" : "monthly");
   const [billingBusy, setBillingBusy] = useState(false);
-  async function startCheckout(plan: "espresso" | "doppio") {
+  async function startCheckout(plan: "start" | "grow") {
     setBillingBusy(true);
     try {
       const r = await fetch("/api/billing/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ venueId: billingVenue.id, plan, cycle: billingCycle }) });
@@ -391,8 +391,8 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
             {(["monthly", "yearly"] as const).map((c) => <button key={c} onClick={() => setBillingCycle(c)} style={{ height: 34, padding: "0 16px", border: "none", borderRadius: 999, background: billingCycle === c ? INK : "transparent", color: billingCycle === c ? PAPER : MUTED, fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{c === "monthly" ? "Mesečno" : "Letno −2 mes"}</button>)}
           </div>
           <div className="flex w-full" style={{ gap: 10, marginTop: 4 }}>
-            {(["espresso", "doppio"] as const).map((p) => { const m = PLANS[p].monthly || 0; const per = billingCycle === "yearly" ? (m * 10) / 12 : m; return (
-              <button key={p} onClick={() => startCheckout(p)} disabled={billingBusy} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "14px 10px", border: p === "doppio" ? "none" : `1.5px solid ${BORD}`, borderRadius: 14, background: p === "doppio" ? INK : "#fff", color: p === "doppio" ? PAPER : INK, fontFamily: JAK, cursor: "pointer", opacity: billingBusy ? 0.6 : 1 }}>
+            {(["start", "grow"] as const).map((p) => { const m = PLANS[p].monthly || 0; const per = billingCycle === "yearly" ? (m * 10) / 12 : m; return (
+              <button key={p} onClick={() => startCheckout(p)} disabled={billingBusy} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "14px 10px", border: p === "grow" ? "none" : `1.5px solid ${BORD}`, borderRadius: 14, background: p === "grow" ? INK : "#fff", color: p === "grow" ? PAPER : INK, fontFamily: JAK, cursor: "pointer", opacity: billingBusy ? 0.6 : 1 }}>
                 <span style={{ fontSize: 14, fontWeight: 800 }}>{PLANS[p].label}</span>
                 <span style={{ fontSize: 16, fontWeight: 800 }}>{fmtEur(per)}<span style={{ fontSize: 11, fontWeight: 600, opacity: 0.7 }}>/mes</span></span>
               </button>
@@ -853,7 +853,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                       <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Jezik gostove strani</span><select name="language" value={lang} onChange={(e) => setLang(e.target.value)} style={inp}>{LANGS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Jezik celotnega flowa za goste. Prevodi (EN/HR/SR/BS/DE) se vklopijo kmalu — zaenkrat se nastavitev shrani.</span></label>
                       <button onClick={() => { const fd = new FormData(); fd.set("name", sName); fd.set("brand_color", settingsColor); fd.set("points_per_visit", sPoints); fd.set("stamp_goal", sGoal); fd.set("scan_window_hours", sWindow); fd.set("scan_cooldown_minutes", sCooldown); fd.set("google_review_url", sGoogle); fd.set("language", lang); run(() => updateVenueSettings(fd), "Nastavitve shranjene."); }} style={{ marginTop: 4, height: 48, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: "pointer", alignSelf: "flex-start", padding: "0 22px" }}>Shrani</button>
                     </div>
-                    {curPlan === "palaca" && (
+                    {curPlan === "scale" && (
                       <div style={{ ...card, display: "flex", flexDirection: "column", gap: 12 }}>
                         <span style={{ fontWeight: 700, fontSize: 15 }}>E-pošta iz tvoje domene <span style={{ fontSize: 11, fontWeight: 800, color: "#B4781E" }}>SCALE</span></span>
                         <span style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5 }}>Vnesi svoj Resend ključ + pošiljatelja — kampanje gostom gredo iz tvoje domene (boljša dostavljivost + branding).</span>
@@ -877,11 +877,11 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                   const cancelAtEnd = !!billingVenue.cancel_at_period_end;
                   const fmtDay = (d: Date) => d.toLocaleDateString("sl-SI", { day: "2-digit", month: "2-digit", year: "numeric" });
                   const FEATS: Record<string, string[]> = {
-                    espresso: ["1 lokal", "Žigi, točke, kuponi", "Google ocene", "Kolo sreče", "E-pošta na segmente", "Osnovna analitika"],
-                    doppio: ["Vse iz Start", "Do 5 lokalov", "Segmentacija po meri", "Marketing avtomatizacije", "Napredna analitika", "Embed widget"],
-                    palaca: ["Vse iz Grow", "Veriga lokalov", "POS / API integracija", "Namenski skrbnik"],
+                    start: ["1 lokal", "Žigi, točke, kuponi", "Google ocene", "Kolo sreče", "E-pošta na segmente", "Osnovna analitika"],
+                    grow: ["Vse iz Start", "Do 5 lokalov", "Segmentacija po meri", "Marketing avtomatizacije", "Napredna analitika", "Embed widget"],
+                    scale: ["Vse iz Grow", "Veriga lokalov", "POS / API integracija", "Namenski skrbnik"],
                   };
-                  const cards: [PlanKey, boolean][] = [["espresso", false], ["doppio", true], ["palaca", false]];
+                  const cards: [PlanKey, boolean][] = [["start", false], ["grow", true], ["scale", false]];
                   const perMonth = (p: PlanKey) => (billingCycle === "yearly" ? monthlyEquivalent(p, "yearly") : PLANS[p].monthly || 0);
                   const trialUntil = access.until ? new Date(access.until) : null;
                   return (
@@ -954,10 +954,10 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                               <div className="flex flex-col" style={{ gap: 7 }}>{(FEATS[p] || []).map((f) => <div key={f} className="flex items-center" style={{ gap: 8, fontSize: 13, color: MUTED }}><svg width="15" height="15" viewBox="0 0 24 24" style={{ fill: "none", stroke: GREEN, strokeWidth: 2.4, strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0 }}><path d="M5 12.5l4.2 4.3L19 7" /></svg>{f}</div>)}</div>
                               {isCurrent ? (
                                 <button disabled style={{ marginTop: "auto", height: 42, border: `1.5px solid ${GREEN}`, borderRadius: 12, background: "rgba(94,127,82,0.1)", color: "#3E5536", fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "default" }}>Trenutni paket</button>
-                              ) : p === "palaca" ? (
+                              ) : p === "scale" ? (
                                 <a href="/kontakt" style={{ marginTop: "auto", height: 42, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #E4D9C7", borderRadius: 12, background: "#fff", color: INK, fontFamily: JAK, fontSize: 13.5, fontWeight: 700, textDecoration: "none" }}>Pogovorimo se</a>
                               ) : (
-                                <button onClick={() => startCheckout(p as "espresso" | "doppio")} disabled={billingBusy} style={{ marginTop: "auto", height: 42, border: hot ? "none" : "1.5px solid #E4D9C7", borderRadius: 12, background: hot ? INK : "#fff", color: hot ? PAPER : INK, fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer", opacity: billingBusy ? 0.6 : 1 }}>{paid ? `Preklopi na ${PLANS[p].label}` : `Izberi ${PLANS[p].label}`}</button>
+                                <button onClick={() => startCheckout(p as "start" | "grow")} disabled={billingBusy} style={{ marginTop: "auto", height: 42, border: hot ? "none" : "1.5px solid #E4D9C7", borderRadius: 12, background: hot ? INK : "#fff", color: hot ? PAPER : INK, fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer", opacity: billingBusy ? 0.6 : 1 }}>{paid ? `Preklopi na ${PLANS[p].label}` : `Izberi ${PLANS[p].label}`}</button>
                               )}
                             </div>
                           );

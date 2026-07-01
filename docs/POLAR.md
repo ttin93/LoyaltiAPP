@@ -16,13 +16,13 @@ Naredi štiri (cena = brez DDV; Polar kot MoR davek doda sam):
 
 | Produkt (ime je tvoje) | Interval | Cena      | Env var                              |
 |------------------------|----------|-----------|--------------------------------------|
-| Loyavi Start (mes)      | monthly  | 49,99 €   | `POLAR_PRODUCT_ESPRESSO_MONTHLY_ID`  |
-| Loyavi Start (let)      | yearly   | 499,90 €  | `POLAR_PRODUCT_ESPRESSO_YEARLY_ID`   |
-| Loyavi Grow (mes)       | monthly  | 79,99 €   | `POLAR_PRODUCT_DOPPIO_MONTHLY_ID`    |
-| Loyavi Grow (let)       | yearly   | 799,90 €  | `POLAR_PRODUCT_DOPPIO_YEARLY_ID`     |
+| Loyavi Start (mes)      | monthly  | 49,99 €   | `POLAR_PRODUCT_START_MONTHLY_ID`  |
+| Loyavi Start (let)      | yearly   | 499,90 €  | `POLAR_PRODUCT_START_YEARLY_ID`   |
+| Loyavi Grow (mes)       | monthly  | 79,99 €   | `POLAR_PRODUCT_GROW_MONTHLY_ID`    |
+| Loyavi Grow (let)       | yearly   | 799,90 €  | `POLAR_PRODUCT_GROW_YEARLY_ID`     |
 
 > Letno = **mesečna × 10** (2 meseca gratis). Imena paketov so Start/Grow/Scale,
-> a env ključi ostajajo `ESPRESSO`/`DOPPIO` (notranji ključi). Scale = "po dogovoru"
+> a env ključi ostajajo `START`/`GROW` (notranji ključi). Scale = "po dogovoru"
 > → brez produkta (gumb pelje na /kontakt).
 
 ### 14-dnevni FREE TRIAL (kartica vnaprej) — KLJUČNO
@@ -55,18 +55,18 @@ Polar → Settings → **Webhooks** → Add endpoint:
 # POLAR_API_BASE=https://sandbox-api.polar.sh
 POLAR_API_TOKEN=polar_oat_...
 POLAR_WEBHOOK_SECRET=polar_whs_...
-POLAR_PRODUCT_ESPRESSO_MONTHLY_ID=...
-POLAR_PRODUCT_ESPRESSO_YEARLY_ID=...
-POLAR_PRODUCT_DOPPIO_MONTHLY_ID=...
-POLAR_PRODUCT_DOPPIO_YEARLY_ID=...
+POLAR_PRODUCT_START_MONTHLY_ID=...
+POLAR_PRODUCT_START_YEARLY_ID=...
+POLAR_PRODUCT_GROW_MONTHLY_ID=...
+POLAR_PRODUCT_GROW_YEARLY_ID=...
 NEXT_PUBLIC_SITE_URL=https://<tvoja-domena>
 ```
 Redeploy.
 
 ## 6. Test
-1. Dashboard → **Naročnina** → izberi Espresso → odpre se Polar checkout.
+1. Dashboard → **Naročnina** → izberi Start → odpre se Polar checkout.
 2. Plačaj (sandbox test kartica) → vrne te na `/dashboard?billing=success`.
-3. V par sekundah webhook posodobi lokal: paket Espresso, status Aktivna,
+3. V par sekundah webhook posodobi lokal: paket Start, status Aktivna,
    "Naslednje plačilo: …".
 4. **Upravljaj naročnino** → odpre Polar portal → tam preklic/kartica/računi.
 5. Preklic → webhook nastavi `cancel_at_period_end` → v dashboardu piše

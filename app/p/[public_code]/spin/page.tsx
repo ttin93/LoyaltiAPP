@@ -32,7 +32,7 @@ export default async function SpinPage({
   }
 
   const initial = name.charAt(0).toUpperCase();
-  // kolo rabi živo barvo; če je brand temna (espresso/zelena), vzemi jantar
+  // kolo rabi živo barvo; če je brand temna (start/zelena), vzemi jantar
   const wheelBrand = brand && !["#2B1D17", "#16a34a", "#000000"].includes(brand) ? brand : "#E8A23D";
 
   return (

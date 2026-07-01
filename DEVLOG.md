@@ -49,6 +49,12 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-06-30 — seja 59 (Polar LIVE + plan ključi start/grow/scale + info@ email)
+- **Polar dokončan:** 4 produkti (Start/Grow, mes+let) s 14-dnevnim trialom, API token + webhook (`https://loyavi.app/api/webhooks/polar`). Preverjeno prek Polar API: token dela, vsak produkt ima 14d trial, checkout se ustvari (HTTP 201). Env na Vercelu: `POLAR_API_TOKEN`, `POLAR_WEBHOOK_SECRET`, 4× `POLAR_PRODUCT_*`.
+- **Plan ključi preimenovani** `espresso/doppio/palaca` → **`start/grow/scale`** povsod (11 datotek + DB migracija [`0023_rename_plan_keys.sql`](supabase/0023_rename_plan_keys.sql); `plan` je text brez constrainta). Env vars zdaj `POLAR_PRODUCT_START_*` / `GROW_*`. Uporabniške oznake Start/Grow/Scale nespremenjene. `tsc` ✅.
+- **Email from:** `pozdrav@loyavi.app` → **`info@loyavi.app`** (RESEND_FROM).
+- **Billing model potrjen (opcija A):** 14-dnevni Polar trial (kartica vnaprej) ostane; dostop "active" šele ob `subscription.active` (pravo plačilo). Webhook = vir resnice, ne token.
+
 ### 2026-06-30 — seja 58 (slike nagrad + točkovne nagrade v welcome mailu + Resend LIVE)
 - **Resend LIVE:** domena `loyavi.app` (kupljena prek Vercela) verificirana v Resendu; testni mail prišel v **inbox** (ne spam). Env na Vercelu: `RESEND_API_KEY`, `RESEND_FROM=Loyavi <pozdrav@loyavi.app>`, `RESEND_REPLY_TO` (Gmail), `CRON_SECRET`. Reply-To podpora v [`lib/email.ts`](lib/email.ts) (`RESEND_REPLY_TO`).
 - **Slike nagrad:** lastnik lahko naloži sliko na nagrado namesto ikone. `rewards.image_url` (že v shemi; migracija [`0022_reward_images.sql`](supabase/0022_reward_images.sql) zagotovi na živi bazi). Akciji `uploadRewardImage`/`removeRewardImage` ([`app/actions.ts`](app/actions.ts), bucket "logos", varnost: nagrada mora pripadati lokalu). Dashboard urejevalnik: thumbnail + upload (PNG/JPG/WEBP ≤2 MB) na žig- in točkovnih nagradah. Gostova kartica: če `image_url` → slika, sicer ikona.

@@ -248,7 +248,7 @@ export async function sendGuestCampaign(args: { subject: string; message: string
   if (!args.subject.trim() || !args.message.trim()) return { sent: 0, failed: 0, total: 0, error: "Vpiši zadevo in sporočilo." };
   const emails = (args.emails || []).filter((e) => e && /.+@.+\..+/.test(e));
   if (!emails.length) return { sent: 0, failed: 0, total: 0, error: "Ni prejemnikov z e-pošto." };
-  const byo = venue.plan === "palaca" && venue.resend_api_key
+  const byo = venue.plan === "scale" && venue.resend_api_key
     ? { apiKey: venue.resend_api_key as string, from: (venue.email_from as string) || undefined }
     : null;
   if (!byo && !emailConfigured()) return { sent: 0, failed: 0, total: 0, error: "E-pošta še ni nastavljena (RESEND_API_KEY)." };

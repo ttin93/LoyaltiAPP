@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Napačen zahtevek." }, { status: 400 });
   }
 
-  const plan = (["espresso", "doppio"].includes(String(body.plan)) ? body.plan : "") as PlanKey;
+  const plan = (["start", "grow"].includes(String(body.plan)) ? body.plan : "") as PlanKey;
   const cycle = (body.cycle === "yearly" ? "yearly" : "monthly") as BillingCycle;
   if (!plan) return NextResponse.json({ error: "Ta paket nima samopostrežnega plačila." }, { status: 400 });
 

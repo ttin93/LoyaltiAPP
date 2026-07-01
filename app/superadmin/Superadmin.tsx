@@ -367,7 +367,7 @@ function Lokali({
 
 /* ---------------- NAROČNINE ---------------- */
 
-const PLAN_COLOR: Record<PlanKey, string> = { free: "#B4A892", espresso: AMBER, doppio: CORAL, palaca: GREEN };
+const PLAN_COLOR: Record<PlanKey, string> = { free: "#B4A892", start: AMBER, grow: CORAL, scale: GREEN };
 
 function PlanBadge({ plan }: { plan: PlanKey }) {
   const c = PLAN_COLOR[plan] || MUTED;
@@ -382,7 +382,7 @@ function PlanBadge({ plan }: { plan: PlanKey }) {
 function Narocnine({ revenue: r, venues, onOpen, onTrial }: { revenue: SARevenue; venues: SAVenue[]; onOpen: (v: SAVenue) => void; onTrial: number }) {
   const maxPlanMrr = Math.max(1, ...r.byPlan.map((p) => p.mrr));
   // primer letnega popusta na Doppio
-  const dMonthly = PLANS.doppio.monthly || 0;
+  const dMonthly = PLANS.grow.monthly || 0;
 
   // ---- filtri ----
   const [q, setQ] = useState("");
@@ -905,7 +905,7 @@ function VenueModal({ venue, onClose }: { venue: SAVenue; onClose: () => void })
               </Field>
               <Field label="Vezava (mesecev)"><input type="number" value={commit} onChange={(e) => setCommit(e.target.value)} style={inp} /></Field>
             </div>
-            <Field label="Cena po meri (€/mes — povozi paket)"><input value={customPrice} onChange={(e) => setCustomPrice(e.target.value)} placeholder={plan === "palaca" ? "npr. 149,99" : "prazno = paketna cena"} style={inp} /></Field>
+            <Field label="Cena po meri (€/mes — povozi paket)"><input value={customPrice} onChange={(e) => setCustomPrice(e.target.value)} placeholder={plan === "scale" ? "npr. 149,99" : "prazno = paketna cena"} style={inp} /></Field>
             {plan !== "free" && (
               <div style={{ background: PAPER, borderRadius: 11, padding: "10px 13px", fontSize: 12.5, color: MUTED }}>
                 Prispevek k MRR: <strong style={{ color: GREEN }}>{fmtEur(meNow)}/mes</strong>

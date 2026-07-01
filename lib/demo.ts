@@ -161,7 +161,7 @@ export type Plan = {
 
 export const PRICING: Plan[] = [
   {
-    key: "espresso",
+    key: "start",
     name: "Espresso",
     tagline: "Za en lokal, ki začenja",
     price: "29,99 €",
@@ -177,7 +177,7 @@ export const PRICING: Plan[] = [
     ],
   },
   {
-    key: "doppio",
+    key: "grow",
     name: "Doppio",
     tagline: "Cel stroj za stalne goste",
     price: "69,99 €",

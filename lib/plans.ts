@@ -9,15 +9,15 @@ export const YEARLY_FREE_MONTHS = 12 - YEARLY_MONTHS;
 /** Izpeljani % popust (za prikaze, ki želijo odstotek). */
 export const YEARLY_DISCOUNT = YEARLY_FREE_MONTHS / 12;
 
-// Ključi v bazi/Polarju ostajajo espresso/doppio/palaca; spremenila so se le IMENA.
+// Ključi v bazi/Polarju = start/grow/scale (interno); oznake = Start/Grow/Scale.
 export const PLANS: Record<PlanKey, { label: string; tag: string; monthly: number | null }> = {
   free: { label: "Brezplačni", tag: "Začetni", monthly: 0 },
-  espresso: { label: "Start", tag: "Vse za en lokal", monthly: 49.99 },
-  doppio: { label: "Grow", tag: "Rast & avtomatizacija", monthly: 79.99 },
-  palaca: { label: "Scale", tag: "Veriga, po dogovoru", monthly: null }, // cena po dogovoru → custom_price_eur
+  start: { label: "Start", tag: "Vse za en lokal", monthly: 49.99 },
+  grow: { label: "Grow", tag: "Rast & avtomatizacija", monthly: 79.99 },
+  scale: { label: "Scale", tag: "Veriga, po dogovoru", monthly: null }, // cena po dogovoru → custom_price_eur
 };
 
-export const PLAN_ORDER: PlanKey[] = ["free", "espresso", "doppio", "palaca"];
+export const PLAN_ORDER: PlanKey[] = ["free", "start", "grow", "scale"];
 
 // ── Zmožnosti po paketu (en vir resnice za gating) ───────────────────────────
 // Start = vse za en lokal + ocene + osnovni win-back. Grow doda rast/avtomatizacijo.
@@ -34,16 +34,16 @@ const ALL_FEATURES: Record<PlanFeature, boolean> = {
 
 export const PLAN_FEATURES: Record<PlanKey, Record<PlanFeature, boolean>> = {
   free: { ...ALL_FEATURES }, // pilot: vse odprto
-  espresso: {
+  start: {
     wheel: true, emailBasic: true,
     customSegments: false, automations: false, advancedAnalytics: false, embedWidget: false,
     sms: false, whatsapp: false, export: false,
   },
-  doppio: { ...ALL_FEATURES }, // Grow: vse
-  palaca: { ...ALL_FEATURES }, // Scale: vse
+  grow: { ...ALL_FEATURES }, // Grow: vse
+  scale: { ...ALL_FEATURES }, // Scale: vse
 };
 
-export const PLAN_MAX_VENUES: Record<PlanKey, number> = { free: 99, espresso: 1, doppio: 5, palaca: 999 };
+export const PLAN_MAX_VENUES: Record<PlanKey, number> = { free: 99, start: 1, grow: 5, scale: 999 };
 
 export function planFeature(plan: PlanKey | undefined, f: PlanFeature): boolean {
   return PLAN_FEATURES[plan ?? "free"]?.[f] ?? false;

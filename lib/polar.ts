@@ -14,7 +14,7 @@ export function polarConfigured(): boolean {
 
 /** Env ime produkta za (paket × cikel). Palača/Brezplačni nimata self-serve checkouta. */
 export function polarProductEnv(plan: PlanKey, cycle: BillingCycle): string | null {
-  if (plan === "free" || plan === "palaca") return null;
+  if (plan === "free" || plan === "scale") return null;
   const key = `POLAR_PRODUCT_${plan.toUpperCase()}_${cycle.toUpperCase()}_ID`;
   return key;
 }
@@ -28,8 +28,8 @@ export function polarProductId(plan: PlanKey, cycle: BillingCycle): string | und
 export function planFromProductId(productId: string | undefined): { plan: PlanKey; cycle: BillingCycle } | null {
   if (!productId) return null;
   const combos: [PlanKey, BillingCycle][] = [
-    ["espresso", "monthly"], ["espresso", "yearly"],
-    ["doppio", "monthly"], ["doppio", "yearly"],
+    ["start", "monthly"], ["start", "yearly"],
+    ["grow", "monthly"], ["grow", "yearly"],
   ];
   for (const [plan, cycle] of combos) {
     if (process.env[`POLAR_PRODUCT_${plan.toUpperCase()}_${cycle.toUpperCase()}_ID`] === productId) {

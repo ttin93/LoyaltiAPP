@@ -11,10 +11,10 @@ function origin() {
   return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "";
 }
 function guestSender(v: V) {
-  return v.plan === "palaca" && v.resend_api_key ? { apiKey: v.resend_api_key, from: v.email_from || undefined } : {};
+  return v.plan === "scale" && v.resend_api_key ? { apiKey: v.resend_api_key, from: v.email_from || undefined } : {};
 }
 function canGuest(v: V) {
-  return emailConfigured() || !!(v.plan === "palaca" && v.resend_api_key);
+  return emailConfigured() || !!(v.plan === "scale" && v.resend_api_key);
 }
 export function couponCode(v: { public_code?: string }) {
   return `${(v.public_code || "TALY").slice(0, 4).toUpperCase()}-${Math.random().toString(16).slice(2, 6).toUpperCase()}`;

@@ -41,7 +41,7 @@ export async function adminUpdateVenue(formData: FormData) {
   }
 
   // naročnina
-  const PLANS = ["free", "espresso", "doppio", "palaca"];
+  const PLANS = ["free", "start", "grow", "scale"];
   const STATUSES = ["trialing", "active", "past_due", "canceled"];
   let planVal: string | undefined;
   if (formData.has("plan")) {

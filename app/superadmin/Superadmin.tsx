@@ -381,7 +381,7 @@ function PlanBadge({ plan }: { plan: PlanKey }) {
 
 function Narocnine({ revenue: r, venues, onOpen, onTrial }: { revenue: SARevenue; venues: SAVenue[]; onOpen: (v: SAVenue) => void; onTrial: number }) {
   const maxPlanMrr = Math.max(1, ...r.byPlan.map((p) => p.mrr));
-  // primer letnega popusta na Doppio
+  // primer letnega popusta na Grow
   const dMonthly = PLANS.grow.monthly || 0;
 
   // ---- filtri ----
@@ -485,7 +485,7 @@ function Narocnine({ revenue: r, venues, onOpen, onTrial }: { revenue: SARevenue
               </div>
             );
           })}
-          <div style={{ fontSize: 11.5, color: "#A89B88", marginTop: 10 }}>Primer: Doppio letno prihrani {fmtEur(dMonthly * 2)} na leto (2 meseca).</div>
+          <div style={{ fontSize: 11.5, color: "#A89B88", marginTop: 10 }}>Primer: Grow letno prihrani {fmtEur(dMonthly * 2)} na leto (2 meseca).</div>
         </Card>
       </div>
 

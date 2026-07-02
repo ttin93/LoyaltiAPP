@@ -422,7 +422,7 @@ export default function SpinFlow({
                   <div style={{ background: "#FFFFFF", borderRadius: 10, padding: 8 }}><FakeQr px={70} seed={7} /></div>
                   <div className="flex flex-col" style={{ gap: 3, textAlign: "left" }}>
                     <div style={{ fontSize: 11, color: "#A89878" }}>{t.couponCode}</div>
-                    <div style={{ fontWeight: 800, fontSize: 19, letterSpacing: "0.08em", whiteSpace: "nowrap" }}>{couponCode || "MORA-7C4D"}</div>
+                    <div style={{ fontWeight: 800, fontSize: 19, letterSpacing: "0.08em", whiteSpace: "nowrap" }}>{couponCode || "LIPA-7C4D"}</div>
                     <div style={{ fontSize: 12, color: "#A89878", marginTop: 2 }}>{t.activatesOnFirstScan}</div>
                   </div>
                 </div>

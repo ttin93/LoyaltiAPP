@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 const DEMO_VENUE: Venue = {
   id: "demo",
   owner_user_id: null,
-  name: "Kavarna Moka",
+  name: "Kavarna Lipa",
   public_code: "demo",
   logo_url: null,
   brand_color: "#2B1D17",

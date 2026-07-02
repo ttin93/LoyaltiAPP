@@ -17,7 +17,7 @@ function canGuest(v: V) {
   return emailConfigured() || !!(v.plan === "scale" && v.resend_api_key);
 }
 export function couponCode(v: { public_code?: string }) {
-  return `${(v.public_code || "TALY").slice(0, 4).toUpperCase()}-${Math.random().toString(16).slice(2, 6).toUpperCase()}`;
+  return `${(v.public_code || "LOYA").slice(0, 4).toUpperCase()}-${Math.random().toString(16).slice(2, 6).toUpperCase()}`;
 }
 function gBase(v: V) {
   return { venueName: v.name, brandColor: v.brand_color, ctaUrl: `${origin()}/p/${v.public_code}` };

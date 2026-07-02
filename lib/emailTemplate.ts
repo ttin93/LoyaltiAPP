@@ -7,7 +7,9 @@ const INK = "#1C1007";
 const MUTED = "#7A6855";
 
 export function esc(s: string): string {
-  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return String(s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
 /** Besedilo → HTML: dvojni newline = odstavek, enojni = <br>. */
@@ -26,7 +28,7 @@ const hline = () => `<div style="height:1px;background:#F0E8DC;margin:26px 0;fon
 const big = (html: string) => `<div style="font-size:48px;line-height:1;margin-bottom:10px">${html}</div>`;
 
 function btn(text: string, href: string, color = INK): string {
-  return `<a href="${href || "#"}" style="display:inline-block;background:${color};color:#FFFFFF;padding:13px 28px;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;letter-spacing:-0.01em">${esc(text)}</a>`;
+  return `<a href="${esc(href || "#")}" style="display:inline-block;background:${color};color:#FFFFFF;padding:13px 28px;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;letter-spacing:-0.01em">${esc(text)}</a>`;
 }
 function ctaCenter(text: string, href: string, color = INK): string {
   return `<div style="text-align:center;margin-top:30px">${btn(text, href, color)}</div>`;

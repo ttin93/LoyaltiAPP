@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Page({ params }: { params: Promise<{ public_code: string }> }) {
   const { public_code } = await params;
-  let name = "Kavarna Moka";
+  let name = "Kavarna Lipa";
   let brand = "#2B1D17";
   let wheelCfg: import("@/lib/types").WheelConfig | null = null;
 

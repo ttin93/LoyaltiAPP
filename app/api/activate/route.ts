@@ -18,7 +18,7 @@ export async function POST(req: Request) {
       .single();
     if (!venue) return NextResponse.json({ ok: false, error: "Lokal ne obstaja." }, { status: 404 });
 
-    const { data: reward } = await db.from("rewards").select("name").eq("id", rewardId).single();
+    const { data: reward } = await db.from("rewards").select("name").eq("id", rewardId).eq("venue_id", venue.id).maybeSingle();
 
     const { data, error } = await db.rpc("activate_reward", {
       p_venue_id: venue.id,

@@ -1,5 +1,6 @@
 import { NextResponse, after } from "next/server";
 import { getServiceClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/ssrServer";
 import { errMsg } from "@/lib/loyalty";
 import { notifyWelcome } from "@/lib/notify";
 
@@ -66,6 +67,19 @@ export async function POST(req: Request) {
         .maybeSingle();
       customer = data;
     }
+    // VARNOST: zaščitenega računa (email + geslo) NI dovoljeno prevzeti brez gesla.
+    // Izjema: preverjena Supabase seja (Google OAuth) z istim emailom.
+    if (customer?.pass_hash) {
+      const authed = await getCurrentUser().catch(() => null);
+      const verified = !!authed?.email && !!normalizedEmail && authed.email.toLowerCase() === normalizedEmail;
+      if (!verified) {
+        return NextResponse.json(
+          { ok: false, error: "Ta email je zaščiten z geslom — vpiši geslo za prijavo.", needPassword: true },
+          { status: 401 },
+        );
+      }
+    }
+
     let created = false;
     if (!customer) {
       const { data, error } = await db
@@ -82,7 +96,6 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ok: true,
       customerId: customer.id,
-      points: customer.points,
       isNew: customer.points === 0,
     });
   } catch (e) {

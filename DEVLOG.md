@@ -49,6 +49,19 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-07-01 — seja 63 (CEL AUDIT: varnost + branding ostanki + SEO) — Fable 5
+- **VARNOST (3 popravki + 1 hardening):**
+  - **KRITIČNO — prevzem gostovega računa** prek `/api/register`: passwordless veja je vračala `customerId` za obstoječ email tudi ko je imel geslo. Fix: če ima račun `pass_hash`, dostop brez gesla dovoljen SAMO ob preverjeni Supabase seji (Google OAuth) z istim emailom; sicer `needPassword`. Odstranjen `points` iz odgovora.
+  - **Cron fail-closed** ([`api/cron/daily`](app/api/cron/daily/route.ts)): brez `CRON_SECRET` je ruta zdaj vedno 401 (prej publicno klicljiva → mass-mail zloraba).
+  - **`/api/activate`**: reward name lookup scopan na `venue_id` (defenzivno).
+  - **`esc()` hardening** ([`lib/emailTemplate.ts`](lib/emailTemplate.ts)): ubeži tudi `"`/`'`; `btn()` href skozi esc → prepreči prihodnji atribut-XSS.
+  - Preverjeno OK: superadmin gating (vse akcije + stran `notFound`), owner actions (ownership scoping), Polar webhook podpis (fail-closed, replay okno, timingSafeEqual), scan dedup (unique zoi + FOR UPDATE).
+- **BRANDING OSTANKI počiščeni** (agent audit): MORA/Moka → Lipa (landing telefon mockup, SpinFlow fallback kupon, demo dashboard QR/embed/mail, 4× "Kavarna Moka" fallbacki, kontakt placeholder); mrtvi ceniki Espresso/Doppio + stare cene 29,99/69,99 v `lib/i18n.ts`+`lib/demo.ts` → Start/Grow/Scale 49,99/79,99; "TALY" kupon fallback → "LOYA".
+- **Polar letne cene** popravljene prek API: 499,99→**499,90**, 799,99→**799,90** (točno ×10).
+- **SEO/sharing:** `app/opengraph-image.tsx` (link preview za WhatsApp/FB), `robots.ts`, `sitemap.ts`, `metadataBase` + OG/Twitter meta, počiščen Next boilerplate iz `public/`.
+- **ODPRTO (product odločitev, ne fixano):** `/api/confirm-redemption` nima staff-avtentikacije (2-step je na gostovem telefonu — MVP zaupa osebju, ki gleda). Za scale: staff PIN/session. Passwordless guest-i (brez gesla) so enumerabilni po emailu/telefonu — priporočilo: geslo za vse pred scale.
+- `next build` ✅.
+
 ### 2026-07-01 — seja 62 (Postavitev + ROI iz Landing v2 dizajna)
 - Iz handoff-a "Landing v2" prevzeta dva dizajna, zamenjala prejšnji verziji: **SetupTimeline → [`SetupSection.tsx`](app/components/SetupSection.tsx)** (animiran 4-koračni timeline: Ime&barva/Nastavi nagrado/Aktiviraj davčno/Natisni QR + "kartica v živo" preview, scroll-reveal prek IntersectionObserver, naši podatki Kavarna Lipa). **Temni ROI → svetli [`RoiCalculator.tsx`](app/components/RoiCalculator.tsx)** (gradient kartica + primerjalni stolpci "Zdaj vs Z Loyavi" + 2 rezultat kartici; Slider hoisted na modul zaradi drag remount-a; predpostavke nespremenjene, "Z Loyavi" namesto "Z Tally"). SetupTimeline.tsx zbrisan. `tsc` ✅, DOM + brez console napak.
 

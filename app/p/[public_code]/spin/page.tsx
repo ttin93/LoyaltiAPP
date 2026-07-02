@@ -9,7 +9,7 @@ export default async function SpinPage({
   params: Promise<{ public_code: string }>;
 }) {
   const { public_code } = await params;
-  let name = "Kavarna Moka";
+  let name = "Kavarna Lipa";
   let brand = "#2B1D17";
   let wheelCfg: import("@/lib/types").WheelConfig | null = null;
   let lang: string | undefined;

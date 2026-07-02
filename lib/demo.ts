@@ -3,7 +3,7 @@ import { Venue, Reward } from "./types";
 export const DEMO_VENUE: Venue = {
   id: "demo",
   owner_user_id: null,
-  name: "Kavarna Moka",
+  name: "Kavarna Lipa",
   public_code: "demo",
   logo_url: null,
   brand_color: "#2B1D17",
@@ -162,9 +162,9 @@ export type Plan = {
 export const PRICING: Plan[] = [
   {
     key: "start",
-    name: "Espresso",
+    name: "Start",
     tagline: "Za en lokal, ki začenja",
-    price: "29,99 €",
+    price: "49,99 €",
     period: "/ mesec",
     cta: "Začni 14 dni brezplačno",
     featured: false,
@@ -178,15 +178,15 @@ export const PRICING: Plan[] = [
   },
   {
     key: "grow",
-    name: "Doppio",
+    name: "Grow",
     tagline: "Cel stroj za stalne goste",
-    price: "69,99 €",
+    price: "79,99 €",
     period: "/ mesec",
     cta: "Začni 14 dni brezplačno",
     featured: true,
     badge: "Najbolj priljubljeno",
     features: [
-      "Vse iz Espresso",
+      "Vse iz Start",
       "Neomejeno strank",
       "⭐ Google ocene na avtopilotu",
       "Win-back & rojstnodnevne avtomatizacije",
@@ -197,14 +197,14 @@ export const PRICING: Plan[] = [
   },
   {
     key: "veriga",
-    name: "Veriga",
+    name: "Scale",
     tagline: "Za več lokalov pod eno znamko",
     price: "Po dogovoru",
     period: "",
     cta: "Pogovorimo se",
     featured: false,
     features: [
-      "Vse iz Doppio",
+      "Vse iz Grow",
       "Več lokalov, en dashboard",
       "Skupna analitika verige",
       "Preverjanje računov prek blagajne (eBlagajna)",

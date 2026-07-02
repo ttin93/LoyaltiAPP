@@ -12,9 +12,9 @@ const inp = "h-[46px] w-full rounded-xl border border-[#D9CDBA] bg-[#FFFCF6] px-
 
 const SETUP_ICONS = ["star2", "cup", "qr"];
 const SETUP = {
-  sl: { cards: ["Spletna stran", "Kolo sreče", "QR plakat"], badge: "14 dni brezplačno", ph: "npr. Moka" },
-  hr: { cards: ["Web stranica", "Kolo sreće", "QR plakat"], badge: "14 dana besplatno", ph: "npr. Moka" },
-  en: { cards: ["Web page", "Lucky wheel", "QR poster"], badge: "14 days free", ph: "e.g. Moka" },
+  sl: { cards: ["Spletna stran", "Kolo sreče", "QR plakat"], badge: "14 dni brezplačno", ph: "npr. Lipa" },
+  hr: { cards: ["Web stranica", "Kolo sreće", "QR plakat"], badge: "14 dana besplatno", ph: "npr. Lipa" },
+  en: { cards: ["Web page", "Lucky wheel", "QR poster"], badge: "14 days free", ph: "e.g. Lipa" },
 } as const;
 
 export default function Kontakt() {

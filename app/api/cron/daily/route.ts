@@ -15,7 +15,9 @@ const fmtDay = (iso: string) => new Date(iso).toLocaleDateString("sl-SI", { day:
 // Varovalo: če RESEND ni nastavljen, ne naredi nič (da ne piše lažnih dedup zapisov).
 // Vercel cron pošlje Authorization: Bearer <CRON_SECRET>, če je env nastavljen.
 export async function GET(req: Request) {
-  if (process.env.CRON_SECRET && req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Fail-closed: brez nastavljenega CRON_SECRET je ruta vedno zavrnjena (da je ne more sprožiti kdorkoli).
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || req.headers.get("authorization") !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   if (!emailConfigured()) return NextResponse.json({ ok: true, skipped: "email not configured" });

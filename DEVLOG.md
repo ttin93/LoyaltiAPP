@@ -49,6 +49,11 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-07-03 — seja 65 (unikaten public_code + custom QR)
+- **public_code = `ime-8naključnih`** ([`app/actions.ts`](app/actions.ts)) — vsak lokal dobi 8 random številk (več lokalov z istim imenom OK + težje naštevljivo). Prej: samo ob trku.
+- **Custom QR** ([`QrCode.tsx`](app/dashboard/QrCode.tsx)): QR v temni brand barvi (INK, zanesljivo berljiv) z **logom lokala v sredini** (H korekcija). Nov gumb **»Prenesi plakat«** = brandiran plakat za mizo (PNG): brand header + ime lokala + QR z logom + "Skeniraj za žig" + nagrada + powered by Loyavi. `tsc` ✅.
+
+
 ### 2026-07-03 — seja 64 (ROI dashboard + rojstni dan gosta + register varnost)
 - **Varnost:** `/api/register` zdaj zahteva geslo za email (zapre prevzem računa gosta — passwordless email pot je bila napadalni vektor; SpinFlow itak vedno pošlje geslo). cron fail-closed + activate scoping sta bila že v auditu 9088ad8.
 - **ROI kartica** v dashboard Pregledu ([`Dashboard.tsx`](app/dashboard/Dashboard.tsx)): "Kaj ti je Loyavi prinesel" — ocenjen dodaten prihodek (ponovni obiski = skeni − prve prijave × nastavljiv povpr. račun), ponovni obiski, unovčene nagrade, donos-na-strošek. Anti-churn.

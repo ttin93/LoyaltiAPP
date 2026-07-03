@@ -87,9 +87,11 @@ export async function createVenue(formData: FormData) {
     .filter((r) => r.name && r.points > 0)
     .map((r, i) => ({ name: r.name, points: r.points, sort: i + 2 }));
 
-  // unikaten public_code
+  // unikaten public_code: ime + 8 naključnih številk (dovoljuje več lokalov z istim
+  // imenom + koda je težje ugibljiva/naštevljiva). Ob (astronomsko redkem) trku regeneriraj.
   const base = slugify(name);
-  let code = base;
+  const rand8 = () => String(Math.floor(Math.random() * 1e8)).padStart(8, "0");
+  let code = `${base}-${rand8()}`;
   for (let i = 0; i < 6; i++) {
     const { data: existing } = await db
       .from("venues")
@@ -97,7 +99,7 @@ export async function createVenue(formData: FormData) {
       .eq("public_code", code)
       .maybeSingle();
     if (!existing) break;
-    code = `${base}-${Math.floor(Math.random() * 9000 + 1000)}`;
+    code = `${base}-${rand8()}`;
   }
 
   const { data: venue, error } = await db

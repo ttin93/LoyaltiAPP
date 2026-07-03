@@ -60,8 +60,6 @@ export default function QrEditor({ path, accent, venueName, brandColor, logoUrl,
     return () => { cancelled = true; };
   }, [full, dot, color, bg, useLogo, logoUrl]);
 
-  function preset(d: Dot, c: string) { setDot(d); setColor(c); }
-
   function downloadPng() {
     qrRef.current?.download({ name: `${(venueName || "loyavi").toLowerCase().replace(/\s+/g, "-")}-qr`, extension: "png" });
   }
@@ -94,7 +92,6 @@ export default function QrEditor({ path, accent, venueName, brandColor, logoUrl,
 
   const lowContrast = Math.abs(lum(color) - lum(bg)) < 0.4;
   const swatch = { width: 30, height: 30, borderRadius: 8, border: "1px solid #E0D2BC", cursor: "pointer", padding: 0, background: "none" } as const;
-  const brandDark = lum(brandColor || "") <= 0.62 ? (brandColor || INK) : INK;
 
   return (
     <div className="flex flex-col items-center" style={{ gap: 16 }}>
@@ -112,14 +109,6 @@ export default function QrEditor({ path, accent, venueName, brandColor, logoUrl,
         <label className="flex items-center" style={{ gap: 8, fontSize: 13, color: "#6E6253", fontWeight: 600 }}>Barva<input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={swatch} /></label>
         <label className="flex items-center" style={{ gap: 8, fontSize: 13, color: "#6E6253", fontWeight: 600 }}>Ozadje<input type="color" value={bg} onChange={(e) => setBg(e.target.value)} style={swatch} /></label>
         {logoUrl && <label className="flex items-center" style={{ gap: 7, fontSize: 13, color: "#6E6253", fontWeight: 600, cursor: "pointer" }}><input type="checkbox" checked={useLogo} onChange={(e) => setUseLogo(e.target.checked)} />Logo v sredini</label>}
-      </div>
-
-      {/* hitre barve */}
-      <div className="flex flex-wrap items-center justify-center" style={{ gap: 7 }}>
-        <span style={{ fontSize: 12, color: "#9A8F80" }}>Hitro:</span>
-        {[["Klasična", "square", INK], ["Zaobljena", "rounded", INK], ["Brand", "rounded", brandDark]].map(([lbl, d, c]) => (
-          <button key={lbl as string} onClick={() => preset(d as Dot, c as string)} style={{ height: 30, padding: "0 11px", borderRadius: 999, border: "1px solid #E4D9C7", background: "#fff", color: INK, fontFamily: "var(--font-jakarta), sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{lbl}</button>
-        ))}
       </div>
 
       {lowContrast && <div style={{ fontSize: 12, color: "#9B3F1E", background: "rgba(196,98,61,0.1)", borderRadius: 10, padding: "8px 12px", textAlign: "center", lineHeight: 1.4 }}>⚠ Nizek kontrast — QR morda ne bo berljiv. Izberi temnejšo barvo na svetlem ozadju.</div>}

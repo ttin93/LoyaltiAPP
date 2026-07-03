@@ -923,6 +923,11 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                                 ? `${fmtDay(trialUntil)} se prične obračun ${fmtEur(monthlyEq)}/mes.`
                                 : trialUntil ? `Preizkus traja do ${fmtDay(trialUntil)} — nato izberi paket za nadaljevanje.` : "Izberi paket za nadaljevanje."}
                             </div>
+                            {access.state === "trial" && (
+                              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#7A5E1E", marginTop: 4 }}>
+                                ✨ V preizkusu imaš odklenjene VSE funkcije (raven Grow) — avtomatizacije, segmente po meri, napredno analitiko. Z izbiro paketa obdržiš tisto, kar paket vsebuje.
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}

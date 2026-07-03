@@ -47,7 +47,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, customerId: r.customer_id, isNew: r.is_new });
     }
 
-    // poišči obstoječo stranko: najprej po telefonu, sicer po emailu (Google)
+    // VARNOST: email BREZ gesla ni dovoljen — sicer bi kdorkoli z znanim emailom dobil
+    // tuj račun (customerId = token) + sprožil welcome-spam. Email gre VEDNO prek guest_auth
+    // (geslo) zgoraj; passwordless spodaj velja samo za telefon.
+    if (normalizedEmail && !password) {
+      return NextResponse.json({ ok: false, error: "Za prijavo z emailom vpiši geslo." }, { status: 400 });
+    }
+
+    // poišči obstoječo stranko po telefonu (telefonski model, brez gesla)
     let customer = null;
     if (normalizedPhone) {
       const { data } = await db

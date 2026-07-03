@@ -683,9 +683,14 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
               coupons.map((c) =>
                 c.pending ? (
                   <div key={c.id} className="flex items-center" style={{ gap: 13, background: CREAM, border: "1.5px dashed #E0D2BC", borderRadius: 18, padding: 15 }}>
-                    <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#fff", flexShrink: 0, opacity: 0.7 }}><Cup stroke={brand} size={22} /></div>
-                    <div className="min-w-0 flex-1"><div style={{ fontWeight: 800, fontSize: 14.5 }}>{c.name}</div><div style={{ fontSize: 12, fontWeight: 600, color: accentDeep }}>{t.pendingCoupon}</div></div>
-                    <span className="flex items-center" style={{ height: 26, padding: "0 11px", borderRadius: 999, background: "#FCEFD8", color: "#B4781E", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{t.waits}</span>
+                    <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#F1E8D9", flexShrink: 0 }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#B5A98F", strokeWidth: 1.9, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M7 11V8a5 5 0 0 1 10 0v3" /><rect x="5" y="11" width="14" height="9" rx="2" /></svg>
+                    </div>
+                    <div className="min-w-0 flex-1"><div style={{ fontWeight: 800, fontSize: 14.5, color: "#7A6E5E" }}>{c.name}</div><div style={{ fontSize: 12, fontWeight: 600, color: accentDeep }}>{t.pendingCoupon}</div></div>
+                    <span className="flex items-center" style={{ gap: 4, height: 26, padding: "0 10px", borderRadius: 999, background: "#FCEFD8", color: "#B4781E", fontSize: 10.5, fontWeight: 800, flexShrink: 0, letterSpacing: "0.04em" }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#B4781E", strokeWidth: 2.4, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M7 11V8a5 5 0 0 1 10 0v3" /><rect x="5" y="11" width="14" height="9" rx="2" /></svg>
+                      {t.waits}
+                    </span>
                   </div>
                 ) : (
                   <div key={c.id} className="flex items-center" style={{ gap: 13, background: `linear-gradient(135deg,${tintLight},${tintMed})`, borderRadius: 18, padding: 15 }}>

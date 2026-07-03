@@ -49,6 +49,9 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-07-03 — seja 66 (QR editor — žive oblike/barve/logo)
+- Nova knjižnica **qr-code-styling** ^1.9.2. Komponenta [`QrEditor.tsx`](app/dashboard/QrEditor.tsx) zamenja statični QrCode.tsx (zbrisan): lastnik v živo ureja **obliko pik** (zaobljeno/klasično/pike/elegantno/mehko), **barvo + ozadje** (color picker), **logo v sredini** (toggle), hitre preset-e (Klasična/Zaobljena/Brand). Vedno H korekcija; opozorilo ob nizkem kontrastu (berljivost). Izvoz: PNG + brandiran plakat (styled QR narisan v poster canvas). Vgrajeno v Sistem tab. `tsc` ✅.
+
 ### 2026-07-03 — seja 65 (unikaten public_code + custom QR)
 - **public_code = `ime-8naključnih`** ([`app/actions.ts`](app/actions.ts)) — vsak lokal dobi 8 random številk (več lokalov z istim imenom OK + težje naštevljivo). Prej: samo ob trku.
 - **Custom QR** ([`QrCode.tsx`](app/dashboard/QrCode.tsx)): QR v temni brand barvi (INK, zanesljivo berljiv) z **logom lokala v sredini** (H korekcija). Nov gumb **»Prenesi plakat«** = brandiran plakat za mizo (PNG): brand header + ime lokala + QR z logom + "Skeniraj za žig" + nagrada + powered by Loyavi. `tsc` ✅.

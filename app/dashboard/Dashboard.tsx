@@ -7,7 +7,7 @@ import { updateVenueSettings, activateScanning, testReceipt, saveReward, deleteR
 import { PLANS, fmtEur, monthlyEquivalent, chargedAmount, STATUS_LABEL, planFeature, planMaxVenues } from "@/lib/plans";
 import type { Access } from "@/lib/access";
 import Scanner from "@/app/components/Scanner";
-import QrCode from "./QrCode";
+import QrEditor from "./QrEditor";
 
 export type ReviewRow = { id: string; stars: number; comment: string | null; to_google: boolean; created_at: string };
 
@@ -759,9 +759,9 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                     <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>
                       <span style={{ fontWeight: 700, fontSize: 15 }}>QR koda lokala</span>
                       <span style={{ fontSize: 13, color: "#9A8F80", lineHeight: 1.5 }}>Natisni in postavi na pult. Gostje skenirajo → odpre se njihova stran zvestobe.</span>
-                      <QrCode path={`/p/${venue.public_code}`} accent={AMBER} venueName={venue.name} brandColor={venue.brand_color} logoUrl={venue.logo_url} reward={stampRewards[0]?.name} />
+                      <QrEditor path={`/p/${venue.public_code}`} accent={AMBER} venueName={venue.name} brandColor={venue.brand_color} logoUrl={venue.logo_url} reward={stampRewards[0]?.name} />
                       <a href={`/p/${venue.public_code}`} target="_blank" rel="noreferrer" className="flex items-center justify-center" style={{ height: 42, borderRadius: 10, border: "1.5px solid #E4D9C7", color: INK, textDecoration: "none", fontSize: 13.5, fontWeight: 700, fontFamily: JAK }}>Odpri predogled gostove strani →</a>
-                      <span style={{ fontSize: 12, color: "#9A8F80", lineHeight: 1.5 }}>QR že vključi tvoj logo v sredini. »Prenesi plakat« naredi brandiran plakat za mizo (barva + ime + nagrada).</span>
+                      <span style={{ fontSize: 12, color: "#9A8F80", lineHeight: 1.5 }}>Uredi obliko, barve in logo QR-ja zgoraj. »Prenesi plakat« naredi brandiran plakat za mizo.</span>
                     </div>
                     {/* skeniranje */}
                     <div className="flex flex-col" style={{ gap: 16 }}>

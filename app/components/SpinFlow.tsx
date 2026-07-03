@@ -402,8 +402,8 @@ export default function SpinFlow({
           {/* COUPON */}
           {step === "coupon" && (
             <div className="flex flex-col items-center text-center" style={{ gap: 16 }}>
-              <div className="flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(94,127,82,0.14)", border: "2.5px solid #5E7F52", animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
-                <svg width="30" height="30" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#5E7F52", strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M5 12.5l4.2 4.2L18.5 7.5" /></svg>
+              <div className="flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: "50%", background: "#FCEFD8", border: "2.5px solid #E2A04A", animation: "popIn 0.5s cubic-bezier(0.2,1.5,0.4,1) both" }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#B4781E", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round" }}><path d="M7 11V8a5 5 0 0 1 10 0v3" /><rect x="5" y="11" width="14" height="9" rx="2" /></svg>
               </div>
               <div className="flex flex-col" style={{ gap: 4 }}>
                 <div style={{ fontWeight: 800, fontSize: 23, letterSpacing: "-0.01em" }}>{t.couponWaits}</div>

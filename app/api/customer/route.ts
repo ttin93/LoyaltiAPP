@@ -36,6 +36,7 @@ export async function GET(req: Request) {
       ok: true,
       points: customer.points,
       stamps: customer.stamps ?? 0,
+      birthday: customer.birthday ?? null,
       nextReward: nextRewardProgress(customer.points, (rewards ?? []).filter((r) => r.kind !== "stamp")),
     });
   } catch (e) {

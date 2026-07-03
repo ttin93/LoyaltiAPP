@@ -84,6 +84,14 @@ export async function notifyBirthdayVenue(v: V, email: string | null | undefined
   } catch (e) { console.error("[notify bday-venue]", e); }
 }
 
+export async function notifyBirthdayGuest(v: V, email: string | null | undefined, d: { giftName: string }) {
+  if (!email || !canGuest(v)) return;
+  try {
+    const html = T.emailBirthdayGuest(gBase(v), { giftName: d.giftName, couponCode: couponCode(v) });
+    await sendEmail({ to: email, subject: `🎂 Vse najboljše od ${v.name}!`, html, ...guestSender(v) });
+  } catch (e) { console.error("[notify bday-guest]", e); }
+}
+
 // ── ADMIN (Loyavi → lastnik) — samo platformni ključ ─────────────────────────
 export async function notifyOwnerWelcome(email: string | null | undefined, ownerName: string | null | undefined, venueName: string) {
   if (!email || !emailConfigured()) return;

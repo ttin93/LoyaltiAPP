@@ -111,6 +111,20 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [points, setPoints] = useState(0);
   const [stamps, setStamps] = useState(0);
+  const [bday, setBday] = useState<string | null | undefined>(undefined); // undefined=neznano, null=ni nastavljen (pokaži), "MM-DD"=nastavljen
+  const [bdayD, setBdayD] = useState("");
+  const [bdayM, setBdayM] = useState("");
+  const [bdayBusy, setBdayBusy] = useState(false);
+  async function saveBirthday() {
+    if (!bdayD || !bdayM || !customerId) return;
+    const val = `${String(bdayM).padStart(2, "0")}-${String(bdayD).padStart(2, "0")}`;
+    setBdayBusy(true);
+    try {
+      const r = await fetch("/api/guest-birthday", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ venueCode: venue.public_code, customerId, birthday: val }) });
+      const j = await r.json();
+      if (j.ok) setBday(val);
+    } finally { setBdayBusy(false); }
+  }
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState<"home" | "success" | "error">("home");
   const [scanning, setScanning] = useState(false);
@@ -178,7 +192,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
       try {
         const r = await fetch(`/api/customer?venueCode=${venue.public_code}&customerId=${id}`);
         const j = await r.json();
-        if (j.ok) { setPoints(j.points); setStamps(j.stamps ?? 0); }
+        if (j.ok) { setPoints(j.points); setStamps(j.stamps ?? 0); setBday(j.birthday ?? null); }
         else {
           localStorage.removeItem(storageKey);
           setCustomerId(null);
@@ -689,6 +703,26 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
             )}
           </div>
         </div>
+
+        {/* ROJSTNI DAN — postopno zbiranje (ne ob prijavi), z nagrado */}
+        {bday === null && (
+          <div className="px-4 lg:px-0" style={{ marginTop: 28 }}>
+            <div style={{ background: `linear-gradient(135deg,${tintLight},${tintMed})`, border: "1px solid #EFE6D6", borderRadius: 20, padding: 18, display: "flex", flexDirection: "column", gap: 13 }}>
+              <div className="flex items-center" style={{ gap: 11 }}>
+                <div className="flex items-center justify-center" style={{ width: 42, height: 42, borderRadius: 12, background: "#fff", flexShrink: 0, fontSize: 22 }}>🎁</div>
+                <div style={{ lineHeight: 1.3 }}>
+                  <div style={{ fontWeight: 800, fontSize: 15 }}>Dodaj rojstni dan</div>
+                  <div style={{ fontSize: 12.5, color: accentDeep }}>Da te lahko razveselimo z darilom 🎂</div>
+                </div>
+              </div>
+              <div className="flex items-center" style={{ gap: 8 }}>
+                <select value={bdayD} onChange={(e) => setBdayD(e.target.value)} style={{ flex: 1, height: 44, borderRadius: 12, border: "1px solid #E0D2BC", background: "#fff", color: INK, fontFamily: JAK, fontSize: 14, padding: "0 10px" }}><option value="">Dan</option>{Array.from({ length: 31 }, (_, i) => <option key={i} value={String(i + 1)}>{i + 1}</option>)}</select>
+                <select value={bdayM} onChange={(e) => setBdayM(e.target.value)} style={{ flex: 1.2, height: 44, borderRadius: 12, border: "1px solid #E0D2BC", background: "#fff", color: INK, fontFamily: JAK, fontSize: 14, padding: "0 10px" }}><option value="">Mesec</option>{["januar", "februar", "marec", "april", "maj", "junij", "julij", "avgust", "september", "oktober", "november", "december"].map((m, i) => <option key={i} value={String(i + 1)}>{m}</option>)}</select>
+                <button onClick={saveBirthday} disabled={!bdayD || !bdayM || bdayBusy} style={{ height: 44, padding: "0 18px", border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: !bdayD || !bdayM || bdayBusy ? 0.5 : 1, flexShrink: 0 }}>{bdayBusy ? "…" : "Shrani"}</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* MENI NAGRAD (za točke) */}
         {pointRewards.length > 0 && (

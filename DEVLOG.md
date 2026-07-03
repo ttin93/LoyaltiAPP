@@ -49,6 +49,12 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-07-03 — seja 64 (ROI dashboard + rojstni dan gosta + register varnost)
+- **Varnost:** `/api/register` zdaj zahteva geslo za email (zapre prevzem računa gosta — passwordless email pot je bila napadalni vektor; SpinFlow itak vedno pošlje geslo). cron fail-closed + activate scoping sta bila že v auditu 9088ad8.
+- **ROI kartica** v dashboard Pregledu ([`Dashboard.tsx`](app/dashboard/Dashboard.tsx)): "Kaj ti je Loyavi prinesel" — ocenjen dodaten prihodek (ponovni obiski = skeni − prve prijave × nastavljiv povpr. račun), ponovni obiski, unovčene nagrade, donos-na-strošek. Anti-churn.
+- **Rojstni dan gosta (postopno zbiranje):** NE ob prijavi — neobvezna kartica na gostovi strani ([`GuestApp.tsx`](app/p/[public_code]/GuestApp.tsx)) "🎁 Dodaj rojstni dan → darilo" (dan+mesec, brez leta). Migracija [`0024_guest_birthday.sql`](supabase/0024_guest_birthday.sql) (`customers.birthday` MM-DD), API [`/api/guest-birthday`](app/api/guest-birthday/route.ts), `/api/customer` vrača birthday, `notifyBirthdayGuest` + cron pošlje na rojstni dan (dedup 300d). `tsc` ✅.
+
+
 ### 2026-07-01 — seja 63 (CEL AUDIT: varnost + branding ostanki + SEO) — Fable 5
 - **VARNOST (3 popravki + 1 hardening):**
   - **KRITIČNO — prevzem gostovega računa** prek `/api/register`: passwordless veja je vračala `customerId` za obstoječ email tudi ko je imel geslo. Fix: če ima račun `pass_hash`, dostop brez gesla dovoljen SAMO ob preverjeni Supabase seji (Google OAuth) z istim emailom; sicer `needPassword`. Odstranjen `points` iz odgovora.

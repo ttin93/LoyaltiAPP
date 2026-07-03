@@ -109,6 +109,7 @@ function WheelMini({ segments, winner, accent }: { segments: WheelSegment[]; win
 export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail, isAdmin = false, ownerPlan, billingVenue, access, scanCount = 0, customerCount = 0, dailyScans = [], hourlyScans = [] }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string; isAdmin?: boolean; ownerPlan: PlanKey; billingVenue: Venue; access: Access; scanCount?: number; customerCount?: number; dailyScans?: { day: string; cnt: number }[]; hourlyScans?: { hour: number; cnt: number }[] }) {
   const router = useRouter();
   const [sec, setSec] = useState("pregled");
+  const [roiSpend, setRoiSpend] = useState(4); // povpr. račun za ROI oceno (nastavljiv)
   const [switchOpen, setSwitchOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanMode, setScanMode] = useState<"activate" | "test">("activate");
@@ -485,6 +486,30 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                       <Kpi l="Povp. obiski / stranko" v={stats.avgVisits} />
                       <Kpi l="Unovčene točke" v={stats.pointsRedeemed} dc={CORAL} />
                     </div>
+                    {/* ROI: kaj ti je Loyavi prinesel (ocena, nastavljiv povpr. račun) */}
+                    {(() => {
+                      const repeat = Math.max(0, scanCount - customerCount);
+                      const revenue = repeat * roiSpend;
+                      const rewardsRedeemed = redemptions.length;
+                      const cost = PLANS[ownerPlan]?.monthly || 0;
+                      return (
+                        <div style={{ background: INK, borderRadius: 18, padding: 22, display: "flex", flexDirection: "column", gap: 16 }}>
+                          <div className="flex items-center justify-between" style={{ flexWrap: "wrap", gap: 10 }}>
+                            <span style={{ fontWeight: 800, fontSize: 16, color: "#F8F3EA" }}>Kaj ti je Loyavi prinesel</span>
+                            <label className="flex items-center" style={{ gap: 7, fontSize: 12.5, color: "#B7A488" }}>povpr. račun
+                              <input type="number" min={1} max={200} value={roiSpend} onChange={(e) => setRoiSpend(Math.max(1, Number(e.target.value) || 1))} style={{ width: 58, height: 30, borderRadius: 8, border: "1px solid rgba(248,243,234,0.2)", background: "rgba(248,243,234,0.08)", color: "#F8F3EA", textAlign: "center", fontFamily: JAK, fontSize: 13 }} /> €
+                            </label>
+                          </div>
+                          <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))" }}>
+                            <div><div style={{ fontSize: 12, color: "#B7A488", marginBottom: 4 }}>Ocenjen dodaten prihodek</div><div style={{ fontWeight: 800, fontSize: 29, color: "#9DBE8E", letterSpacing: "-0.01em" }}>+{fmtEur(revenue)}</div></div>
+                            <div><div style={{ fontSize: 12, color: "#B7A488", marginBottom: 4 }}>Ponovni obiski</div><div style={{ fontWeight: 800, fontSize: 29, color: "#F8F3EA" }}>{repeat}</div></div>
+                            <div><div style={{ fontSize: 12, color: "#B7A488", marginBottom: 4 }}>Unovčene nagrade</div><div style={{ fontWeight: 800, fontSize: 29, color: "#E2A04A" }}>{rewardsRedeemed}</div></div>
+                            {cost > 0 && <div><div style={{ fontSize: 12, color: "#B7A488", marginBottom: 4 }}>Donos na strošek</div><div style={{ fontWeight: 800, fontSize: 29, color: "#9DBE8E" }}>{revenue > 0 ? Math.round(revenue / cost) : 0}×</div></div>}
+                          </div>
+                          <div style={{ fontSize: 11.5, color: "rgba(248,243,234,0.45)", lineHeight: 1.5 }}>Ocena: ponovni obiski = skeniranja − prve prijave, pomnoženo s povprečnim računom. Vrednost je ocena, ne točen znesek.</div>
+                        </div>
+                      );
+                    })()}
                     <div className="grid gap-3.5 lg:grid-cols-[1.6fr_1fr]">
                       <div style={card}><div style={{ fontWeight: 700, fontSize: 15, marginBottom: 18 }}>Skeniranja (zadnjih 14 dni)</div><div className="flex items-end" style={{ gap: 5, height: 150 }}>{stats.days.map((d) => <div key={d.label} className="flex flex-1 flex-col items-center justify-end" style={{ gap: 5, height: "100%" }}><div style={{ width: "100%", height: `${Math.round((d.count / stats.maxDay) * 130)}px`, minHeight: d.count ? 4 : 0, borderRadius: "5px 5px 2px 2px", background: AMBER }} /><span style={{ fontSize: 9, color: "#B5AB9C" }}>{d.label}</span></div>)}</div></div>
                       <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}><span style={{ fontWeight: 700, fontSize: 15 }}>Najboljše stranke</span>{topCustomers.length === 0 && <span style={{ fontSize: 13.5, color: "#9A8F80" }}>Še ni strank.</span>}{topCustomers.map((c, i) => <div key={c.id} className="flex items-center" style={{ gap: 11 }}><div className="flex items-center justify-center" style={{ width: 30, height: 30, borderRadius: "50%", background: "#FCEFD8", color: "#B4781E", fontWeight: 800, fontSize: 12 }}>{i + 1}</div><span className="flex-1 truncate" style={{ fontSize: 13.5, fontWeight: 600 }}>{c.email || c.phone || "—"}</span><span style={{ fontSize: 13, fontWeight: 700, color: "#B4862F" }}>{c.points} t</span></div>)}</div>

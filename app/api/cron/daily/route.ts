@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase/server";
 import { emailConfigured } from "@/lib/email";
 import { bestOwnerPlan, PLANS } from "@/lib/plans";
-import { notifyWeMissYou, notifyAnniversary, notifyBirthdayVenue, notifyAdminExpiring } from "@/lib/notify";
+import { notifyWeMissYou, notifyAnniversary, notifyBirthdayVenue, notifyBirthdayGuest, notifyAdminExpiring } from "@/lib/notify";
 import type { Venue, Automations } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -59,6 +59,19 @@ export async function GET(req: Request) {
         const plan = bestOwnerPlan([v]);
         await notifyAdminExpiring(emailById.get(v.owner_user_id || "") || null, { venueName: v.name, plan: PLANS[plan]?.label ?? "—", expiresOn: fmtDay(until) });
         await logSent("admin_expiring", v.id, null);
+        sent++;
+      }
+    }
+
+    // ── ROJSTNI DAN GOSTA (customers.birthday == danes) — deluje za vse lokale ──
+    {
+      const { data: bdayCusts } = await db.from("customers").select("id, email").eq("venue_id", v.id).eq("birthday", todayMMDD).not("email", "is", null).limit(500);
+      const giftName = (v.automations as Automations | null)?.guest_birthday?.couponName || "Darilo za rojstni dan 🎂";
+      for (const c of bdayCusts ?? []) {
+        if (sent >= cap) break;
+        if (await sentRecently("birthday_guest", v.id, c.id, 300)) continue;
+        await notifyBirthdayGuest(v, c.email as string, { giftName });
+        await logSent("birthday_guest", v.id, c.id);
         sent++;
       }
     }

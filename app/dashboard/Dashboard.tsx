@@ -592,7 +592,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
 
                 {sec === "marketing" && (
                   <div className="flex flex-col" style={{ gap: 16 }}>
-                    <div className="flex" style={{ background: "#F1E8D9", borderRadius: 12, padding: 4, maxWidth: 380 }}>{([["campaign", "Enkratna kampanja"], ["auto", `Avtomatizacije${autoCount ? ` · ${autoCount}` : ""}`]] as const).map(([k, l]) => { const locked = k === "auto" && !gate.automations; return <button key={k} onClick={() => (locked ? setSec("narocnina") : setMktTab(k))} style={{ flex: 1, height: 38, border: "none", borderRadius: 9, background: mktTab === k && !locked ? "#fff" : "transparent", color: locked ? "#B4781E" : mktTab === k ? INK : "#9A8F80", fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{locked ? "🔒 " : ""}{l}</button>; })}</div>
+                    <div className="flex" style={{ background: "#F1E8D9", borderRadius: 12, padding: 4, maxWidth: 380 }}>{([["campaign", "Enkratna kampanja"], ["auto", `Avtomatizacije${autoCount ? ` · ${autoCount}` : ""}`]] as const).map(([k, l]) => { const locked = k === "auto" && !gate.automations; return <button key={k} onClick={() => setMktTab(k)} style={{ flex: 1, height: 38, border: "none", borderRadius: 9, background: mktTab === k && !locked ? "#fff" : "transparent", color: locked ? "#B4781E" : mktTab === k ? INK : "#9A8F80", fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{locked ? "🔒 " : ""}{l}</button>; })}</div>
                     {mktTab === "campaign" && (
                   <div className="grid gap-3.5 lg:grid-cols-[1.4fr_1fr]">
                     <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -637,6 +637,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                     </div>
                   </div>
                     )}
+                    {mktTab === "auto" && !gate.automations && lockCard("Marketing avtomatizacije", "Win-back, rojstni dan in obletnica — e-pošta se pošlje SAMA, ko se gost ne vrne. Največji vzvod za ponovne obiske. Odkleneš v Grow.")}
                     {mktTab === "auto" && gate.automations && (
                       <div className="flex flex-col" style={{ gap: 14, maxWidth: 760 }}>
                         <div style={{ background: "#FCEFD8", borderRadius: 14, padding: "14px 16px", fontSize: 13, lineHeight: 1.5, color: "#7A5E1E" }}>Avtomatizacije pošljejo e-pošto <b>same</b>, ko se zgodi sprožilec — vklopiš jih enkrat. (Dejansko pošiljanje se vklopi z e-poštnim providerjem.)</div>

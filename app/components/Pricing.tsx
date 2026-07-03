@@ -69,6 +69,12 @@ export default function Pricing() {
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.featured ? AMBER : GREEN, flexShrink: 0 }} />{p.fit}
               </div>
               <Link href={p.name === "Scale" ? "/kontakt" : PARTNER} style={p.featured ? { height: 50, borderRadius: 14, background: AMBER, color: INK, fontSize: 15, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" } : { height: 50, borderRadius: 14, border: `1.5px solid ${INK}`, color: INK, fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{p.cta}</Link>
+              {p.featured && (
+                <div style={{ background: "rgba(226,160,74,0.16)", borderRadius: 12, padding: "11px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: AMBER }}>Za +30 € nad Start odkleneš</span>
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: "#F8F3EA", lineHeight: 1.45 }}>Avtomatski win-back · do 5 lokalov · napredna analitika</span>
+                </div>
+              )}
               <div className="flex flex-col" style={{ gap: 11, borderTop: p.featured ? "1px solid rgba(248,243,234,0.14)" : "1px solid #F1E8D9", paddingTop: 18 }}>
                 {p.feats.map((f) => {
                   const soon = f.endsWith("· kmalu");

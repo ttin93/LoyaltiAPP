@@ -49,6 +49,12 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-07-06 — seja 66 (PRODAJNI PAKET za prve lokale)
+- **[`marketing/Loyavi-predstavitev.pdf`](marketing/Loyavi-predstavitev.pdf)** — 3-stranski brandiran PDF (reportlab, Segoe UI za šumnike, vizualno preverjen): (1) kaj je + kako deluje + kartonček vizual, (2) FOKUS: stroj za Google ocene (≤3 zasebno / 4–5 na Google) + direkten marketing + ROI primer, (3) pilotna ponudba "prvi mesec zastonj, jaz vse nastavim" + cenik Start/Grow + QR na demo (loyavi.app/p/demo). Generator: scratchpad loyavi_pdf.py (za popravke regeneriraj).
+- **[`marketing/PITCHI.md`](marketing/PITCHI.md)** — copy-paste pitchi: 30-sek v živo, email (ob videu+PDF), IG DM, follow-up, 6 ugovorov z odgovori, checklist obiska, scenarij prvega dne.
+- Kontekst: uporabnika je strah prodajnega koraka — paket je narejen tako, da zniža aktivacijsko energijo (vse pripravljeno, samo copy-paste / natisni).
+
+
 ### 2026-07-03 — seja 66 (QR editor — žive oblike/barve/logo)
 - Nova knjižnica **qr-code-styling** ^1.9.2. Komponenta [`QrEditor.tsx`](app/dashboard/QrEditor.tsx) zamenja statični QrCode.tsx (zbrisan): lastnik v živo ureja **obliko pik** (zaobljeno/klasično/pike/elegantno/mehko), **barvo + ozadje** (color picker), **logo v sredini** (toggle), hitre preset-e (Klasična/Zaobljena/Brand). Vedno H korekcija; opozorilo ob nizkem kontrastu (berljivost). Izvoz: PNG + brandiran plakat (styled QR narisan v poster canvas). Vgrajeno v Sistem tab. `tsc` ✅.
 

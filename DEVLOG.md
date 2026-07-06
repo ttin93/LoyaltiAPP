@@ -49,6 +49,12 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-07-07 — seja 67 (PDF v3: knjižna slovenščina + angleška različica)
+- **Jezikovni pregled PDF-ja** (user: slovnica kritična): celotno besedilo prepisano v knjižno slovenščino z **vikanjem** (prej mešano tikanje): "ocene na Googlu" (ne "Google ocene"), "QR-koda" (vezaj), "brezplačno" (ne "zastonj"), "kadar koli", "neposredni marketing", "3-krat"… Vsi overflow-i pokrpani, ★ vektorsko.
+- **Angleška različica**: [`marketing/Loyavi-presentation-EN.pdf`](marketing/Loyavi-presentation-EN.pdf) — ista postavitev, naravna angleška prodajna kopija.
+- Generator [`marketing/generator_pdf.py`](marketing/generator_pdf.py) zdaj parametriziran (SL/EN slovarja besedil) in **teče iz repa**: `python marketing/generator_pdf.py` zgradi oba PDF-ja. Vse strani vizualno preverjene.
+
+
 ### 2026-07-06 — seja 66 (PRODAJNI PAKET za prve lokale)
 - **[`marketing/Loyavi-predstavitev.pdf`](marketing/Loyavi-predstavitev.pdf)** — 3-stranski brandiran PDF (reportlab, Segoe UI za šumnike, vizualno preverjen): (1) kaj je + kako deluje + kartonček vizual, (2) FOKUS: stroj za Google ocene (≤3 zasebno / 4–5 na Google) + direkten marketing + ROI primer, (3) pilotna ponudba "prvi mesec zastonj, jaz vse nastavim" + cenik Start/Grow + QR na demo (loyavi.app/p/demo). Generator: scratchpad loyavi_pdf.py (za popravke regeneriraj).
 - **[`marketing/PITCHI.md`](marketing/PITCHI.md)** — copy-paste pitchi: 30-sek v živo, email (ob videu+PDF), IG DM, follow-up, 6 ugovorov z odgovori, checklist obiska, scenarij prvega dne.

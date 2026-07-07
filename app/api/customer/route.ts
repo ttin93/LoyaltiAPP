@@ -32,11 +32,18 @@ export async function GET(req: Request) {
     }
 
     const { data: rewards } = await db.from("rewards").select("*").eq("venue_id", venue.id);
+    // št. skeniranih računov gosta — za prag rojstno-dnevnega popupa
+    const { count: scanCount } = await db
+      .from("scans")
+      .select("id", { count: "exact", head: true })
+      .eq("venue_id", venue.id)
+      .eq("customer_id", customerId);
     return NextResponse.json({
       ok: true,
       points: customer.points,
       stamps: customer.stamps ?? 0,
       birthday: customer.birthday ?? null,
+      scanCount: scanCount ?? 0,
       nextReward: nextRewardProgress(customer.points, (rewards ?? []).filter((r) => r.kind !== "stamp")),
     });
   } catch (e) {

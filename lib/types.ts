@@ -18,6 +18,8 @@ export interface Venue {
   redemption_minutes: number;
   daily_scan_cap: number | null;
   google_review_url?: string | null; // za Google-ocene autopilot (opcijsko)
+  birthday_prompt_enabled?: boolean; // lastnik vklopi rojstno-dnevni popup za goste
+  birthday_prompt_min_scans?: number; // koliko računov mora gost skenirati, da se popup prikaže (privzeto 5)
   language?: string; // jezik gostovega flowa (sl/en/hr/sr/bs/de)
   wheel_config?: WheelConfig | null; // konfiguracija kolesa sreče
   automations?: Automations | null; // marketing avtomatizacije

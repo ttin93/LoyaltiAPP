@@ -49,6 +49,15 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-07-07 — seja 70 (Google login + geslo pravila; gost desktop full-screen; rojstni-dan opt-in)
+- **Geslo:** gost min 6 (prej 4), lastnik-registracija min 8 + številka. Google login je ŽE v kodi (AuthForm + SpinFlow prek Supabase OAuth) — rabi le konfiguracijo → vodič [`docs/GOOGLE-LOGIN.md`](docs/GOOGLE-LOGIN.md).
+- **Gost desktop** ([`GuestApp.tsx`](app/p/[public_code]/GuestApp.tsx)): full-screen edge-to-edge split (levo 720 welcome+stat polna višina, desno scroll s kartico+skeniraj+kuponi+nagradami). Konec lebdečih kartic na bež ozadju. Mobilno nespremenjeno.
+- **Rojstni dan — opt-in feature** (migracija [`0025`](supabase/0025_birthday_prompt.sql): `venues.birthday_prompt_enabled` + `birthday_prompt_min_scans` privzeto 5):
+  - Lastnik ga vklopi v **Nastavitve** (toggle + prag skeniranih računov + **statistika koliko gostov je vpisalo**).
+  - Gost: na telefonu **bottom sheet**, na računalniku **centrirano okno**. Prikaže se šele ko doseže prag skeniranih računov. »Ne zdaj« = samodejno se ne prikaže več (localStorage), a lahko ga odpre prek gumba na kartici. **Write-once** (server 409 če že vpisan) — vpiše lahko samo enkrat.
+  - `scanCount` dodan v [`/api/customer`](app/api/customer/route.ts); write-once v [`/api/guest-birthday`](app/api/guest-birthday/route.ts). Preverjeno v živo (popup desktop/mobile + API 409). `tsc` ✅.
+- **Maili:** popoln seznam predlog v [`docs/EMAILI.md`](docs/EMAILI.md) (za redizajn — preview `/api/email-preview?type=…`).
+
 ### 2026-07-07 — seja 69 (email varčevanje + superadmin email tracker)
 - **Varčevanje maila:** "napredek/točke" mail ([`scan/route.ts`](app/api/scan/route.ts)) se pošlje SAMO ob mejniku (1 žig do polne kartice ALI ravnokar odklenjena točkovna nagrada), NE ob vsakem skenu. Prej: ~80 mailov/dan na prometno kavarno (bi požrl Resend free 100/dan). Ostalo (welcome/coupon/win-back/ocene) nespremenjeno.
 - **Superadmin email tracker** ([`superadmin/page.tsx`](app/superadmin/page.tsx) + Superadmin.tsx): nov KPI "Poslani maili" + kartica "E-pošta — poslano" (danes/7/30/skupaj z Resend limiti free 100/dan, 3.000/mes; opozorilo ob ≥90/dan) + razčlenitev po vrstah. Bere iz `email_log`. `tsc` ✅.

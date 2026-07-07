@@ -111,6 +111,11 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [points, setPoints] = useState(0);
   const [stamps, setStamps] = useState(0);
+  const [scanCount, setScanCount] = useState(0);
+  const [bday, setBday] = useState<string | null | undefined>(undefined); // undefined=neznano, null=ni vpisan, "MM-DD"=vpisan (zaklenjeno)
+  const [bdayOpen, setBdayOpen] = useState(false);
+  const [bdayBusy, setBdayBusy] = useState(false);
+  const [bdayErr, setBdayErr] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState<"home" | "success" | "error">("home");
   const [scanning, setScanning] = useState(false);
@@ -178,7 +183,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
       try {
         const r = await fetch(`/api/customer?venueCode=${venue.public_code}&customerId=${id}`);
         const j = await r.json();
-        if (j.ok) { setPoints(j.points); setStamps(j.stamps ?? 0); }
+        if (j.ok) { setPoints(j.points); setStamps(j.stamps ?? 0); setBday(j.birthday ?? null); setScanCount(j.scanCount ?? 0); }
         else {
           localStorage.removeItem(storageKey);
           setCustomerId(null);
@@ -202,6 +207,38 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
     },
     [venue.public_code],
   );
+
+  // ── Rojstni dan (opt-in; lastnik vklopi + nastavi prag skeniranih računov) ──
+  const bdayEnabled = !!(venue as { birthday_prompt_enabled?: boolean }).birthday_prompt_enabled;
+  const bdayMinScans = (venue as { birthday_prompt_min_scans?: number }).birthday_prompt_min_scans ?? 5;
+  const bdayEligible = !demo && bdayEnabled && bday === null && scanCount >= bdayMinScans;
+  const bdayDismissKey = `loyalty:${venue.public_code}:bdayDismissed`;
+
+  async function saveBirthday(val: string) {
+    if (!customerId) return;
+    setBdayBusy(true);
+    setBdayErr(null);
+    try {
+      if (demo) { setBday(val); setBdayOpen(false); return; }
+      const r = await fetch("/api/guest-birthday", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ venueCode: venue.public_code, customerId, birthday: val }) });
+      const j = await r.json();
+      if (j.ok) { setBday(val); setBdayOpen(false); }
+      else setBdayErr(j.error || "Napaka pri shranjevanju.");
+    } catch { setBdayErr("Napaka pri povezavi."); }
+    finally { setBdayBusy(false); }
+  }
+  // »Ne zdaj« — samodejni popup se ne prikaže več; gost ga lahko še vedno odpre prek gumba na kartici
+  function dismissBirthday() {
+    try { localStorage.setItem(bdayDismissKey, "1"); } catch {}
+    setBdayOpen(false);
+  }
+  // samodejno odpri, ko gost doseže prag (in ni bilo ročno zaprto)
+  useEffect(() => {
+    if (!bdayEligible) return;
+    let dismissed = false;
+    try { dismissed = localStorage.getItem(bdayDismissKey) === "1"; } catch {}
+    if (!dismissed) setBdayOpen(true);
+  }, [bdayEligible, bdayDismissKey]);
 
   useEffect(() => {
     // deep-link: ?c=<customerId> odpre to stranko (npr. magic link iz maila / demo na telefonu);
@@ -326,6 +363,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
       if (j.ok) {
         setPoints(j.totalPoints);
         setStamps(j.stamps ?? 0);
+        setScanCount((n) => n + 1);
         setAwarded(j.pointsAwarded);
         // 1. skeniran račun aktivira welcome kupon (ki je bil na čakanju)
         let nextCoupons = coupons.map((c) => ({ ...c, pending: false }));
@@ -691,6 +729,14 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
                 <div style={{ fontSize: 13.5, lineHeight: 1.4, color: "#9A8F80" }}>{t.noCouponsYet}</div>
               </div>
             )}
+            {/* ROJSTNI DAN — vstopni gumb (lastnik vklopi + gost dosegel prag skeniranih računov) */}
+            {bdayEligible && (
+              <button onClick={() => setBdayOpen(true)} className="flex items-center" style={{ gap: 12, width: "100%", textAlign: "left", cursor: "pointer", background: `linear-gradient(135deg,${tintLight},${tintMed})`, border: "1px solid #EFE6D6", borderRadius: 18, padding: 15, fontFamily: JAK }}>
+                <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 13, background: "#fff", flexShrink: 0, fontSize: 22 }}>🎁</div>
+                <div className="min-w-0 flex-1"><div style={{ fontWeight: 800, fontSize: 14.5, color: INK }}>Dodaj rojstni dan</div><div style={{ fontSize: 12, fontWeight: 600, color: accentDeep }}>Za darilo na račun hiše 🎂</div></div>
+                <span style={{ fontSize: 20, color: accentDeep, flexShrink: 0 }}>›</span>
+              </button>
+            )}
             {/* NAGRADE ZA TOČKE — v desnem stolpcu */}
             {pointRewards.length > 0 && (
               <div style={{ marginTop: 10 }}>
@@ -744,7 +790,48 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
           onClose={() => setRedeemReward(null)}
         />
       )}
+      {bdayOpen && <BirthdayPrompt accent={brand} busy={bdayBusy} err={bdayErr} onSave={saveBirthday} onClose={dismissBirthday} />}
     </main>
+  );
+}
+
+// Rojstno-dnevni popup: na telefonu spodnja pola (bottom sheet), na računalniku sredinsko okno.
+function BirthdayPrompt({ accent, busy, err, onSave, onClose }: { accent: string; busy: boolean; err: string | null; onSave: (val: string) => void; onClose: () => void }) {
+  const [d, setD] = useState("");
+  const [m, setM] = useState("");
+  const months = ["januar", "februar", "marec", "april", "maj", "junij", "julij", "avgust", "september", "oktober", "november", "december"];
+  const valid = !!d && !!m;
+  const sel: React.CSSProperties = { height: 54, borderRadius: 16, border: "1.5px solid #E4D9C7", background: "#fff", color: INK, fontFamily: JAK, fontSize: 15.5, fontWeight: 600, padding: "0 14px", outline: "none", width: "100%", boxSizing: "border-box" };
+  return (
+    <div onClick={onClose} className="fixed inset-0 z-[70] flex justify-center items-end lg:items-center" style={{ background: "rgba(26,18,13,0.5)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)", fontFamily: JAK, padding: "0 0 0 0" }}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full rounded-t-[28px] lg:rounded-[26px] lg:mb-0" style={{ maxWidth: 420, background: CREAM, padding: "22px 24px 30px", boxShadow: "0 -10px 40px rgba(42,36,29,0.25)", animation: "popIn 0.4s cubic-bezier(0.2,1.2,0.35,1) both" }}>
+        <div className="mx-auto lg:hidden" style={{ marginBottom: 18, height: 5, width: 44, borderRadius: 999, background: "#E0D2BC" }} />
+        <div className="flex items-start" style={{ gap: 14, marginBottom: 18 }}>
+          <div className="flex items-center justify-center" style={{ width: 52, height: 52, borderRadius: 15, background: accent, flexShrink: 0, fontSize: 26 }}>🎁</div>
+          <div style={{ lineHeight: 1.3 }}>
+            <div style={{ fontWeight: 800, fontSize: 19, letterSpacing: "-0.01em" }}>Darilo na tvoj rojstni dan</div>
+            <div style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.5, marginTop: 3 }}>Povej nam datum in vsako leto te čaka presenečenje na račun hiše.</div>
+          </div>
+        </div>
+        <div className="flex" style={{ gap: 10 }}>
+          <label className="flex flex-col" style={{ gap: 6, width: 96 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: "#6E6253" }}>Dan</span>
+            <select value={d} onChange={(e) => setD(e.target.value)} style={sel}><option value="">–</option>{Array.from({ length: 31 }, (_, i) => <option key={i} value={String(i + 1)}>{i + 1}</option>)}</select>
+          </label>
+          <label className="flex flex-1 flex-col" style={{ gap: 6 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: "#6E6253" }}>Mesec</span>
+            <select value={m} onChange={(e) => setM(e.target.value)} style={sel}><option value="">Izberi …</option>{months.map((mo, i) => <option key={i} value={String(i + 1)}>{mo}</option>)}</select>
+          </label>
+        </div>
+        <div className="flex items-center" style={{ gap: 8, marginTop: 14, background: "#FBEFD6", borderRadius: 12, padding: "11px 14px" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" style={{ fill: "none", stroke: "#B4781E", strokeWidth: 2, flexShrink: 0 }}><circle cx="12" cy="12" r="9" /><path d="M12 11v5" strokeLinecap="round" /><circle cx="12" cy="7.6" r="0.6" fill="#B4781E" stroke="none" /></svg>
+          <span style={{ fontSize: 12.5, color: "#8A6414", lineHeight: 1.4 }}>Samo dan in mesec — leta ne potrebujemo.</span>
+        </div>
+        {err && <div style={{ marginTop: 12, borderRadius: 12, padding: "10px 14px", fontSize: 13, fontWeight: 600, background: "rgba(196,98,61,0.12)", color: "#A83E1F" }}>{err}</div>}
+        <button onClick={() => valid && onSave(`${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`)} disabled={!valid || busy} style={{ marginTop: 18, height: 54, width: "100%", border: "none", borderRadius: 16, background: valid ? INK : "#E3D9C8", color: valid ? PAPER : "#A99C86", fontFamily: JAK, fontSize: 15.5, fontWeight: 700, cursor: valid && !busy ? "pointer" : "default", opacity: busy ? 0.6 : 1 }}>{busy ? "Shranjujem …" : "Shrani in prevzemi darilo 🎁"}</button>
+        <button onClick={onClose} style={{ marginTop: 8, height: 42, width: "100%", border: "none", background: "none", color: "#9A8F80", fontFamily: JAK, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Ne zdaj</button>
+      </div>
+    </div>
   );
 }
 

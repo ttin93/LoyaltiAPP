@@ -135,6 +135,10 @@ export async function updateVenueSettings(formData: FormData) {
     patch.scan_cooldown_minutes = Math.max(0, Number(formData.get("scan_cooldown_minutes")) || 0);
   if (formData.has("google_review_url"))
     patch.google_review_url = String(formData.get("google_review_url")).trim() || null;
+  if (formData.has("birthday_prompt_enabled"))
+    patch.birthday_prompt_enabled = formData.get("birthday_prompt_enabled") === "1";
+  if (formData.has("birthday_prompt_min_scans"))
+    patch.birthday_prompt_min_scans = Math.min(50, Math.max(0, Number(formData.get("birthday_prompt_min_scans")) || 0));
   if (formData.has("language")) patch.language = String(formData.get("language")) || "sl";
   if (formData.has("davcna_stevilka")) {
     const dav = String(formData.get("davcna_stevilka")).replace(/\D/g, "").slice(0, 8);

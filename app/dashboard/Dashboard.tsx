@@ -106,7 +106,7 @@ function WheelMini({ segments, winner, accent }: { segments: WheelSegment[]; win
   );
 }
 
-export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail, isAdmin = false, ownerPlan, billingVenue, access, scanCount = 0, customerCount = 0, dailyScans = [], hourlyScans = [], emailLog = [] }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string; isAdmin?: boolean; ownerPlan: PlanKey; billingVenue: Venue; access: Access; scanCount?: number; customerCount?: number; dailyScans?: { day: string; cnt: number }[]; hourlyScans?: { hour: number; cnt: number }[]; emailLog?: { id: string; kind: string; created_at: string; customers: { email: string | null } | null }[] }) {
+export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail, isAdmin = false, ownerPlan, billingVenue, access, scanCount = 0, customerCount = 0, birthdayCount = 0, dailyScans = [], hourlyScans = [], emailLog = [] }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string; isAdmin?: boolean; ownerPlan: PlanKey; billingVenue: Venue; access: Access; scanCount?: number; customerCount?: number; birthdayCount?: number; dailyScans?: { day: string; cnt: number }[]; hourlyScans?: { hour: number; cnt: number }[]; emailLog?: { id: string; kind: string; created_at: string; customers: { email: string | null } | null }[] }) {
   const router = useRouter();
   const [sec, setSec] = useState("pregled");
   const [roiSpend, setRoiSpend] = useState(4); // povpr. račun za ROI oceno (nastavljiv)
@@ -129,6 +129,8 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   const [sWindow, setSWindow] = useState(String(venue.scan_window_hours));
   const [sCooldown, setSCooldown] = useState(String((venue as { scan_cooldown_minutes?: number }).scan_cooldown_minutes ?? 0));
   const [sGoogle, setSGoogle] = useState(venue.google_review_url ?? "");
+  const [bdayEnabled, setBdayEnabled] = useState(!!(venue as { birthday_prompt_enabled?: boolean }).birthday_prompt_enabled);
+  const [bdayMinScans, setBdayMinScans] = useState(String((venue as { birthday_prompt_min_scans?: number }).birthday_prompt_min_scans ?? 5));
   const [wheel, setWheel] = useState<WheelConfig>(() => (venue.wheel_config && Array.isArray(venue.wheel_config.segments) && venue.wheel_config.segments.length ? venue.wheel_config : DEFAULT_WHEEL));
   function patchWheel(p: Partial<WheelConfig>) { setWheel((w) => ({ ...w, ...p })); }
   function setSeg(i: number, p: Partial<WheelSegment>) { setWheel((w) => ({ ...w, segments: w.segments.map((s, j) => (j === i ? { ...s, ...p } : s)) })); }
@@ -906,6 +908,33 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                       <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Google povezava za ocene</span><input value={sGoogle} onChange={(e) => setSGoogle(e.target.value)} type="url" placeholder="https://g.page/r/…" style={inp} /><span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Kamor pošljemo zadovoljne goste (4–5★). Najdeš jo v Google Business profilu → »Pridobi več ocen«.</span></label>
                       <label className="flex flex-col" style={{ gap: 5 }}><span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Jezik gostove strani</span><select name="language" value={lang} onChange={(e) => setLang(e.target.value)} style={inp}>{LANGS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Jezik celotnega flowa za goste. Prevodi (EN/HR/SR/BS/DE) se vklopijo kmalu — zaenkrat se nastavitev shrani.</span></label>
                       <button onClick={() => { const fd = new FormData(); fd.set("name", sName); fd.set("brand_color", settingsColor); fd.set("points_per_visit", sPoints); fd.set("stamp_goal", sGoal); fd.set("scan_window_hours", sWindow); fd.set("scan_cooldown_minutes", sCooldown); fd.set("google_review_url", sGoogle); fd.set("language", lang); run(() => updateVenueSettings(fd), "Nastavitve shranjene."); }} style={{ marginTop: 4, height: 48, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14.5, fontWeight: 700, cursor: "pointer", alignSelf: "flex-start", padding: "0 22px" }}>Shrani</button>
+                    </div>
+                    {/* rojstni dan gostov (opt-in popup) */}
+                    <div style={{ ...card, display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div className="flex items-center" style={{ gap: 10 }}>
+                        <div className="flex items-center justify-center" style={{ width: 38, height: 38, borderRadius: 11, background: bdayEnabled ? AMBER : "#F1E8D9", flexShrink: 0, fontSize: 19 }}>🎁</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 700, fontSize: 15 }}>Rojstni dan gostov</div>
+                          <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.4 }}>Gost neobvezno vpiše dan in mesec. Za rojstni dan mu nato pošlješ darilo prek avtomatizacije »Rojstni dan gosta«.</div>
+                        </div>
+                        <button type="button" role="switch" aria-checked={bdayEnabled} onClick={() => setBdayEnabled((v) => !v)} style={{ width: 50, height: 30, borderRadius: 999, border: "none", background: bdayEnabled ? GREEN : "#D9CDBA", position: "relative", cursor: "pointer", flexShrink: 0, transition: "background .15s" }}>
+                          <span style={{ position: "absolute", top: 3, left: bdayEnabled ? 23 : 3, width: 24, height: 24, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.25)", transition: "left .15s" }} />
+                        </button>
+                      </div>
+                      {bdayEnabled && (
+                        <>
+                          <label className="flex flex-col" style={{ gap: 5 }}>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>Prag: koliko računov mora gost skenirati, da se popup prikaže</span>
+                            <input value={bdayMinScans} onChange={(e) => setBdayMinScans(e.target.value)} type="number" min={0} max={50} style={{ ...inp, maxWidth: 120 }} />
+                            <span style={{ fontSize: 11.5, color: "#9A8F80", lineHeight: 1.4 }}>Popup se ne prikaže novim gostom — šele ko so zvesti (npr. 5 skeniranih računov). Na telefonu se pokaže spodaj, na računalniku kot okno. Gost lahko vpiše samo enkrat.</span>
+                          </label>
+                          <div className="flex items-center" style={{ gap: 8, background: "#F8F2EA", borderRadius: 12, padding: "10px 14px" }}>
+                            <span style={{ fontWeight: 800, fontSize: 20, color: INK }}>{birthdayCount}</span>
+                            <span style={{ fontSize: 13, color: MUTED }}>gostov je že vpisalo rojstni dan</span>
+                          </div>
+                        </>
+                      )}
+                      <button onClick={() => { const fd = new FormData(); fd.set("birthday_prompt_enabled", bdayEnabled ? "1" : "0"); fd.set("birthday_prompt_min_scans", bdayMinScans); run(() => updateVenueSettings(fd), "Rojstni dan shranjen."); }} style={{ height: 46, border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 13.5, fontWeight: 700, cursor: "pointer", alignSelf: "flex-start", padding: "0 20px" }}>Shrani</button>
                     </div>
                     {curPlan === "scale" && (
                       <div style={{ ...card, display: "flex", flexDirection: "column", gap: 12 }}>

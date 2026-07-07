@@ -112,11 +112,20 @@ export async function POST(req: Request) {
     const stamps = row?.stamps ?? 0;
     const cardCompleted = !!row?.card_completed;
 
-    // best-effort e-pošta (no-op brez RESEND); ne blokira odgovora
+    // best-effort e-pošta (no-op brez RESEND); ne blokira odgovora.
+    // VARČEVANJE + boljša izkušnja: "napredek" mail pošljemo SAMO ob mejnikih
+    // (1 žig do polne kartice ALI ravnokar odklenjena točkovna nagrada), NE ob vsakem skenu.
     const cardRewardName = stampReward?.name ?? "Brezplačna kava";
     const next = nextRewardProgress(Number(total), pointRewards);
+    const oneStampAway = Number(stamps) === stampGoal - 1;
+    const unlockedPointReward = pointRewards.some((r) => {
+      const req = Number((r as { points_required?: number }).points_required ?? 0);
+      return req > 0 && req > Number(total) - points && req <= Number(total);
+    });
     after(async () => {
-      await notifyPoints(venue, customer.email, { points, total: Number(total), toReward: next?.remaining ?? 0, stampsFilled: Number(stamps), rewardName: cardRewardName });
+      if (oneStampAway || unlockedPointReward) {
+        await notifyPoints(venue, customer.email, { points, total: Number(total), toReward: next?.remaining ?? 0, stampsFilled: Number(stamps), rewardName: cardRewardName });
+      }
       if (cardCompleted) await notifyCouponEarned(venue, customer.email, { rewardName: cardRewardName });
     });
 

@@ -39,6 +39,11 @@ export type SATotals = {
   reviewAvg: number | null;
   reviewCount: number;
   onTrial: number;
+  emailsTotal: number;
+  emails30: number;
+  emails7: number;
+  emailsToday: number;
+  emailsByKind: { kind: string; count: number }[];
 };
 
 export type SADay = { date: string; label: string; count: number };
@@ -65,7 +70,7 @@ export default async function SuperadminPage() {
 
   const db = getServiceClient();
 
-  const [venuesRes, customersRes, scansRes, redemptionsRes, reviewsRes, usersRes] =
+  const [venuesRes, customersRes, scansRes, redemptionsRes, reviewsRes, usersRes, emailsRes] =
     await Promise.all([
       db.from("venues").select("*").order("created_at", { ascending: false }),
       db.from("customers").select("id, venue_id, created_at"),
@@ -77,6 +82,7 @@ export default async function SuperadminPage() {
       db.from("redemptions").select("id, venue_id, created_at").limit(8000),
       db.from("reviews").select("id, venue_id, stars, created_at").limit(8000),
       db.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+      db.from("email_log").select("kind, created_at").order("created_at", { ascending: false }).limit(20000),
     ]);
 
   const venues = (venuesRes.data ?? []) as Venue[];
@@ -85,10 +91,14 @@ export default async function SuperadminPage() {
   const redemptions = (redemptionsRes.data ?? []) as { id: string; venue_id: string; created_at: string }[];
   const reviews = (reviewsRes.data ?? []) as { id: string; venue_id: string; stars: number; created_at: string }[];
   const users = usersRes.data?.users ?? [];
+  const emails = (emailsRes.data ?? []) as { kind: string; created_at: string }[];
 
   const now = new Date();
   const d30 = new Date(now.getTime() - 30 * 864e5);
   const d7 = new Date(now.getTime() - 7 * 864e5);
+  const dToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const emailKind = new Map<string, number>();
+  for (const e of emails) emailKind.set(e.kind, (emailKind.get(e.kind) || 0) + 1);
 
   const emailById = new Map(users.map((u) => [u.id, u.email ?? null]));
 
@@ -153,6 +163,11 @@ export default async function SuperadminPage() {
       const t = v.trial_ends_at ? new Date(v.trial_ends_at).getTime() : 0;
       return t > now.getTime() && isPaying(v.plan, v.subscription_status) === false;
     }).length,
+    emailsTotal: emails.length,
+    emails30: emails.filter((e) => new Date(e.created_at) >= d30).length,
+    emails7: emails.filter((e) => new Date(e.created_at) >= d7).length,
+    emailsToday: emails.filter((e) => new Date(e.created_at) >= dToday).length,
+    emailsByKind: [...emailKind.entries()].map(([kind, count]) => ({ kind, count })).sort((a, b) => b.count - a.count),
   };
 
   // 30-dnevna platformna serija skenov

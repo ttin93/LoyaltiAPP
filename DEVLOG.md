@@ -49,6 +49,10 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-07-07 — seja 69 (email varčevanje + superadmin email tracker)
+- **Varčevanje maila:** "napredek/točke" mail ([`scan/route.ts`](app/api/scan/route.ts)) se pošlje SAMO ob mejniku (1 žig do polne kartice ALI ravnokar odklenjena točkovna nagrada), NE ob vsakem skenu. Prej: ~80 mailov/dan na prometno kavarno (bi požrl Resend free 100/dan). Ostalo (welcome/coupon/win-back/ocene) nespremenjeno.
+- **Superadmin email tracker** ([`superadmin/page.tsx`](app/superadmin/page.tsx) + Superadmin.tsx): nov KPI "Poslani maili" + kartica "E-pošta — poslano" (danes/7/30/skupaj z Resend limiti free 100/dan, 3.000/mes; opozorilo ob ≥90/dan) + razčlenitev po vrstah. Bere iz `email_log`. `tsc` ✅.
+
 ### 2026-07-07 — seja 68 (avtomatizacije PREVERJENE v živo + dnevnik pošiljanja)
 - **E2E test avtomatizacij na produkciji (PrMaticku, samo Tin kot gost):** ročni cron → `sent: 5` (pogrešamo te ob točno 21 dneh, obletnica 365 dni, rojstni dan gosta, rojstni dan lokala, opomnik naročnine ~3 dni). **Dedup potrjen** (2. zagon `sent: 0`). Cleanup narejen. Opomba: cron na `https://www.loyavi.app/...` (apex redirecta na www → curl izgubi Authorization header na cross-host redirectu).
 - **Varnostni najdbi:** (1) PrTinu je imel VKLOPLJENE avtomatizacije nad 501 fake gosti z realno izgledajočimi gmail naslovi — 12.7. bi cron začel pošiljati neznancem → **izklopljeno**; email_log je bil 0, nič ni ušlo. (2) Demo lokal (public_code `demo`) se je v bazi še imenoval "Kavarna Moka" (PDF QR!) → preimenovan v "Kavarna Lipa". (3) Testni gost imel tin.suklje@ (brez 93) → popravljen.

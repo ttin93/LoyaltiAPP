@@ -19,6 +19,13 @@ const BG = "#E9E2D6";
 const BORD = "#E4D8C4";
 const JAK = "var(--font-jakarta), sans-serif";
 
+const EMAIL_KIND_LABEL: Record<string, string> = {
+  welcome: "Dobrodošlica gosta", points: "Napredek / točke", coupon_earned: "Kupon zaslužen",
+  review_thanks: "Hvala za oceno", campaign: "Kampanja (ročna)", we_miss_you: "Pogrešamo te",
+  anniversary: "Obletnica", birthday_guest: "Rojstni dan gosta", birthday_venue: "Rojstni dan lokala",
+  admin_expiring: "Opomnik naročnine", admin_purchase: "Potrditev nakupa", owner_welcome: "Dobrodošlica lastnika",
+};
+
 const LANGS = [
   { v: "sl", l: "Slovenščina" },
   { v: "en", l: "English" },
@@ -178,6 +185,7 @@ function Pregled({
         <Kpi label="Skeni · 30 dni" value={totals.scans30.toLocaleString("sl")} accent={CORAL} />
         <Kpi label="Unovčenja" value={totals.redemptions.toLocaleString("sl")} />
         <Kpi label="Povpr. ocena" value={totals.reviewAvg != null ? `${totals.reviewAvg} ★` : "—"} sub={`${totals.reviewCount} ocen`} accent={AMBER} />
+        <Kpi label="Poslani maili" value={totals.emailsTotal.toLocaleString("sl")} sub={`${totals.emails30} · 30 dni`} accent={CORAL} />
       </div>
 
       {/* CHART */}
@@ -204,6 +212,45 @@ function Pregled({
             ))}
           </div>
         </div>
+      </Card>
+
+      {/* E-POŠTA — poraba (Resend limit: free 100/dan, 3.000/mes) */}
+      <Card>
+        <div className="flex items-center justify-between" style={{ marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+          <div style={{ fontWeight: 800, fontSize: 16 }}>E-pošta — poslano</div>
+          <span className="flex items-center" style={{ height: 24, padding: "0 11px", borderRadius: 999, background: totals.emailsToday >= 90 ? "rgba(196,98,61,0.16)" : "rgba(94,127,82,0.14)", color: totals.emailsToday >= 90 ? "#A8431F" : "#3E5536", fontSize: 11.5, fontWeight: 800 }}>
+            {totals.emailsToday} / 100 danes {totals.emailsToday >= 90 ? "⚠ blizu limita" : ""}
+          </span>
+        </div>
+        <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12, marginBottom: 16 }}>
+          {([["Danes", totals.emailsToday, "/ 100 (free)"], ["7 dni", totals.emails7, ""], ["30 dni", totals.emails30, "/ 3.000 (free)"], ["Skupaj", totals.emailsTotal, ""]] as const).map(([l, v, sub]) => (
+            <div key={l} style={{ background: BG, borderRadius: 14, padding: "12px 14px" }}>
+              <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 3 }}>{l}</div>
+              <div style={{ fontWeight: 800, fontSize: 22 }}>{v.toLocaleString("sl")}</div>
+              {sub && <div style={{ fontSize: 10.5, color: MUTED }}>{sub}</div>}
+            </div>
+          ))}
+        </div>
+        {totals.emailsByKind.length === 0 ? (
+          <Empty>Še ni poslanih e-sporočil.</Empty>
+        ) : (
+          <div className="flex flex-col" style={{ gap: 8 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: MUTED }}>Po vrstah</div>
+            {totals.emailsByKind.map((e) => {
+              const label = EMAIL_KIND_LABEL[e.kind] || e.kind;
+              const pct = totals.emailsTotal ? Math.round((e.count / totals.emailsByKind[0].count) * 100) : 0;
+              return (
+                <div key={e.kind} className="flex items-center" style={{ gap: 10 }}>
+                  <span style={{ fontSize: 13, color: INK, width: 150, flexShrink: 0 }}>{label}</span>
+                  <div style={{ flex: 1, height: 8, background: BG, borderRadius: 99, overflow: "hidden" }}>
+                    <div style={{ width: `${pct}%`, height: "100%", background: AMBER, borderRadius: 99 }} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: INK, width: 44, textAlign: "right", flexShrink: 0 }}>{e.count.toLocaleString("sl")}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Card>
 
       {/* TOP + NAJNOVEJŠI */}

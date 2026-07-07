@@ -27,7 +27,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const venue = venues.find((v) => v.id === sp?.v) || venues[0];
 
-  const [{ data: rewards }, { data: customers }, { data: scans }, { data: redemptions }, { data: reviews }, { data: grants }, scanCountRes, customerCountRes, { data: dailyScans }, { data: hourlyScans }] =
+  const [{ data: rewards }, { data: customers }, { data: scans }, { data: redemptions }, { data: reviews }, { data: grants }, scanCountRes, customerCountRes, { data: dailyScans }, { data: hourlyScans }, { data: emailLog }] =
     await Promise.all([
       db.from("rewards").select("*").eq("venue_id", venue.id).order("points_required"),
       db.from("customers").select("*").eq("venue_id", venue.id).order("points", { ascending: false }),
@@ -60,6 +60,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       db.from("customers").select("id", { count: "exact", head: true }).eq("venue_id", venue.id),
       db.rpc("venue_daily_scans", { p_venue_id: venue.id, p_days: 365 }),
       db.rpc("venue_hourly_scans", { p_venue_id: venue.id, p_days: 365 }),
+      // dnevnik pošiljanja (za Marketing → Dnevnik)
+      db.from("email_log").select("id, kind, created_at, customers(email)").eq("venue_id", venue.id).order("created_at", { ascending: false }).limit(150),
     ]);
   const scanCount = scanCountRes.count ?? (scans?.length ?? 0);
   const customerCount = customerCountRes.count ?? (customers?.length ?? 0);
@@ -83,6 +85,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       customerCount={customerCount}
       dailyScans={(dailyScans ?? []) as { day: string; cnt: number }[]}
       hourlyScans={(hourlyScans ?? []) as { hour: number; cnt: number }[]}
+      emailLog={(emailLog ?? []) as unknown as { id: string; kind: string; created_at: string; customers: { email: string | null } | null }[]}
     />
   );
 }

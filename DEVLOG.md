@@ -49,6 +49,11 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-07-07 — seja 68 (avtomatizacije PREVERJENE v živo + dnevnik pošiljanja)
+- **E2E test avtomatizacij na produkciji (PrMaticku, samo Tin kot gost):** ročni cron → `sent: 5` (pogrešamo te ob točno 21 dneh, obletnica 365 dni, rojstni dan gosta, rojstni dan lokala, opomnik naročnine ~3 dni). **Dedup potrjen** (2. zagon `sent: 0`). Cleanup narejen. Opomba: cron na `https://www.loyavi.app/...` (apex redirecta na www → curl izgubi Authorization header na cross-host redirectu).
+- **Varnostni najdbi:** (1) PrTinu je imel VKLOPLJENE avtomatizacije nad 501 fake gosti z realno izgledajočimi gmail naslovi — 12.7. bi cron začel pošiljati neznancem → **izklopljeno**; email_log je bil 0, nič ni ušlo. (2) Demo lokal (public_code `demo`) se je v bazi še imenoval "Kavarna Moka" (PDF QR!) → preimenovan v "Kavarna Lipa". (3) Testni gost imel tin.suklje@ (brez 93) → popravljen.
+- **Dnevnik pošiljanja za lastnika:** Marketing → nov zavihek **Dnevnik** — vsa poslana sporočila (vrsta + prejemnik + čas). Beleženje razširjeno: [`lib/notify.ts`](lib/notify.ts) `logEmail()` za welcome/points/coupon_earned/review_thanks, kampanje v [`app/actions.ts`](app/actions.ts) (kind `campaign`); cron je že logiral. Fetch v `dashboard/page.tsx` (email_log + customers embed, FK obstaja, join preverjen v živo). `tsc` ✅.
+
 ### 2026-07-07 — seja 67 (PDF v3: knjižna slovenščina + angleška različica)
 - **Jezikovni pregled PDF-ja** (user: slovnica kritična): celotno besedilo prepisano v knjižno slovenščino z **vikanjem** (prej mešano tikanje): "ocene na Googlu" (ne "Google ocene"), "QR-koda" (vezaj), "brezplačno" (ne "zastonj"), "kadar koli", "neposredni marketing", "3-krat"… Vsi overflow-i pokrpani, ★ vektorsko.
 - **Angleška različica**: [`marketing/Loyavi-presentation-EN.pdf`](marketing/Loyavi-presentation-EN.pdf) — ista postavitev, naravna angleška prodajna kopija.

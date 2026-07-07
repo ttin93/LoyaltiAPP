@@ -106,7 +106,7 @@ function WheelMini({ segments, winner, accent }: { segments: WheelSegment[]; win
   );
 }
 
-export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail, isAdmin = false, ownerPlan, billingVenue, access, scanCount = 0, customerCount = 0, dailyScans = [], hourlyScans = [] }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string; isAdmin?: boolean; ownerPlan: PlanKey; billingVenue: Venue; access: Access; scanCount?: number; customerCount?: number; dailyScans?: { day: string; cnt: number }[]; hourlyScans?: { hour: number; cnt: number }[] }) {
+export default function Dashboard({ venue, venues = [], rewards, customers, scans, redemptions, reviews = [], grants = [], ownerEmail, isAdmin = false, ownerPlan, billingVenue, access, scanCount = 0, customerCount = 0, dailyScans = [], hourlyScans = [], emailLog = [] }: { venue: Venue; venues?: { id: string; name: string }[]; rewards: Reward[]; customers: Customer[]; scans: ScanRow[]; redemptions: RedemptionRow[]; reviews?: ReviewRow[]; grants?: GrantRow[]; ownerEmail: string; isAdmin?: boolean; ownerPlan: PlanKey; billingVenue: Venue; access: Access; scanCount?: number; customerCount?: number; dailyScans?: { day: string; cnt: number }[]; hourlyScans?: { hour: number; cnt: number }[]; emailLog?: { id: string; kind: string; created_at: string; customers: { email: string | null } | null }[] }) {
   const router = useRouter();
   const [sec, setSec] = useState("pregled");
   const [roiSpend, setRoiSpend] = useState(4); // povpr. račun za ROI oceno (nastavljiv)
@@ -189,7 +189,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
   const [couponOn, setCouponOn] = useState(false);
   const [couponName, setCouponName] = useState("Brezplačna kava");
   const [segMinPts, setSegMinPts] = useState(100);
-  const [mktTab, setMktTab] = useState<"campaign" | "auto">("campaign");
+  const [mktTab, setMktTab] = useState<"campaign" | "auto" | "log">("campaign");
   const [autos, setAutos] = useState<Automations>(() => buildAutomations((venue as { automations?: Automations | null }).automations));
   const setAuto = (key: string, patch: Partial<Automation>) => setAutos((a) => ({ ...a, [key]: { ...a[key], ...patch } }));
   const autoCount = Object.values(autos).filter((a) => a.enabled).length;
@@ -592,7 +592,7 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
 
                 {sec === "marketing" && (
                   <div className="flex flex-col" style={{ gap: 16 }}>
-                    <div className="flex" style={{ background: "#F1E8D9", borderRadius: 12, padding: 4, maxWidth: 380 }}>{([["campaign", "Enkratna kampanja"], ["auto", `Avtomatizacije${autoCount ? ` · ${autoCount}` : ""}`]] as const).map(([k, l]) => { const locked = k === "auto" && !gate.automations; return <button key={k} onClick={() => setMktTab(k)} style={{ flex: 1, height: 38, border: "none", borderRadius: 9, background: mktTab === k && !locked ? "#fff" : "transparent", color: locked ? "#B4781E" : mktTab === k ? INK : "#9A8F80", fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{locked ? "🔒 " : ""}{l}</button>; })}</div>
+                    <div className="flex" style={{ background: "#F1E8D9", borderRadius: 12, padding: 4, maxWidth: 480 }}>{([["campaign", "Enkratna kampanja"], ["auto", `Avtomatizacije${autoCount ? ` · ${autoCount}` : ""}`], ["log", "Dnevnik"]] as const).map(([k, l]) => { const locked = k === "auto" && !gate.automations; return <button key={k} onClick={() => setMktTab(k)} style={{ flex: 1, height: 38, border: "none", borderRadius: 9, background: mktTab === k && !locked ? "#fff" : "transparent", color: locked ? "#B4781E" : mktTab === k ? INK : "#9A8F80", fontFamily: JAK, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>{locked ? "🔒 " : ""}{l}</button>; })}</div>
                     {mktTab === "campaign" && (
                   <div className="grid gap-3.5 lg:grid-cols-[1.4fr_1fr]">
                     <div style={{ ...card, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -637,6 +637,34 @@ export default function Dashboard({ venue, venues = [], rewards, customers, scan
                     </div>
                   </div>
                     )}
+                    {mktTab === "log" && (() => {
+                      const KIND: Record<string, [string, string]> = {
+                        welcome: ["Dobrodošlica", GREEN], points: ["Točke za obisk", "#B4862F"], coupon_earned: ["Kupon zaslužen", CORAL],
+                        review_thanks: ["Hvala za oceno", AMBER], campaign: ["Kampanja", INK], we_miss_you: ["Pogrešamo te", CORAL],
+                        anniversary: ["Obletnica", "#8E5BA6"], birthday_guest: ["Rojstni dan gosta", "#B4862F"], birthday_venue: ["Rojstni dan lokala", AMBER],
+                        admin_expiring: ["Opomnik naročnine", MUTED],
+                      };
+                      const fmtTs = (iso: string) => new Date(iso).toLocaleString("sl-SI", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+                      return (
+                        <div style={{ ...card, display: "flex", flexDirection: "column", gap: 4, maxWidth: 760 }}>
+                          <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
+                            <span style={{ fontWeight: 700, fontSize: 15 }}>Dnevnik poslanih sporočil</span>
+                            <span style={{ fontSize: 12, color: "#9A8F80" }}>zadnjih {emailLog.length}</span>
+                          </div>
+                          {emailLog.length === 0 && <span style={{ fontSize: 13.5, color: "#9A8F80" }}>Še ni poslanih sporočil. Tu se bodo beležila avtomatska in kampanjska sporočila.</span>}
+                          {emailLog.map((e) => {
+                            const [label, kcol] = KIND[e.kind] || [e.kind, MUTED];
+                            return (
+                              <div key={e.id} className="flex items-center" style={{ gap: 10, padding: "9px 2px", borderBottom: "1px solid #F5EEE0" }}>
+                                <span className="flex items-center" style={{ height: 24, padding: "0 10px", borderRadius: 999, background: `${kcol}1A`, color: kcol, fontSize: 11.5, fontWeight: 800, flexShrink: 0, whiteSpace: "nowrap" }}>{label}</span>
+                                <span className="flex-1 truncate" style={{ fontSize: 13, fontWeight: 600, color: INK }}>{e.customers?.email || (e.kind === "birthday_venue" ? "vsi gostje z e-pošto" : "lastnik lokala")}</span>
+                                <span style={{ fontSize: 12, color: "#9A8F80", flexShrink: 0 }}>{fmtTs(e.created_at)}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                     {mktTab === "auto" && !gate.automations && lockCard("Marketing avtomatizacije", "Win-back, rojstni dan in obletnica — e-pošta se pošlje SAMA, ko se gost ne vrne. Največji vzvod za ponovne obiske. Odkleneš v Grow.")}
                     {mktTab === "auto" && gate.automations && (
                       <div className="flex flex-col" style={{ gap: 14, maxWidth: 760 }}>

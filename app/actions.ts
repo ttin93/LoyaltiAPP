@@ -262,6 +262,14 @@ export async function sendGuestCampaign(args: { subject: string; message: string
     html: emailCampaign({ venueName: venue.name, brandColor: venue.brand_color, ctaUrl }, { heading: args.subject, message: args.message }),
   }));
   const { sent, failed } = await sendBatch(items, byo ? { apiKey: byo.apiKey, from: byo.from } : undefined);
+  // dnevnik pošiljanja (best-effort): zabeleži prejemnike kampanje
+  if (sent > 0) {
+    try {
+      const db = getServiceClient();
+      const { data: recips } = await db.from("customers").select("id").eq("venue_id", venue.id).in("email", emails);
+      if (recips?.length) await db.from("email_log").insert(recips.map((r) => ({ kind: "campaign", venue_id: venue.id, customer_id: r.id })));
+    } catch { /* dnevnik ne sme podreti kampanje */ }
+  }
   return { sent, failed, total: items.length };
 }
 

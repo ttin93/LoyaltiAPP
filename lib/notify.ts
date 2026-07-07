@@ -22,6 +22,18 @@ export function couponCode(v: { public_code?: string }) {
 function gBase(v: V) {
   return { venueName: v.name, brandColor: v.brand_color, ctaUrl: `${origin()}/p/${v.public_code}` };
 }
+/** Best-effort vpis v email_log (lastnikov dnevnik pošiljanja). Nikoli ne vrže. */
+async function logEmail(kind: string, venueId: string, customerEmail?: string | null) {
+  try {
+    const db = getServiceClient();
+    let customerId: string | null = null;
+    if (customerEmail) {
+      const { data } = await db.from("customers").select("id").eq("venue_id", venueId).eq("email", customerEmail).maybeSingle();
+      customerId = (data?.id as string) ?? null;
+    }
+    await db.from("email_log").insert({ kind, venue_id: venueId, customer_id: customerId });
+  } catch { /* dnevnik ne sme podreti pošiljanja */ }
+}
 
 // ── GOST ──────────────────────────────────────────────────────────────────
 export async function notifyWelcome(v: V, email?: string | null) {
@@ -32,7 +44,8 @@ export async function notifyWelcome(v: V, email?: string | null) {
     const { data: prs } = await db.from("rewards").select("name, points_required, image_url").eq("venue_id", v.id).eq("kind", "points").order("points_required", { ascending: true }).limit(5);
     const pointRewards = (prs || []).map((r) => ({ name: r.name as string, points: r.points_required as number, image: (r.image_url as string | null) || null }));
     const html = T.emailWelcome(gBase(v), { rewardName: (rw?.name as string) || "Brezplačna kava", stampsTotal: v.stamp_goal || 10, pointRewards });
-    await sendEmail({ to: email, subject: `Dobrodošel pri ${v.name}! 👋`, html, ...guestSender(v) });
+    const r = await sendEmail({ to: email, subject: `Dobrodošel pri ${v.name}! 👋`, html, ...guestSender(v) });
+    if (r.ok) await logEmail("welcome", v.id, email);
   } catch (e) { console.error("[notify welcome]", e); }
 }
 
@@ -40,7 +53,8 @@ export async function notifyPoints(v: V, email: string | null | undefined, d: { 
   if (!email || !canGuest(v)) return;
   try {
     const html = T.emailPoints(gBase(v), { points: d.points, totalPoints: d.total, toReward: d.toReward, stampsFilled: d.stampsFilled, stampsTotal: v.stamp_goal || 10, rewardName: d.rewardName });
-    await sendEmail({ to: email, subject: "Dobil si točke za obisk! ⭐", html, ...guestSender(v) });
+    const r = await sendEmail({ to: email, subject: "Dobil si točke za obisk! ⭐", html, ...guestSender(v) });
+    if (r.ok) await logEmail("points", v.id, email);
   } catch (e) { console.error("[notify points]", e); }
 }
 
@@ -48,7 +62,8 @@ export async function notifyCouponEarned(v: V, email: string | null | undefined,
   if (!email || !canGuest(v)) return;
   try {
     const html = T.emailCouponEarned(gBase(v), { rewardName: d.rewardName, couponCode: couponCode(v), stampsTotal: v.stamp_goal || 10 });
-    await sendEmail({ to: email, subject: `🎉 Čestitke! Zaslužil si ${d.rewardName}!`, html, ...guestSender(v) });
+    const r = await sendEmail({ to: email, subject: `🎉 Čestitke! Zaslužil si ${d.rewardName}!`, html, ...guestSender(v) });
+    if (r.ok) await logEmail("coupon_earned", v.id, email);
   } catch (e) { console.error("[notify coupon-earned]", e); }
 }
 
@@ -56,7 +71,8 @@ export async function notifyReviewThanks(v: V, email: string | null | undefined,
   if (!email || !canGuest(v)) return;
   try {
     const html = T.emailReviewThanks(gBase(v), { stars: d.stars, comment: d.comment });
-    await sendEmail({ to: email, subject: "⭐ Hvala za vašo oceno!", html, ...guestSender(v) });
+    const r = await sendEmail({ to: email, subject: "⭐ Hvala za vašo oceno!", html, ...guestSender(v) });
+    if (r.ok) await logEmail("review_thanks", v.id, email);
   } catch (e) { console.error("[notify review]", e); }
 }
 

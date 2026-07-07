@@ -522,7 +522,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
     const successMsg = cardCompleted
       ? t.couponInWallet(completedReward.toLowerCase())
       : hasCard
-        ? t.visitsLeft(visitsLeft, (stampReward?.name || "kave").toLowerCase())
+        ? t.visitsLeft(visitsLeft, stampReward?.name || "Brezplačna kava")
         : rewardReady ? t.canRedeem : t.pointsToReward(left);
     return (
       <main className="flex min-h-dvh w-full flex-col items-center justify-center" style={{ background: BG, fontFamily: JAK, color: INK, padding: 20 }}>
@@ -657,17 +657,17 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const visitsNote = hasCard
     ? stamps >= stampGoal
       ? t.cardFullActivate
-      : t.visitsLeft(visitsLeft, (stampReward?.name || "kave").toLowerCase())
+      : t.visitsLeft(visitsLeft, stampReward?.name || "Brezplačna kava")
     : rewardReady
       ? t.canRedeem
       : t.pointsToReward(left);
 
   const city = (venue as { city?: string | null }).city || null;
   return (
-    <main style={{ background: BG, fontFamily: JAK, color: INK, minHeight: "100dvh", overflowX: "hidden" }}>
-      <div className="lg:grid lg:h-dvh" style={{ gridTemplateColumns: "1fr minmax(440px,560px)" }}>
+    <main className="flex items-start justify-center lg:items-center lg:p-8" style={{ background: BG, fontFamily: JAK, color: INK, minHeight: "100dvh", overflowX: "hidden" }}>
+      <div className="w-full lg:grid lg:max-w-[1120px] lg:overflow-hidden lg:rounded-[28px] lg:border lg:border-[#E4D9C7] lg:shadow-[0_30px_70px_rgba(34,28,22,0.16)]" style={{ gridTemplateColumns: "1fr minmax(420px,500px)", background: "#fff" }}>
           {/* LEVO — welcome + statistika (na desktopu čez cel zaslon) */}
-          <div className="relative flex flex-col justify-center lg:h-dvh" style={{ background: `linear-gradient(160deg,${tintLight} 0%,${tintMed} 100%)`, padding: "clamp(30px,4vw,60px)", gap: 20, overflow: "hidden" }}>
+          <div className="relative flex flex-col justify-center" style={{ background: `linear-gradient(160deg,${tintLight} 0%,${tintMed} 100%)`, padding: "clamp(30px,4vw,52px)", gap: 20, overflow: "hidden" }}>
             <div aria-hidden style={{ position: "absolute", bottom: -50, right: -30, width: 200, height: 200, borderRadius: "50%", background: hexA(brand, 0.22) }} />
             <div className="relative flex items-center" style={{ gap: 12 }}>
               <div className="flex items-center justify-center" style={{ width: 52, height: 52, borderRadius: 17, background: venue.logo_url ? "#fff" : logoBg, color: PAPER, fontWeight: 800, fontSize: 24, overflow: "hidden" }}>{venue.logo_url ? <img src={venue.logo_url} alt={venue.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : (venue.name.trim().charAt(0) || "M").toUpperCase()}</div>
@@ -682,9 +682,9 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
             </div>
           </div>
 
-          {/* DESNO — kartonček + skeniraj + kuponi + nagrade (scroll na desktopu) */}
-          <div className="flex flex-col lg:h-dvh lg:overflow-y-auto" style={{ background: "#fff" }}>
-            <div className="flex w-full flex-col lg:my-auto" style={{ padding: "clamp(24px,3vw,40px)", gap: 16, boxSizing: "border-box" }}>
+          {/* DESNO — kartonček + skeniraj + kuponi + nagrade */}
+          <div className="flex flex-col" style={{ background: "#fff" }}>
+            <div className="flex w-full flex-col" style={{ padding: "clamp(24px,3vw,36px)", gap: 16, boxSizing: "border-box" }}>
             {/* kartonček / točke */}
             <div style={{ background: "#fff", borderRadius: 24, padding: "22px 22px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)", border: "1px solid #F1E8D9" }}>
               <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>

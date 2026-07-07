@@ -51,7 +51,8 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ### 2026-07-07 — seja 70 (Google login + geslo pravila; gost desktop full-screen; rojstni-dan opt-in)
 - **Geslo:** gost min 6 (prej 4), lastnik-registracija min 8 + številka. Google login je ŽE v kodi (AuthForm + SpinFlow prek Supabase OAuth) — rabi le konfiguracijo → vodič [`docs/GOOGLE-LOGIN.md`](docs/GOOGLE-LOGIN.md).
-- **Gost desktop** ([`GuestApp.tsx`](app/p/[public_code]/GuestApp.tsx)): full-screen edge-to-edge split (levo 720 welcome+stat polna višina, desno scroll s kartico+skeniraj+kuponi+nagradami). Konec lebdečih kartic na bež ozadju. Mobilno nespremenjeno.
+- **Gost desktop** ([`GuestApp.tsx`](app/p/[public_code]/GuestApp.tsx)): kohezivna **centrirana kartica** (max-w 1120, split levo welcome+stat / desno kartica+skeniraj+kuponi+nagrade, zaobljena+shadow, naravna višina). Prvi poskus je bil full-bleed `h-dvh` → na širokem ekranu OGROMNA prazna zelena ploskev; popravljeno na centrirano+omejeno (kot Mora). Mobilno = full-width zloženo.
+- **Slovnica:** `visitsLeft` je hardkodiral »do brezplačne {nagrada}« → pri nagradi »Brezplačna kava« = »do brezplačne brezplačna kava«. Popravljeno v vseh 4 jezikih na »do nagrade: {ime}« ([`lib/guestI18n.ts`](lib/guestI18n.ts) + klici brez `toLowerCase`).
 - **Rojstni dan — opt-in feature** (migracija [`0025`](supabase/0025_birthday_prompt.sql): `venues.birthday_prompt_enabled` + `birthday_prompt_min_scans` privzeto 5):
   - Lastnik ga vklopi v **Nastavitve** (toggle + prag skeniranih računov + **statistika koliko gostov je vpisalo**).
   - Gost: na telefonu **bottom sheet**, na računalniku **centrirano okno**. Prikaže se šele ko doseže prag skeniranih računov. »Ne zdaj« = samodejno se ne prikaže več (localStorage), a lahko ga odpre prek gumba na kartici. **Write-once** (server 409 če že vpisan) — vpiše lahko samo enkrat.

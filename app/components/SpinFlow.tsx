@@ -174,7 +174,7 @@ export default function SpinFlow({
     const mail = email.trim();
     setRegErr("");
     if (!mail || !/.+@.+\..+/.test(mail)) { setRegErr("Vpiši veljaven email."); return; }
-    if (password.length < 4) { setRegErr("Geslo naj ima vsaj 4 znake."); return; }
+    if (password.length < 6) { setRegErr("Geslo naj ima vsaj 6 znakov."); return; }
     doRegister({ email: mail, password });
   }
 

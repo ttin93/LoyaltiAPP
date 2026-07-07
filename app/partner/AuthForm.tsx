@@ -64,6 +64,11 @@ export default function AuthForm() {
     const supabase = createBrowserSupabase();
     try {
       if (isReg) {
+        if (password.length < 8 || !/[0-9]/.test(password)) {
+          setError("Geslo naj ima vsaj 8 znakov in vsaj eno številko.");
+          setBusy(false);
+          return;
+        }
         const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name } } });
         if (error) throw error;
         const { data } = await supabase.auth.getSession();
@@ -166,7 +171,7 @@ export default function AuthForm() {
             </div>
             <div className="flex flex-col gap-1.5">
               <label style={{ fontSize: 13, fontWeight: 700, color: "#6E6253" }}>Geslo</label>
-              <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="min. 6 znakov" style={inputStyle} />
+              <input type="password" required minLength={isReg ? 8 : undefined} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={isReg ? "min. 8 znakov + številka" : "geslo"} style={inputStyle} />
             </div>
 
             {error && <p style={{ margin: 0, borderRadius: 12, padding: "10px 14px", fontSize: 13.5, fontWeight: 600, background: "rgba(200,81,43,0.1)", color: "#A83E1F" }}>{error}</p>}

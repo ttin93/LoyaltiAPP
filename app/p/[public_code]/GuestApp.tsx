@@ -111,20 +111,6 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [points, setPoints] = useState(0);
   const [stamps, setStamps] = useState(0);
-  const [bday, setBday] = useState<string | null | undefined>(undefined); // undefined=neznano, null=ni nastavljen (pokaži), "MM-DD"=nastavljen
-  const [bdayD, setBdayD] = useState("");
-  const [bdayM, setBdayM] = useState("");
-  const [bdayBusy, setBdayBusy] = useState(false);
-  async function saveBirthday() {
-    if (!bdayD || !bdayM || !customerId) return;
-    const val = `${String(bdayM).padStart(2, "0")}-${String(bdayD).padStart(2, "0")}`;
-    setBdayBusy(true);
-    try {
-      const r = await fetch("/api/guest-birthday", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ venueCode: venue.public_code, customerId, birthday: val }) });
-      const j = await r.json();
-      if (j.ok) setBday(val);
-    } finally { setBdayBusy(false); }
-  }
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState<"home" | "success" | "error">("home");
   const [scanning, setScanning] = useState(false);
@@ -192,7 +178,7 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
       try {
         const r = await fetch(`/api/customer?venueCode=${venue.public_code}&customerId=${id}`);
         const j = await r.json();
-        if (j.ok) { setPoints(j.points); setStamps(j.stamps ?? 0); setBday(j.birthday ?? null); }
+        if (j.ok) { setPoints(j.points); setStamps(j.stamps ?? 0); }
         else {
           localStorage.removeItem(storageKey);
           setCustomerId(null);
@@ -641,11 +627,9 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
   const city = (venue as { city?: string | null }).city || null;
   return (
     <main style={{ background: BG, fontFamily: JAK, color: INK, minHeight: "100dvh", overflowX: "hidden" }}>
-      <div className="mx-auto w-full pb-16 lg:max-w-[1040px] lg:px-8 lg:pt-11">
-        {/* split: levo welcome+statistika, desno kartonček+skeniraj+kuponi — full-bleed na telefonu */}
-        <div className="overflow-hidden lg:grid lg:rounded-[24px] lg:border lg:border-[#E4D9C7] lg:shadow-[0_26px_60px_rgba(34,28,22,0.16)]" style={{ gridTemplateColumns: "1fr 440px", background: "#fff" }}>
-          {/* LEVO */}
-          <div className="relative flex flex-col justify-center" style={{ background: `linear-gradient(160deg,${tintLight} 0%,${tintMed} 100%)`, padding: "clamp(28px,4vw,48px)", gap: 20, overflow: "hidden" }}>
+      <div className="lg:grid lg:h-dvh" style={{ gridTemplateColumns: "1fr minmax(440px,560px)" }}>
+          {/* LEVO — welcome + statistika (na desktopu čez cel zaslon) */}
+          <div className="relative flex flex-col justify-center lg:h-dvh" style={{ background: `linear-gradient(160deg,${tintLight} 0%,${tintMed} 100%)`, padding: "clamp(30px,4vw,60px)", gap: 20, overflow: "hidden" }}>
             <div aria-hidden style={{ position: "absolute", bottom: -50, right: -30, width: 200, height: 200, borderRadius: "50%", background: hexA(brand, 0.22) }} />
             <div className="relative flex items-center" style={{ gap: 12 }}>
               <div className="flex items-center justify-center" style={{ width: 52, height: 52, borderRadius: 17, background: venue.logo_url ? "#fff" : logoBg, color: PAPER, fontWeight: 800, fontSize: 24, overflow: "hidden" }}>{venue.logo_url ? <img src={venue.logo_url} alt={venue.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} /> : (venue.name.trim().charAt(0) || "M").toUpperCase()}</div>
@@ -660,8 +644,9 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
             </div>
           </div>
 
-          {/* DESNO */}
-          <div className="flex flex-col justify-center" style={{ padding: "clamp(24px,3vw,36px)", gap: 16 }}>
+          {/* DESNO — kartonček + skeniraj + kuponi + nagrade (scroll na desktopu) */}
+          <div className="flex flex-col lg:h-dvh lg:overflow-y-auto" style={{ background: "#fff" }}>
+            <div className="flex w-full flex-col lg:my-auto" style={{ padding: "clamp(24px,3vw,40px)", gap: 16, boxSizing: "border-box" }}>
             {/* kartonček / točke */}
             <div style={{ background: "#fff", borderRadius: 24, padding: "22px 22px", boxShadow: "0 2px 6px rgba(42,36,29,0.04),0 18px 40px rgba(42,36,29,0.08)", border: "1px solid #F1E8D9" }}>
               <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
@@ -706,37 +691,14 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
                 <div style={{ fontSize: 13.5, lineHeight: 1.4, color: "#9A8F80" }}>{t.noCouponsYet}</div>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* ROJSTNI DAN — postopno zbiranje (ne ob prijavi), z nagrado */}
-        {bday === null && (
-          <div className="px-4 lg:px-0" style={{ marginTop: 28 }}>
-            <div style={{ background: `linear-gradient(135deg,${tintLight},${tintMed})`, border: "1px solid #EFE6D6", borderRadius: 20, padding: 18, display: "flex", flexDirection: "column", gap: 13 }}>
-              <div className="flex items-center" style={{ gap: 11 }}>
-                <div className="flex items-center justify-center" style={{ width: 42, height: 42, borderRadius: 12, background: "#fff", flexShrink: 0, fontSize: 22 }}>🎁</div>
-                <div style={{ lineHeight: 1.3 }}>
-                  <div style={{ fontWeight: 800, fontSize: 15 }}>Dodaj rojstni dan</div>
-                  <div style={{ fontSize: 12.5, color: accentDeep }}>Da te lahko razveselimo z darilom 🎂</div>
+            {/* NAGRADE ZA TOČKE — v desnem stolpcu */}
+            {pointRewards.length > 0 && (
+              <div style={{ marginTop: 10 }}>
+                <div className="flex items-baseline justify-between" style={{ marginBottom: 14 }}>
+                  <div style={{ fontWeight: 800, fontSize: 19, letterSpacing: "-0.01em" }}>{t.pointRewards}</div>
+                  <div style={{ fontSize: 13, color: "#9A8F80" }}>{points} {t.points} · +{venue.points_per_visit}</div>
                 </div>
-              </div>
-              <div className="flex items-center" style={{ gap: 8 }}>
-                <select value={bdayD} onChange={(e) => setBdayD(e.target.value)} style={{ flex: 1, height: 44, borderRadius: 12, border: "1px solid #E0D2BC", background: "#fff", color: INK, fontFamily: JAK, fontSize: 14, padding: "0 10px" }}><option value="">Dan</option>{Array.from({ length: 31 }, (_, i) => <option key={i} value={String(i + 1)}>{i + 1}</option>)}</select>
-                <select value={bdayM} onChange={(e) => setBdayM(e.target.value)} style={{ flex: 1.2, height: 44, borderRadius: 12, border: "1px solid #E0D2BC", background: "#fff", color: INK, fontFamily: JAK, fontSize: 14, padding: "0 10px" }}><option value="">Mesec</option>{["januar", "februar", "marec", "april", "maj", "junij", "julij", "avgust", "september", "oktober", "november", "december"].map((m, i) => <option key={i} value={String(i + 1)}>{m}</option>)}</select>
-                <button onClick={saveBirthday} disabled={!bdayD || !bdayM || bdayBusy} style={{ height: 44, padding: "0 18px", border: "none", borderRadius: 12, background: INK, color: PAPER, fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: !bdayD || !bdayM || bdayBusy ? 0.5 : 1, flexShrink: 0 }}>{bdayBusy ? "…" : "Shrani"}</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* MENI NAGRAD (za točke) */}
-        {pointRewards.length > 0 && (
-          <div className="px-4 lg:px-0" style={{ marginTop: 28 }}>
-            <div className="flex items-baseline justify-between" style={{ marginBottom: 14 }}>
-              <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: "-0.01em" }}>{t.pointRewards}</div>
-              <div style={{ fontSize: 13, color: "#9A8F80" }}>{points} {t.points} · +{venue.points_per_visit}</div>
-            </div>
-            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))" }}>
+                <div className="grid gap-3" style={{ gridTemplateColumns: "1fr" }}>
               {pointRewards.map((r, idx) => {
                 const ready = points >= r.points_required;
                 const pct = Math.min(100, Math.round((points / r.points_required) * 100));
@@ -761,9 +723,11 @@ export default function GuestApp({ venue, rewards, demo = false }: { venue: Venu
                   </div>
                 );
               })}
-            </div>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {scanning && <Scanner demo={demo} lang={lang} onResult={handleScan} onClose={() => setScanning(false)} />}

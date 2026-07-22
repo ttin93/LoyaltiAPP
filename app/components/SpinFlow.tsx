@@ -152,6 +152,7 @@ export default function SpinFlow({
     }
     setBusy(true);
     setRegErr("");
+    let isNew = false;
     try {
       const r = await fetch("/api/register", {
         method: "POST",
@@ -161,11 +162,14 @@ export default function SpinFlow({
       const j = await r.json();
       if (!j.ok) { setBusy(false); setRegErr(j.error || "Napaka pri prijavi."); return; }
       localStorage.setItem(`loyalty:${code}:customerId`, j.customerId);
+      isNew = j.isNew === true;
     } catch {
       setBusy(false); setRegErr("Napaka povezave. Poskusi znova."); return;
     }
     setBusy(false);
-    if (!enabled) { window.location.href = `/p/${code}`; return; }
+    // Nagrado s kolesa dobi SAMO nov gost (strežnik pove `isNew`). Vrnjenega gosta peljemo
+    // na njegovo kartico — sicer bi lahko z brisanjem localStorage neomejeno vrtel nove kupone.
+    if (!enabled || !isNew) { window.location.href = `/p/${code}`; return; }
     grantWelcomeCoupon(wonLabel);
     setStep("coupon");
   }

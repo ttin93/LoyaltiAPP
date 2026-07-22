@@ -100,10 +100,12 @@ export async function POST(req: Request) {
     }
     if (created) after(() => notifyWelcome(venue, normalizedEmail));
 
+    // isNew = stranka je bila ravnokar USTVARJENA. (Prej: points === 0, kar je bilo napačno —
+    // obstoječa stranka brez točk se je štela za novo in je spet dobila welcome nagrado.)
     return NextResponse.json({
       ok: true,
       customerId: customer.id,
-      isNew: customer.points === 0,
+      isNew: created,
     });
   } catch (e) {
     return NextResponse.json({ ok: false, error: errMsg(e) }, { status: 500 });

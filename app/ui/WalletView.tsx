@@ -63,7 +63,7 @@ export default function WalletView({ name, cards, rewards, showBirthday, extra }
             Nagrade
             <span className="rounded-full bg-accent px-2 py-0.5 font-mono text-xs font-semibold text-on-accent">{rewards.length}</span>
           </h2>
-          <div className="-mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-4 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
+          <div className="-mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-4 [scrollbar-width:none] lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0 [&::-webkit-scrollbar]:hidden">
             {rewards.map((r) => (
               <RewardTicket
                 key={r.id}

@@ -60,6 +60,7 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
   `docs/TESTNI-RACUN.local.md` (ni v gitu).
 - Treg: skupaj približno 0,40 $ (10 fotografij, 2 lista 3D ikon, list logotipov).
 - Preverjeno: `tsc`, `eslint` (0 napak), `next build`. Čaka: Tinova ocena novega videza, potem merge v `main`.
+- Popravek: skrit drsnik pod trakom nagrad v denarnici.
 
 ### 2026-11-16 — seja 72 (Loyavi v2: vse na novo po vzoru Feedel, veja `v2`) — Fable 5.2
 > **Stanje:** vse delo je na veji **`v2`** (ni še v `main`, živa stran je še stara). Vir resnice za v2 je

@@ -68,6 +68,7 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
   glavne gumbe, pisava Anton za velike naslove, 10 fotografij (Gemini 3 Pro Image prek trega, 0,30 $). Vse barve so žetoni
   v `app/globals.css`, zato je menjava palete delo ene datoteke.
 - **Preverjeno:** `tsc`, `eslint` (0 napak), `next build` (28 strani), E2E gost in lastnik v brskalniku, namizje + telefon.
+- Dodatek istega dne: trak fotografij na `/partnerji`, posnetki plošče in aplikacije v `docs/predogled/` (04 do 06).
 - **Naslednji koraki:** Tin pregleda predogled veje `v2` → potrditev → merge v `main`. Odprte točke so v `docs/V2-PLAN.md`
   (»Odprto po v2«). Posnetki predogleda: `docs/predogled/`.
 

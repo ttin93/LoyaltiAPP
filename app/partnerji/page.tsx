@@ -163,6 +163,21 @@ export default function Partnerji() {
           </div>
         </section>
 
+        {/* FOTOGRAFIJE: gostje in lokali */}
+        <section aria-label="Utrinki iz lokalov" className="mx-auto max-w-6xl px-6 py-12">
+          <div className="grid grid-cols-2 items-end gap-4 lg:grid-cols-4">
+            <Reveal className="col-span-2">
+              <Photo src="/photos/terrace.jpg" alt="Družba nazdravlja s kavo na sončni terasi" className="aspect-video" sizes="(min-width: 1024px) 50vw, 100vw" />
+            </Reveal>
+            <Reveal delay={100}>
+              <Photo src="/photos/tap.jpg" alt="Gost približa telefon stojalu ob blagajni" shape="pill" className="aspect-[3/5]" />
+            </Reveal>
+            <Reveal delay={200}>
+              <Photo src="/photos/barista.jpg" alt="Natakarica čez pult podaja kapučino" shape="circle" className="aspect-square" />
+            </Reveal>
+          </div>
+        </section>
+
         {/* NAČINA BELEŽENJA */}
         <section className="mx-auto max-w-6xl px-6 py-24">
           <SectionHead eyebrow="Beleženje obiskov" title="Račun, stojalo ali oboje." text="Sam izbereš, kako gostje zabeležijo obisk. Način lahko kadar koli zamenjaš." />

@@ -11,7 +11,7 @@ komunikacija v slovenščini, sproščeno. Cilj ni več funkcij — cilj je **pr
 
 - **Na ZAČETKU vsake seje preberi [`docs/MASTERPLAN.md`](docs/MASTERPLAN.md)** (vizija, obljuba, šibke točke, kaj NE delati) **in [`DEVLOG.md`](DEVLOG.md)** (trenutno stanje + dnevnik).
 - Vsak predlog testiraj z vprašanjem: **»Ali to pripelje bližje stranki, ali je beg pred prodajo?«**
-- **Ne** predlagaj rewrita od začetka — refaktoriraj namensko. **Ne** izmišljaj lažnih ocen/statistik.
+- **v2 (veja `v2`) je nova osnova** — Tin je 2026-11-16 naročil prenovo od začetka po vzoru Feedel. Vir resnice: [`docs/V2-PLAN.md`](docs/V2-PLAN.md). Od tu naprej refaktoriraj namensko, ne predlagaj še enega rewrita. **Ne** izmišljaj lažnih ocen/statistik.
 - Šibke točke povej naravnost. Odgovori kratko, konkretno, z jasno naslednjo akcijo.
 
 # Kontekstni handoff (razvoj na večih PC-jih)

@@ -2,20 +2,30 @@ import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase/server";
 import { emailConfigured } from "@/lib/email";
 import { bestOwnerPlan, PLANS } from "@/lib/plans";
-import { notifyWeMissYou, notifyAnniversary, notifyBirthdayVenue, notifyBirthdayGuest, notifyAdminExpiring } from "@/lib/notify";
-import type { Venue, Automations } from "@/lib/types";
+import { notifyMarketing, notifyAdminExpiring } from "@/lib/notify";
+import type { MarketingKind } from "@/lib/emailTemplate";
+import { grantCoupon, type CouponSource } from "@/lib/coupons";
+import { unsubscribedIds } from "@/lib/unsub";
+import { venueHasAccess } from "@/lib/venues";
+import { ownerAccess } from "@/lib/access";
+import { localDay } from "@/lib/guest";
+import { dateShort } from "@/lib/sl";
+import type { Venue, Automation, Automations } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const DAY = 864e5;
-const fmtDay = (iso: string) => new Date(iso).toLocaleDateString("sl-SI", { day: "2-digit", month: "2-digit", year: "numeric" });
+const PAGE = 1000; // PostgREST vrne največ 1000 vrstic na zahtevek
+const CAP = 1000; // največ sporočil na en zagon
 
-// Dnevni cron: avtomatizacije (pogrešamo te / obletnica / rojstni dan lokala) + opomnik za potek naročnine.
-// Varovalo: če RESEND ni nastavljen, ne naredi nič (da ne piše lažnih dedup zapisov).
-// Vercel cron pošlje Authorization: Bearer <CRON_SECRET>, če je env nastavljen.
+type Cust = { id: string; email: string; created_at: string };
+
+// Dnevni cron: samodejna sporočila lokalov (pogrešamo te, rojstni dan gosta, obletnica,
+// praznik lokala) in opomnik lastniku pred iztekom preizkusa ali naročnine.
+// Vercel cron pošlje Authorization: Bearer <CRON_SECRET>.
 export async function GET(req: Request) {
-  // Fail-closed: brez nastavljenega CRON_SECRET je ruta vedno zavrnjena (da je ne more sprožiti kdorkoli).
+  // Brez nastavljenega CRON_SECRET je pot vedno zavrnjena.
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret || req.headers.get("authorization") !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -24,110 +34,136 @@ export async function GET(req: Request) {
 
   const db = getServiceClient();
   const now = Date.now();
-  const todayMMDD = new Date().toISOString().slice(5, 10);
+  const todayMMDD = localDay().slice(5); // datum v Sloveniji
 
-  const [{ data: venues }, usersRes] = await Promise.all([
-    db.from("venues").select("*"),
-    db.auth.admin.listUsers({ page: 1, perPage: 1000 }),
-  ]);
-  const emailById = new Map((usersRes.data?.users ?? []).map((u) => [u.id, u.email ?? null]));
+  const { data: venueRows } = await db.from("venues").select("*");
+  const venues = (venueRows ?? []) as Venue[];
+  let sent = 0;
 
-  // dedup: je bil tak mail že poslan v zadnjih X dneh?
   async function sentRecently(kind: string, venueId: string, customerId: string | null, withinDays: number) {
     let q = db.from("email_log").select("id").eq("kind", kind).eq("venue_id", venueId).gte("created_at", new Date(now - withinDays * DAY).toISOString()).limit(1);
     q = customerId ? q.eq("customer_id", customerId) : q.is("customer_id", null);
-    const { data } = await q.maybeSingle();
-    return !!data;
+    const { data } = await q;
+    return (data ?? []).length > 0;
   }
-  async function logSent(kind: string, venueId: string, customerId: string | null) {
-    await db.from("email_log").insert({ kind, venue_id: venueId, customer_id: customerId });
+  const logSent = (kind: string, venueId: string, customerId: string | null) => db.from("email_log").insert({ kind, venue_id: venueId, customer_id: customerId });
+
+  async function customersOf(venueId: string, filter?: { birthday: string }): Promise<Cust[]> {
+    const out: Cust[] = [];
+    for (let from = 0; from < 10000; from += PAGE) {
+      let q = db.from("customers").select("id, email, created_at").eq("venue_id", venueId).not("email", "is", null);
+      if (filter) q = q.eq("birthday", filter.birthday);
+      const { data } = await q.order("created_at", { ascending: true }).range(from, from + PAGE - 1);
+      const rows = (data ?? []) as Cust[];
+      out.push(...rows);
+      if (rows.length < PAGE) break;
+    }
+    return out;
   }
 
-  let sent = 0;
-  const cap = 1000; // varovalo proti runaway
-
-  for (const vrow of (venues ?? []) as Venue[]) {
-    if (sent >= cap) break;
-    const v = vrow;
-
-    // ── ADMIN: naročnina/trial poteče čez ~3 dni ──
-    const paying = (v.plan ?? "free") !== "free" && v.subscription_status !== "canceled";
-    const until = paying ? v.current_period_end : v.trial_ends_at;
-    if (until) {
-      const days = Math.ceil((new Date(until).getTime() - now) / DAY);
-      if (days >= 2 && days <= 4 && !(await sentRecently("admin_expiring", v.id, null, 10))) {
-        const plan = bestOwnerPlan([v]);
-        await notifyAdminExpiring(emailById.get(v.owner_user_id || "") || null, { venueName: v.name, plan: PLANS[plan]?.label ?? "—", expiresOn: fmtDay(until) });
-        await logSent("admin_expiring", v.id, null);
-        sent++;
+  /** Pošlje eno samodejno sporočilo; ob uspehu doda resničen kupon v gostovo denarnico. */
+  async function deliver(v: Venue, c: Cust, kind: MarketingKind, a: Automation, fallback: string, source: CouponSource) {
+    const couponName = a.coupon && a.couponName?.trim() ? a.couponName.trim() : undefined;
+    const ok = await notifyMarketing(v, c, kind, { message: a.message?.trim() || fallback, couponName });
+    if (!ok) return false;
+    if (couponName) {
+      try {
+        await grantCoupon(db, { venueId: v.id, customerId: c.id, name: couponName, source, status: "ready", validDays: 30 });
+      } catch (e) {
+        console.error("[cron coupon]", e);
       }
     }
+    sent++;
+    return true;
+  }
 
-    // ── ROJSTNI DAN GOSTA (customers.birthday == danes) — deluje za vse lokale ──
-    {
-      const { data: bdayCusts } = await db.from("customers").select("id, email").eq("venue_id", v.id).eq("birthday", todayMMDD).not("email", "is", null).limit(500);
-      const giftName = (v.automations as Automations | null)?.guest_birthday?.couponName || "Darilo za rojstni dan 🎂";
-      for (const c of bdayCusts ?? []) {
-        if (sent >= cap) break;
-        if (await sentRecently("birthday_guest", v.id, c.id, 300)) continue;
-        await notifyBirthdayGuest(v, c.email as string, { giftName });
-        await logSent("birthday_guest", v.id, c.id);
-        sent++;
-      }
-    }
+  // ── LASTNIK: preizkus ali preklicana naročnina se izteče čez približno 3 dni ──
+  // Naročnina je na ravni lastnika (živi na njegovem prvem lokalu), zato gledamo lastnika, ne lokala.
+  const byOwner = new Map<string, Venue[]>();
+  for (const v of venues) if (v.owner_user_id) byOwner.set(v.owner_user_id, [...(byOwner.get(v.owner_user_id) ?? []), v]);
+  for (const [ownerId, list] of byOwner) {
+    if (sent >= CAP) break;
+    const bill = [...list].sort((a, b) => a.created_at.localeCompare(b.created_at))[0];
+    const plan = bestOwnerPlan(list);
+    const access = ownerAccess(plan, bill, now);
+    const trial = access.state === "trial";
+    const ending = trial || (access.state === "active" && !!bill.cancel_at_period_end);
+    if (!ending || !access.until) continue;
+    const days = Math.ceil((new Date(access.until).getTime() - now) / DAY);
+    if (days < 2 || days > 4 || (await sentRecently("admin_expiring", bill.id, null, 10))) continue;
+    const { data: owner } = await db.auth.admin.getUserById(ownerId);
+    await notifyAdminExpiring(owner?.user?.email, { venueName: bill.name, plan: PLANS[plan]?.label ?? "", expiresOn: dateShort(access.until), trial });
+    await logSent("admin_expiring", bill.id, null);
+    sent++;
+  }
+
+  for (const v of venues) {
+    if (sent >= CAP) break;
 
     const autos = (v.automations ?? null) as Automations | null;
-    if (!autos) continue;
+    const on = (k: string) => (autos?.[k]?.enabled ? autos[k] : null);
+    const bday = on("guest_birthday");
+    const feast = on("venue_birthday");
+    const miss = on("inactive");
+    const anniv = on("anniversary");
+    if (!bday && !feast && !miss && !anniv) continue;
+    // lokal brez veljavnega dostopa (iztekel preizkus) ne pošilja
+    if (!(await venueHasAccess(db, v))) continue;
 
-    // ── ROJSTNI DAN LOKALA (datum MM-DD) ──
-    const bv = autos.venue_birthday;
-    if (bv?.enabled && bv.date && bv.date.slice(-5) === todayMMDD && !(await sentRecently("birthday_venue", v.id, null, 300))) {
-      const { data: custs } = await db.from("customers").select("email").eq("venue_id", v.id).not("email", "is", null).limit(2000);
-      const years = "";
-      for (const c of custs ?? []) {
-        if (sent >= cap) break;
-        await notifyBirthdayVenue(v, c.email as string, { years, offer: bv.couponName || "Posebna ponudba", offerDesc: bv.message || "" });
-        sent++;
+    const off = await unsubscribedIds(db, v.id);
+
+    // ── ROJSTNI DAN GOSTA ──
+    if (bday) {
+      for (const c of await customersOf(v.id, { birthday: todayMMDD })) {
+        if (sent >= CAP) break;
+        if (off.has(c.id) || (await sentRecently("birthday_guest", v.id, c.id, 300))) continue;
+        if (await deliver(v, c, "birthday_guest", bday, "Vse najboljše. Ob prazniku te pri nas čaka darilo.", "birthday")) await logSent("birthday_guest", v.id, c.id);
       }
-      await logSent("birthday_venue", v.id, null);
     }
 
-    // ── POGREŠAMO TE + OBLETNICA (per stranka) ──
-    const miss = autos.inactive;
-    const anniv = autos.anniversary;
-    if ((miss?.enabled && (miss.days || 0) > 0) || anniv?.enabled) {
-      const { data: custs } = await db.from("customers").select("id, email, created_at").eq("venue_id", v.id).not("email", "is", null).limit(2000);
-      // zadnji sken na stranko
-      const { data: scans } = await db.from("scans").select("customer_id, created_at").eq("venue_id", v.id).order("created_at", { ascending: false }).limit(8000);
-      const lastScan = new Map<string, string>();
-      for (const s of scans ?? []) if (!lastScan.has(s.customer_id)) lastScan.set(s.customer_id, s.created_at);
+    if (!feast && !miss && !anniv) continue;
+    const custs = await customersOf(v.id);
 
-      for (const c of custs ?? []) {
-        if (sent >= cap) break;
-        // pogrešamo te: zadnji sken točno N dni nazaj (okno 1 dan, da pošljemo enkrat)
-        if (miss?.enabled && (miss.days || 0) > 0) {
-          const ls = lastScan.get(c.id);
-          if (ls) {
-            const d = Math.floor((now - new Date(ls).getTime()) / DAY);
-            if (d === (miss.days || 0) && !(await sentRecently("we_miss_you", v.id, c.id, 30))) {
-              await notifyWeMissYou(v, c.email as string, { days: d, lastVisit: fmtDay(ls) });
-              await logSent("we_miss_you", v.id, c.id);
-              sent++;
-            }
-          }
+    // ── PRAZNIK LOKALA (datum MM-DD) ──
+    if (feast && feast.date && feast.date.slice(-5) === todayMMDD && !(await sentRecently("birthday_venue", v.id, null, 300))) {
+      await logSent("birthday_venue", v.id, null); // najprej zapis, da ponovni zagon ne podvoji pošiljanja
+      for (const c of custs) {
+        if (sent >= CAP) break;
+        if (off.has(c.id)) continue;
+        await deliver(v, c, "birthday_venue", feast, "Danes praznujemo in to želimo deliti s tabo.", "campaign");
+      }
+    }
+
+    // ── POGREŠAMO TE + OBLETNICA ──
+    if (miss || anniv) {
+      const lastScan = new Map<string, string>();
+      if (miss) {
+        for (let from = 0; from < 20000; from += PAGE) {
+          const { data } = await db.from("scans").select("customer_id, created_at").eq("venue_id", v.id).order("created_at", { ascending: false }).range(from, from + PAGE - 1);
+          const rows = (data ?? []) as { customer_id: string; created_at: string }[];
+          for (const s of rows) if (!lastScan.has(s.customer_id)) lastScan.set(s.customer_id, s.created_at);
+          if (rows.length < PAGE) break;
         }
-        // obletnica: ~1 leto od registracije
-        if (anniv?.enabled && c.created_at) {
+      }
+      const missDays = Math.min(365, Math.max(7, miss?.days || 30));
+      for (const c of custs) {
+        if (sent >= CAP) break;
+        if (off.has(c.id)) continue;
+        // pogrešamo te: zadnji obisk točno N dni nazaj (enodnevno okno, da pošljemo enkrat)
+        const ls = miss ? lastScan.get(c.id) : undefined;
+        if (miss && ls && Math.floor((now - new Date(ls).getTime()) / DAY) === missDays && !(await sentRecently("we_miss_you", v.id, c.id, 30))) {
+          if (await deliver(v, c, "we_miss_you", miss, "Nekaj časa te ni bilo pri nas. Pridi spet, veseli te bomo.", "campaign")) await logSent("we_miss_you", v.id, c.id);
+        }
+        // obletnica: eno leto od dneva, ko je gost dodal kartico
+        if (anniv) {
           const d = Math.floor((now - new Date(c.created_at).getTime()) / DAY);
           if (d >= 365 && d <= 366 && !(await sentRecently("anniversary", v.id, c.id, 300))) {
-            await notifyAnniversary(v, c.email as string, { visits: "—", totalPoints: "—", rewards: "—", giftName: anniv.couponName || "Obletniško darilo" });
-            await logSent("anniversary", v.id, c.id);
-            sent++;
+            if (await deliver(v, c, "anniversary", anniv, "Minilo je eno leto, odkar zbiraš žige pri nas. Hvala, da se vračaš.", "campaign")) await logSent("anniversary", v.id, c.id);
           }
         }
       }
     }
   }
 
-  return NextResponse.json({ ok: true, venues: (venues ?? []).length, sent });
+  return NextResponse.json({ ok: true, venues: venues.length, sent });
 }

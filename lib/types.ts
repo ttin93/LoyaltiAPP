@@ -13,6 +13,9 @@ export interface Venue {
   points_per_euro: number;
   stamp_goal?: number; // št. žigov za kartonček-nagrado (kava)
   city?: string | null;
+  venue_type?: string | null; // kategorija (glej lib/categories.ts)
+  phone?: string | null;
+  owner_name?: string | null;
   scan_window_hours: number;
   scan_cooldown_minutes?: number; // min razmik med skeniranji za isto stranko (0 = off)
   redemption_minutes: number;

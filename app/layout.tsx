@@ -1,61 +1,64 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Instrument_Sans, Plus_Jakarta_Sans } from "next/font/google";
+import { Anton, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { LangProvider } from "@/app/components/LangContext";
+import { BRAND_DESCRIPTION, siteOrigin } from "@/lib/brand";
 
-const display = Bricolage_Grotesque({
-  variable: "--font-display",
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin", "latin-ext"],
   display: "swap",
 });
 
-const sans = Instrument_Sans({
-  variable: "--font-sans",
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin", "latin-ext"],
   display: "swap",
 });
 
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
+// Zgoščena pisava za velike naslove na marketinških straneh.
+const anton = Anton({
+  variable: "--font-anton",
+  weight: "400",
   subsets: ["latin", "latin-ext"],
   display: "swap",
 });
+
+const TITLE = "Loyavi: vse kartice zvestobe v telefonu";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://loyavi.app"),
-  title: "Loyavi — kartica zvestobe za lokale",
-  description: "Digitalna kartica zvestobe za kavarne in lokale. Gost skenira QR z računa, zbira žige in nagrade — ti pa gradiš bazo stalnih gostov, Google ocene in marketing. Brez aplikacije.",
-  manifest: "/manifest.webmanifest",
-  icons: { icon: "/icon.svg?v=2", apple: "/icon.svg?v=2" },
+  metadataBase: new URL(siteOrigin()),
+  title: { default: TITLE, template: "%s | Loyavi" },
+  description: BRAND_DESCRIPTION,
+  icons: { icon: "/icon.svg?v=4", apple: "/apple-icon.png?v=4" },
   appleWebApp: { capable: true, title: "Loyavi", statusBarStyle: "default" },
   openGraph: {
     type: "website",
     siteName: "Loyavi",
-    title: "Loyavi — kartica zvestobe za lokale",
-    description: "Žigi, Google ocene in marketing — na fiskalni račun. Postavljeno v 5 minutah, brez aplikacije za gosta.",
+    title: TITLE,
+    description: BRAND_DESCRIPTION,
     locale: "sl_SI",
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Loyavi — kartica zvestobe za lokale",
-    description: "Žigi, Google ocene in marketing — na fiskalni račun.",
-  },
+  twitter: { card: "summary_large_image", title: TITLE, description: BRAND_DESCRIPTION },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  themeColor: "#F5EFE6",
+  viewportFit: "cover",
+  themeColor: "#FDFDFE",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="sl" className={`${display.variable} ${sans.variable} ${jakarta.variable} h-full antialiased`}>
+    <html lang="sl" className={`${geist.variable} ${geistMono.variable} ${anton.variable} h-full antialiased`}>
       <body className="min-h-full">
-        <LangProvider>{children}</LangProvider>
+        <a
+          href="#vsebina"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-brand focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-on-brand"
+        >
+          Skoči na vsebino
+        </a>
+        {children}
       </body>
     </html>
   );

@@ -1,50 +1,78 @@
-import LegalShell, { Section } from "@/app/components/LegalShell";
+import type { Metadata } from "next";
+import LegalShell, { Section } from "@/app/ui/LegalShell";
 import { BRAND, BRAND_EMAIL } from "@/lib/brand";
 
-export const metadata = { title: `Splošni pogoji — ${BRAND}` };
+export const metadata: Metadata = { title: "Splošni pogoji uporabe", alternates: { canonical: "/pogoji" } };
 
 export default function Pogoji() {
   return (
-    <LegalShell title="Splošni pogoji uporabe" updated="20. junij 2026">
+    <LegalShell title="Splošni pogoji uporabe" updated="16. november 2026">
       <Section h="1. Splošno">
-        <p>Ti splošni pogoji urejajo uporabo storitve {BRAND} (»storitev«) — spletne platforme za zvestobo gostov,
-          zbiranje Google ocen in trženje za gostinske in podobne lokale. Z registracijo ali uporabo storitve se strinjate s temi pogoji.</p>
+        <p>
+          Ti splošni pogoji urejajo uporabo storitve {BRAND}, spletne platforme za digitalne kartice zvestobe. Gostje jo uporabljajo brezplačno, lokali pa na podlagi naročnine. Z ustvarjanjem računa
+          ali uporabo storitve se strinjate s temi pogoji.
+        </p>
         <p>Ponudnik storitve je upravljavec platforme {BRAND}. Podatki o ponudniku (naziv, sedež, matična in davčna številka) se dopolnijo ob registraciji dejavnosti.</p>
       </Section>
       <Section h="2. Opis storitve">
-        <p>Storitev lokalom omogoča: stran za zbiranje žigov/točk prek QR kode na fiskalnem računu, kolo sreče za pridobivanje novih gostov,
-          samodejno povabilo k Google oceni, marketinške kampanje (SMS in e-pošta), avtomatizacije (win-back, rojstnodnevne nagrade) ter analitiko in profile gostov.</p>
-        <p>Funkcije se lahko razlikujejo glede na izbrani paket in se sčasoma razvijajo, nadgrajujejo ali spreminjajo.</p>
+        <p>
+          <strong>Gostje</strong> z enim računom zbirajo žige pri sodelujočih lokalih. Obisk zabeležijo s kodo QR na fiskalnem računu ali na stojalu ob blagajni, odvisno od izbire lokala. Polna
+          kartica se spremeni v kupon, ki ga gost prevzame v lokalu.
+        </p>
+        <p>
+          <strong>Lokali</strong> dobijo svojo digitalno kartico zvestobe, kolo dobrodošlice za nove goste, povabilo gostov k oceni, sporočila gostom po elektronski pošti in nadzorno ploščo s
+          pregledom gostov in obiskov. Funkcije se sčasoma razvijajo in se lahko spremenijo.
+        </p>
       </Section>
       <Section h="3. Račun in dostop">
-        <p>Za uporabo lastniškega dela je potrebna registracija. Odgovorni ste za točnost podatkov in za varovanje dostopnih podatkov.
-          Odgovorni ste za vse aktivnosti, izvedene prek vašega računa.</p>
+        <p>Za uporabo je potreben račun z elektronskim naslovom in geslom. Odgovorni ste za točnost podatkov, za varovanje gesla in za vse dejavnosti, izvedene prek vašega računa.</p>
       </Section>
       <Section h="4. Cene, preizkus in plačila">
-        <p>Cene paketov so objavljene na strani s cenami in so brez DDV. Na voljo je 14-dnevni brezplačni preizkus, ki ne zahteva plačilne kartice.</p>
-        <p>Po preizkusu se naročnina obnavlja mesečno, dokler je ne prekličete. Naročnino lahko prekličete kadarkoli; veljala bo do konca plačanega obdobja. Brez vezave.</p>
+        <p>
+          Za goste je storitev brezplačna. Cene paketov za lokale so objavljene na strani <a href="/partnerji#cenik">cenik</a> in so brez DDV. Na voljo je 30 dnevni brezplačni preizkus, za katerega
+          plačilna kartica ni potrebna.
+        </p>
+        <p>
+          Po preizkusu se naročnina obračunava mesečno ali letno, dokler je ne prekličete. Preklic je mogoč kadar koli in velja do konca že plačanega obdobja. Plačila v našem imenu izvaja
+          plačilni partner Polar, ki izda tudi račun.
+        </p>
       </Section>
-      <Section h="5. Obveznosti uporabnika">
-        <p>Zavezujete se, da storitve ne boste uporabljali v nezakonite namene, za pošiljanje neželenih sporočil (spam) brez ustrezne pravne podlage ali privolitve prejemnikov,
-          ter da boste pri trženju spoštovali veljavno zakonodajo (vključno z GDPR in pravili o e-komunikacijah).</p>
+      <Section h="5. Žigi, kuponi in nagrade">
+        <p>
+          Vsak fiskalni račun prinese en žig in velja samo enkrat. Na stojalu je mogoč en žig na dan. Nagrade določi in zagotovi lokal, zato {BRAND} ne odgovarja za njihovo vsebino, razpoložljivost
+          ali kakovost.
+        </p>
+        <p>Ob sumu zlorabe (na primer uporaba tujih računov ali ponarejenih kod) lahko lokal ali ponudnik žige in kupone razveljavi, račun pa omeji ali zapre.</p>
       </Section>
-      <Section h="6. Podatki gostov">
-        <p>V razmerju do podatkov vaših gostov ste vi upravljavec, {BRAND} pa obdelovalec, ki podatke obdeluje po vaših navodilih in v skladu s politiko zasebnosti.
-          Sami ste odgovorni za zakonito zbiranje privolitev gostov za morebitno trženje.</p>
+      <Section h="6. Obveznosti lokala">
+        <p>
+          Lokal se zavezuje, da storitve ne bo uporabljal v nezakonite namene in da bo pri pošiljanju sporočil gostom spoštoval veljavno zakonodajo, vključno s Splošno uredbo o varstvu podatkov
+          in pravili o elektronskih komunikacijah. Vsako tržno sporočilo vsebuje povezavo za odjavo, ki jo mora lokal spoštovati.
+        </p>
       </Section>
-      <Section h="7. Razpoložljivost in podpora">
-        <p>Prizadevamo si za visoko razpoložljivost storitve, vendar je ne moremo jamčiti brez prekinitev. Možne so načrtovane in nenačrtovane prekinitve zaradi vzdrževanja ali napak.</p>
+      <Section h="7. Podatki gostov">
+        <p>
+          Glede podatkov o obiskih in nagradah pri posameznem lokalu je upravljavec lokal, {BRAND} pa obdelovalec, ki podatke obdeluje po navodilih lokala. Glede uporabniškega računa gosta je
+          upravljavec ponudnik {BRAND}. Podrobnosti so v <a href="/zasebnost">politiki zasebnosti</a>.
+        </p>
       </Section>
-      <Section h="8. Omejitev odgovornosti">
-        <p>Storitev je na voljo »takšna, kot je«. V največjem z zakonom dopustnem obsegu ne odgovarjamo za posredno škodo, izgubljeni dobiček ali izgubo podatkov,
-          ki bi nastala iz uporabe ali nezmožnosti uporabe storitve.</p>
+      <Section h="8. Razpoložljivost in podpora">
+        <p>Prizadevamo si za visoko razpoložljivost storitve, vendar je ne moremo jamčiti brez prekinitev. Mogoče so načrtovane in nenačrtovane prekinitve zaradi vzdrževanja ali napak.</p>
       </Section>
-      <Section h="9. Spremembe pogojev">
-        <p>Pogoje lahko občasno posodobimo. O bistvenih spremembah vas obvestimo. Nadaljnja uporaba storitve po spremembi pomeni sprejem posodobljenih pogojev.</p>
+      <Section h="9. Omejitev odgovornosti">
+        <p>
+          Storitev je na voljo takšna, kot je. V največjem obsegu, ki ga dopušča zakon, ne odgovarjamo za posredno škodo, izgubljeni dobiček ali izgubo podatkov, ki bi nastala zaradi uporabe ali
+          nezmožnosti uporabe storitve.
+        </p>
       </Section>
-      <Section h="10. Veljavno pravo in kontakt">
-        <p>Za ta razmerja velja pravo Republike Slovenije; za morebitne spore je pristojno stvarno pristojno sodišče v Sloveniji.
-          Za vprašanja smo dosegljivi na <a className="font-semibold underline" href={`mailto:${BRAND_EMAIL}`}>{BRAND_EMAIL}</a>.</p>
+      <Section h="10. Spremembe pogojev">
+        <p>Pogoje lahko občasno posodobimo. O bistvenih spremembah vas obvestimo. Nadaljnja uporaba storitve po spremembi pomeni, da posodobljene pogoje sprejemate.</p>
+      </Section>
+      <Section h="11. Veljavno pravo in kontakt">
+        <p>
+          Za ta razmerja velja pravo Republike Slovenije, za spore je pristojno stvarno pristojno sodišče v Sloveniji. Za vprašanja smo dosegljivi na{" "}
+          <a href={`mailto:${BRAND_EMAIL}`}>{BRAND_EMAIL}</a>.
+        </p>
       </Section>
     </LegalShell>
   );

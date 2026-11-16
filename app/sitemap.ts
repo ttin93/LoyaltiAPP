@@ -1,12 +1,16 @@
 import type { MetadataRoute } from "next";
+import { siteOrigin } from "@/lib/brand";
 
-// Javne strani za iskalnike (gostove /p/<code> strani so namenoma izpuščene — zasebne kartice).
+// Javne strani za iskalnike. Kartice lokalov (/p/<koda>) in aplikacija so namenoma izpuščene.
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://loyavi.app";
-  const routes = ["", "/cenik", "/kontakt", "/demo", "/partner", "/pogoji", "/zasebnost", "/piskotki"];
-  return routes.map((r) => ({
-    url: `${base}${r}`,
-    changeFrequency: r === "" ? "weekly" : "monthly",
-    priority: r === "" ? 1 : r === "/cenik" ? 0.8 : 0.5,
-  }));
+  const base = siteOrigin();
+  const routes: { path: string; priority: number; weekly?: boolean }[] = [
+    { path: "", priority: 1, weekly: true },
+    { path: "/partnerji", priority: 0.9, weekly: true },
+    { path: "/kontakt", priority: 0.5 },
+    { path: "/pogoji", priority: 0.3 },
+    { path: "/zasebnost", priority: 0.3 },
+    { path: "/piskotki", priority: 0.3 },
+  ];
+  return routes.map((r) => ({ url: `${base}${r.path}`, changeFrequency: r.weekly ? "weekly" : "monthly", priority: r.priority }));
 }

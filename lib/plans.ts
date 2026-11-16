@@ -9,20 +9,18 @@ export const YEARLY_FREE_MONTHS = 12 - YEARLY_MONTHS;
 /** Izpeljani % popust (za prikaze, ki želijo odstotek). */
 export const YEARLY_DISCOUNT = YEARLY_FREE_MONTHS / 12;
 
-// Ključi v bazi/Polarju = start/grow/scale (interno); oznake = Start/Grow/Scale.
+// Ključi v bazi/Polarju = start/grow/scale (interno); oznake za prikaz = Lokal/Veriga/Po meri.
 export const PLANS: Record<PlanKey, { label: string; tag: string; monthly: number | null }> = {
-  free: { label: "Brezplačni", tag: "Začetni", monthly: 0 },
-  start: { label: "Start", tag: "Vse za en lokal", monthly: 49.99 },
-  grow: { label: "Grow", tag: "Rast & avtomatizacija", monthly: 79.99 },
-  scale: { label: "Scale", tag: "Veriga, po dogovoru", monthly: null }, // cena po dogovoru → custom_price_eur
+  free: { label: "Preizkus", tag: "Brez naročnine", monthly: 0 },
+  start: { label: "Lokal", tag: "En lokal", monthly: 49.99 },
+  grow: { label: "Veriga", tag: "Do 5 lokalov", monthly: 79.99 },
+  scale: { label: "Po meri", tag: "Več kot 5 lokalov, po dogovoru", monthly: null }, // cena po dogovoru → custom_price_eur
 };
 
 export const PLAN_ORDER: PlanKey[] = ["free", "start", "grow", "scale"];
 
-// ── Zmožnosti po paketu (en vir resnice za gating) ───────────────────────────
-// Start = vse za en lokal + ocene + osnovni win-back. Grow doda rast/avtomatizacijo.
-// free = pilot/grandfather (vse odprto, dokler ni paywalla). sms/whatsapp/export
-// še niso funkcionalni → na ceniku "kmalu", v appu jih ne izpostavljamo.
+// ── Zmožnosti po paketu ──────────────────────────────────────────────────────
+// v2: vsi paketi imajo vse funkcije; razlika je samo število lokalov (PLAN_MAX_VENUES).
 export type PlanFeature =
   | "wheel" | "emailBasic" | "customSegments" | "automations"
   | "advancedAnalytics" | "embedWidget" | "sms" | "whatsapp" | "export";
@@ -34,16 +32,13 @@ const ALL_FEATURES: Record<PlanFeature, boolean> = {
 
 export const PLAN_FEATURES: Record<PlanKey, Record<PlanFeature, boolean>> = {
   free: { ...ALL_FEATURES }, // pilot: vse odprto
-  start: {
-    wheel: true, emailBasic: true,
-    customSegments: false, automations: false, advancedAnalytics: false, embedWidget: false,
-    sms: false, whatsapp: false, export: false,
-  },
-  grow: { ...ALL_FEATURES }, // Grow: vse
-  scale: { ...ALL_FEATURES }, // Scale: vse
+  start: { ...ALL_FEATURES },
+  grow: { ...ALL_FEATURES },
+  scale: { ...ALL_FEATURES },
 };
 
-export const PLAN_MAX_VENUES: Record<PlanKey, number> = { free: 99, start: 1, grow: 5, scale: 999 };
+// free = brezplačni preizkus: dovolimo toliko lokalov kot paket Veriga, da ga lastnik lahko preizkusi.
+export const PLAN_MAX_VENUES: Record<PlanKey, number> = { free: 5, start: 1, grow: 5, scale: 999 };
 
 export function planFeature(plan: PlanKey | undefined, f: PlanFeature): boolean {
   return PLAN_FEATURES[plan ?? "free"]?.[f] ?? false;

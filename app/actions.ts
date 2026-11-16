@@ -1,353 +1,303 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createSSRClient, getCurrentUser } from "@/lib/supabase/ssrServer";
 import { getServiceClient } from "@/lib/supabase/server";
 import { parseFiscalQR } from "@/lib/fiscalQr";
-import type { WheelConfig, Automations } from "@/lib/types";
-import { PLANS, bestOwnerPlan, planMaxVenues } from "@/lib/plans";
+import type { WheelConfig, Automations, Venue } from "@/lib/types";
 import { sendBatch, emailConfigured } from "@/lib/email";
 import { emailCampaign } from "@/lib/emailTemplate";
-import { notifyOwnerWelcome } from "@/lib/notify";
+import { categoryKey } from "@/lib/categories";
+import { safeHex } from "@/lib/color";
+import { mergeVenueMeta, newStandKey, venueMeta, type CheckinMode } from "@/lib/venueMeta";
+import { grantCoupon } from "@/lib/coupons";
+import { campaignParts } from "@/lib/notify";
+import { unsubscribedIds } from "@/lib/unsub";
 
-function slugify(s: string): string {
-  return (
-    s
-      .toLowerCase()
-      .replace(/[čć]/g, "c")
-      .replace(/š/g, "s")
-      .replace(/ž/g, "z")
-      .replace(/đ/g, "d")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 24) || "lokal"
-  );
-}
+type Result = { ok: true } | { ok: false; error: string };
+const fail = (error: string): Result => ({ ok: false, error });
 
-async function ownerVenue() {
+/** Lokal, ki ga ureja prijavljeni lastnik. Vedno preveri lastništvo. */
+async function owned(venueId: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Nisi prijavljen.");
   const db = getServiceClient();
-  // limit(1) namesto maybeSingle: maybeSingle vrže napako, če je lastnik nekoč ustvaril >1 lokal
-  const { data: venues } = await db
-    .from("venues")
-    .select("*")
-    .eq("owner_user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1);
-  return { user, db, venue: venues?.[0] ?? null };
+  const { data } = await db.from("venues").select("*").eq("id", venueId).eq("owner_user_id", user.id).maybeSingle();
+  if (!data) throw new Error("Lokal ne obstaja ali ni tvoj.");
+  return { user, db, venue: data as Venue };
 }
 
-export async function createVenue(formData: FormData) {
-  const user = await getCurrentUser();
-  if (!user) throw new Error("Nisi prijavljen.");
-  const db = getServiceClient();
+const clamp = (n: unknown, lo: number, hi: number, dflt: number) => {
+  const v = Number(n);
+  return Number.isFinite(v) ? Math.min(hi, Math.max(lo, Math.round(v))) : dflt;
+};
+const text = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
 
-  // PER-LASTNIK limit: koliko lokalov že ima + njegov najboljši aktiven paket
-  const { data: owned } = await db
-    .from("venues")
-    .select("plan, subscription_status")
-    .eq("owner_user_id", user.id);
-  const ownerPlan = bestOwnerPlan(owned ?? []);
-  const maxVenues = planMaxVenues(ownerPlan);
-  if ((owned?.length ?? 0) >= maxVenues) {
-    throw new Error(
-      `Tvoj paket (${PLANS[ownerPlan].label}) dovoljuje ${maxVenues} ${maxVenues === 1 ? "lokal" : "lokalov"}. Nadgradi za več.`,
-    );
+// ── Profil lokala, pravila, način beleženja ──────────────────────────────────
+export type VenuePatch = {
+  name?: string;
+  category?: string;
+  city?: string;
+  phone?: string;
+  address?: string;
+  website?: string;
+  hours?: string;
+  about?: string;
+  listed?: boolean;
+  checkin?: CheckinMode;
+  color?: string;
+  scanWindowHours?: number;
+  cooldownMinutes?: number;
+  redemptionMinutes?: number;
+  googleReviewUrl?: string;
+};
+
+export async function saveVenue(venueId: string, p: VenuePatch): Promise<Result> {
+  const { db, venue } = await owned(venueId);
+  const cols: Record<string, unknown> = {};
+  if (p.name !== undefined) {
+    const name = text(p.name, 60);
+    if (name.length < 2) return fail("Vpiši ime lokala.");
+    cols.name = name;
+  }
+  if (p.category !== undefined) cols.venue_type = categoryKey(p.category);
+  if (p.city !== undefined) cols.city = text(p.city, 60) || null;
+  if (p.phone !== undefined) cols.phone = text(p.phone, 30) || null;
+  if (p.color !== undefined) cols.brand_color = safeHex(p.color);
+  if (p.scanWindowHours !== undefined) cols.scan_window_hours = clamp(p.scanWindowHours, 1, 9000, 24);
+  if (p.cooldownMinutes !== undefined) cols.scan_cooldown_minutes = clamp(p.cooldownMinutes, 0, 1440, 0);
+  if (p.redemptionMinutes !== undefined) cols.redemption_minutes = clamp(p.redemptionMinutes, 1, 60, 5);
+  if (p.googleReviewUrl !== undefined) {
+    const url = text(p.googleReviewUrl, 300);
+    if (url && !/^https?:\/\//i.test(url)) return fail("Povezava naj se začne s https://");
+    cols.google_review_url = url || null;
   }
 
-  const name = String(formData.get("name") || "").trim();
-  const brand = String(formData.get("brand_color") || "#16a34a");
-  if (!name) throw new Error("Vpiši ime lokala.");
-
-  const owner_name = String(formData.get("owner_name") || "").trim() || null;
-  const phone = String(formData.get("phone") || "").trim() || null;
-  const venue_type = String(formData.get("venue_type") || "").trim() || null;
-  const city = String(formData.get("city") || "").trim() || null;
-  const points_model = formData.get("points_model") === "per_euro" ? "per_euro" : "per_visit";
-
-  // nastavljiv žig-cilj (4–12) + točk na obisk (lahko 0 = samo žigi)
-  const rawPts = Number(formData.get("points_per_visit"));
-  const pointsPerVisit = Math.min(50, Math.max(0, Number.isFinite(rawPts) ? rawPts : 10));
-  const stampGoal = Math.min(12, Math.max(4, Number(formData.get("stamp_goal")) || 10));
-  const rewardName = String(formData.get("reward_name") || "").trim() || "Brezplačna kava";
-
-  // točkovne nagrade (urejene v onboardingu); prazne/0 odpademo
-  let extraRewards: { name: string; points: number }[] = [];
-  try {
-    const parsed = JSON.parse(String(formData.get("point_rewards") || "[]"));
-    if (Array.isArray(parsed)) extraRewards = parsed;
-  } catch {
-    /* ignore */
+  const meta: Parameters<typeof mergeVenueMeta>[1] = {};
+  if (p.address !== undefined) meta.address = text(p.address, 120);
+  if (p.hours !== undefined) meta.hours = text(p.hours, 200);
+  if (p.about !== undefined) meta.about = text(p.about, 300);
+  if (p.listed !== undefined) meta.listed = !!p.listed;
+  if (p.website !== undefined) {
+    const w = text(p.website, 200);
+    meta.website = w && !/^https?:\/\//i.test(w) ? `https://${w}` : w;
   }
-  const pointRewardRows = extraRewards
-    .map((r) => ({ name: String(r?.name || "").trim(), points: Math.max(0, Number(r?.points) || 0) }))
-    .filter((r) => r.name && r.points > 0)
-    .map((r, i) => ({ name: r.name, points: r.points, sort: i + 2 }));
-
-  // unikaten public_code: ime + 8 naključnih številk (dovoljuje več lokalov z istim
-  // imenom + koda je težje ugibljiva/naštevljiva). Ob (astronomsko redkem) trku regeneriraj.
-  const base = slugify(name);
-  const rand8 = () => String(Math.floor(Math.random() * 1e8)).padStart(8, "0");
-  let code = `${base}-${rand8()}`;
-  for (let i = 0; i < 6; i++) {
-    const { data: existing } = await db
-      .from("venues")
-      .select("id")
-      .eq("public_code", code)
-      .maybeSingle();
-    if (!existing) break;
-    code = `${base}-${rand8()}`;
+  if (p.checkin !== undefined) {
+    meta.checkin = p.checkin === "stand" || p.checkin === "both" ? p.checkin : "receipt";
+    if (!venueMeta(venue).standKey) meta.standKey = newStandKey();
   }
+  if (Object.keys(meta).length) cols.automations = mergeVenueMeta(venue.automations, meta);
 
-  const { data: venue, error } = await db
-    .from("venues")
-    .insert({ owner_user_id: user.id, name, brand_color: brand, public_code: code, owner_name, phone, venue_type, city, points_model, points_per_visit: pointsPerVisit, stamp_goal: stampGoal, trial_ends_at: new Date(Date.now() + 30 * 864e5).toISOString() })
-    .select("*")
-    .single();
-  if (error) throw error;
-
-  // kava = ŽIGI (poln kartonček = stampGoal žigov); druge nagrade = TOČKE
-  await db.from("rewards").insert([
-    { venue_id: venue.id, name: rewardName, points_required: stampGoal, sort_order: 1, kind: "stamp" },
-    ...pointRewardRows.map((r) => ({ venue_id: venue.id, name: r.name, points_required: r.points, sort_order: r.sort, kind: "points" })),
-  ]);
-
-  after(() => notifyOwnerWelcome(user.email, owner_name, name));
-  redirect("/dashboard");
-}
-
-export async function updateVenueSettings(formData: FormData) {
-  const { db, venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
-  const patch: Record<string, unknown> = {};
-  if (formData.has("name")) patch.name = String(formData.get("name")).trim();
-  if (formData.has("brand_color")) patch.brand_color = String(formData.get("brand_color"));
-  if (formData.has("points_per_visit"))
-    patch.points_per_visit = Math.max(0, Number(formData.get("points_per_visit")) || 0);
-  if (formData.has("stamp_goal"))
-    patch.stamp_goal = Math.min(12, Math.max(4, Number(formData.get("stamp_goal")) || 10));
-  if (formData.has("scan_window_hours"))
-    patch.scan_window_hours = Number(formData.get("scan_window_hours"));
-  if (formData.has("scan_cooldown_minutes"))
-    patch.scan_cooldown_minutes = Math.max(0, Number(formData.get("scan_cooldown_minutes")) || 0);
-  if (formData.has("google_review_url"))
-    patch.google_review_url = String(formData.get("google_review_url")).trim() || null;
-  if (formData.has("birthday_prompt_enabled"))
-    patch.birthday_prompt_enabled = formData.get("birthday_prompt_enabled") === "1";
-  if (formData.has("birthday_prompt_min_scans"))
-    patch.birthday_prompt_min_scans = Math.min(50, Math.max(0, Number(formData.get("birthday_prompt_min_scans")) || 0));
-  if (formData.has("language")) patch.language = String(formData.get("language")) || "sl";
-  if (formData.has("davcna_stevilka")) {
-    const dav = String(formData.get("davcna_stevilka")).replace(/\D/g, "").slice(0, 8);
-    patch.davcna_stevilka = dav.length === 8 ? dav : null;
-  }
-  const { error } = await db.from("venues").update(patch).eq("id", venue.id);
-  if (error) throw error;
+  if (!Object.keys(cols).length) return { ok: true };
+  const { error } = await db.from("venues").update(cols).eq("id", venue.id);
+  if (error) return fail("Shranjevanje ni uspelo.");
   revalidatePath("/dashboard");
+  return { ok: true };
 }
 
-/** Aktiviraj skeniranje: iz vzorčnega fiskalnega QR preberi davčno izdajatelja. */
-export async function activateScanning(payload: string): Promise<string> {
-  const { db, venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
-  const parsed = parseFiscalQR(payload); // vrže, če neveljaven
-  await db.from("venues").update({ davcna_stevilka: parsed.davcna }).eq("id", venue.id);
-  revalidatePath("/dashboard");
-  return parsed.davcna;
-}
+/** Kartica: število žigov in nagrada za polno kartico. */
+export async function saveCard(venueId: string, p: { goal: number; reward: string; color?: string }): Promise<Result> {
+  const { db, venue } = await owned(venueId);
+  const goal = clamp(p.goal, 4, 12, 8);
+  const reward = text(p.reward, 60);
+  if (!reward) return fail("Vpiši nagrado.");
+  const cols: Record<string, unknown> = { stamp_goal: goal };
+  if (p.color !== undefined) cols.brand_color = safeHex(p.color);
+  await db.from("venues").update(cols).eq("id", venue.id);
 
-export async function saveReward(formData: FormData) {
-  const { db, venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
-  const id = String(formData.get("id") || "");
-  const name = String(formData.get("name") || "").trim();
-  const points = Number(formData.get("points_required"));
-  const kind = formData.get("kind") === "stamp" ? "stamp" : "points";
-  if (!name || !points) throw new Error("Vpiši ime in vrednost.");
-  if (id) {
-    await db
-      .from("rewards")
-      .update({ name, points_required: points })
-      .eq("id", id)
-      .eq("venue_id", venue.id);
+  const { data: existing } = await db.from("rewards").select("id").eq("venue_id", venue.id).eq("kind", "stamp").limit(1);
+  if (existing?.length) {
+    const { error } = await db.from("rewards").update({ name: reward, points_required: goal }).eq("id", existing[0].id);
+    if (error) return fail("Nagrada s tem imenom že obstaja. Izberi drugo ime.");
   } else {
-    await db
-      .from("rewards")
-      .insert({ venue_id: venue.id, name, points_required: points, sort_order: 99, kind });
+    const { error } = await db.from("rewards").insert({ venue_id: venue.id, name: reward, points_required: goal, sort_order: 1, kind: "stamp" });
+    if (error) return fail("Nagrada s tem imenom že obstaja. Izberi drugo ime.");
   }
   revalidatePath("/dashboard");
+  return { ok: true };
 }
 
-/**
- * Testiraj fiskalni račun BREZ dodeljevanja točk: pove ali je veljaven za ta lokal
- * in ali je unikaten. (Ne gleda ure/datuma — samo struktura, davčna in ZOI.)
- */
-export async function testReceipt(payload: string): Promise<{ ok: boolean; msg: string }> {
-  const { db, venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
-  let parsed;
+// ── Skeniranje računov: davčna številka izdajatelja ───────────────────────────
+/** Iz vzorčnega fiskalnega računa prebere davčno številko lokala in vklopi skeniranje. */
+export async function activateScanning(venueId: string, payload: string): Promise<{ ok: true; davcna: string } | { ok: false; error: string }> {
+  const { db, venue } = await owned(venueId);
   try {
-    parsed = parseFiscalQR(payload);
+    const parsed = parseFiscalQR(payload);
+    await db.from("venues").update({ davcna_stevilka: parsed.davcna }).eq("id", venue.id);
+    revalidatePath("/dashboard");
+    return { ok: true, davcna: parsed.davcna };
   } catch (e) {
-    return { ok: false, msg: e instanceof Error ? e.message : "QR ni veljaven fiskalni račun." };
+    return { ok: false, error: e instanceof Error ? e.message : "Kode ni mogoče prebrati." };
   }
-  if (venue.davcna_stevilka && parsed.davcna !== venue.davcna_stevilka) {
-    return { ok: false, msg: `Račun ni tega lokala (davčna ${parsed.davcna}).` };
+}
+
+export async function setDavcna(venueId: string, value: string): Promise<Result> {
+  const { db, venue } = await owned(venueId);
+  const dav = value.replace(/\D/g, "");
+  if (dav && dav.length !== 8) return fail("Davčna številka ima 8 števk.");
+  await db.from("venues").update({ davcna_stevilka: dav || null }).eq("id", venue.id);
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function regenerateStandKey(venueId: string): Promise<Result> {
+  const { db, venue } = await owned(venueId);
+  await db.from("venues").update({ automations: mergeVenueMeta(venue.automations, { standKey: newStandKey() }) }).eq("id", venue.id);
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+// ── Kolo, avtomatizacije ─────────────────────────────────────────────────────
+export async function saveWheel(venueId: string, config: WheelConfig): Promise<Result> {
+  const { db, venue } = await owned(venueId);
+  const segments = (config.segments ?? [])
+    .map((s) => ({ label: text(s.label, 28), weight: clamp(s.weight, 0, 100, 1) }))
+    .filter((s) => s.label)
+    .slice(0, 8);
+  if (segments.length < 2) return fail("Kolo potrebuje vsaj dva segmenta.");
+  const clean: WheelConfig = {
+    enabled: config.enabled !== false,
+    mode: config.mode === "fixed" ? "fixed" : "weighted",
+    winner: clamp(config.winner, 0, segments.length - 1, 0),
+    segments,
+  };
+  await db.from("venues").update({ wheel_config: clean }).eq("id", venue.id);
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function saveAutomations(venueId: string, autos: Automations): Promise<Result> {
+  const { db, venue } = await owned(venueId);
+  // ohrani v2 nastavitve lokala, ki živijo v istem stolpcu
+  const keep = (venue.automations as Record<string, unknown> | null | undefined)?.__v2;
+  const clean: Record<string, unknown> = {};
+  for (const [k, a] of Object.entries(autos ?? {})) {
+    if (k.startsWith("__") || !a) continue;
+    clean[k] = {
+      enabled: !!a.enabled,
+      message: text(a.message, 600),
+      coupon: !!a.coupon,
+      couponName: text(a.couponName, 60),
+      ...(a.days !== undefined ? { days: clamp(a.days, 7, 365, 30) } : {}),
+      ...(a.date !== undefined ? { date: /^\d{2}-\d{2}$/.test(String(a.date)) ? a.date : "" } : {}),
+    };
   }
-  const { data: dup } = await db
-    .from("scans")
-    .select("id")
-    .eq("zoi", parsed.zoiHex)
-    .maybeSingle();
-  if (dup) return { ok: false, msg: "Račun je že bil uporabljen — ni unikaten." };
-  return { ok: true, msg: `Veljaven račun · davčna ${parsed.davcna}` };
-}
-
-export async function deleteReward(id: string) {
-  const { db, venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
-  await db.from("rewards").delete().eq("id", id).eq("venue_id", venue.id);
+  if (keep) clean.__v2 = keep;
+  await db.from("venues").update({ automations: clean }).eq("id", venue.id);
   revalidatePath("/dashboard");
+  return { ok: true };
 }
 
-export async function addManualPoints(customerId: string, points: number) {
-  const { db, venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
-  const { data: c } = await db
-    .from("customers")
-    .select("id, venue_id, points")
-    .eq("id", customerId)
-    .single();
-  if (!c || c.venue_id !== venue.id) throw new Error("Neveljavna stranka.");
-  await db
-    .from("customers")
-    .update({ points: c.points + points })
-    .eq("id", customerId);
-  // dnevnik: kdo/kdaj/koliko (vidno v Zgodovini)
-  await db.from("point_grants").insert({ venue_id: venue.id, customer_id: customerId, points });
+// ── Gostje: ročni žig, podarjen kupon ────────────────────────────────────────
+export async function giftCoupon(venueId: string, customerId: string, name: string): Promise<Result> {
+  const { db, venue } = await owned(venueId);
+  const label = text(name, 60);
+  if (!label) return fail("Vpiši, kaj podarjaš.");
+  const { data: c } = await db.from("customers").select("id").eq("id", customerId).eq("venue_id", venue.id).maybeSingle();
+  if (!c) return fail("Gost ne obstaja.");
+  await grantCoupon(db, { venueId: venue.id, customerId, name: label, source: "manual", status: "ready" });
   revalidatePath("/dashboard");
+  return { ok: true };
 }
 
-/** Shrani konfiguracijo kolesa sreče. */
-export async function saveWheel(config: WheelConfig) {
-  const { db, venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
-  await db.from("venues").update({ wheel_config: config }).eq("id", venue.id);
+export async function addManualStamp(venueId: string, customerId: string): Promise<Result> {
+  const { db, venue } = await owned(venueId);
+  const { data: c } = await db.from("customers").select("id, stamps").eq("id", customerId).eq("venue_id", venue.id).maybeSingle();
+  if (!c) return fail("Gost ne obstaja.");
+  const goal = venue.stamp_goal || 10;
+  const next = (c.stamps ?? 0) + 1;
+  if (next >= goal) {
+    const { data: rw } = await db.from("rewards").select("name").eq("venue_id", venue.id).eq("kind", "stamp").limit(1);
+    await db.from("customers").update({ stamps: next - goal }).eq("id", customerId);
+    await grantCoupon(db, { venueId: venue.id, customerId, name: (rw?.[0]?.name as string) || "Nagrada", source: "card", status: "ready" });
+  } else {
+    await db.from("customers").update({ stamps: next }).eq("id", customerId);
+  }
+  await db.from("point_grants").insert({ venue_id: venue.id, customer_id: customerId, points: 0, note: "ročni žig" });
   revalidatePath("/dashboard");
+  return { ok: true };
 }
 
-/** Shrani marketing avtomatizacije. */
-export async function saveAutomations(autos: Automations) {
-  const { db, venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
-  await db.from("venues").update({ automations: autos }).eq("id", venue.id);
-  revalidatePath("/dashboard");
-}
+// ── Kampanja po elektronski pošti ────────────────────────────────────────────
+export type Segment = "all" | "active" | "inactive" | "close";
 
-/** Lokal → gostje: pošlji branded e-pošto kampanjo. Scale lahko uporabi svoj Resend ključ. */
-export async function sendGuestCampaign(args: { subject: string; message: string; emails: string[] }): Promise<{ sent: number; failed: number; total: number; error?: string }> {
-  const { venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
-  if (!args.subject.trim() || !args.message.trim()) return { sent: 0, failed: 0, total: 0, error: "Vpiši zadevo in sporočilo." };
-  const emails = (args.emails || []).filter((e) => e && /.+@.+\..+/.test(e));
-  if (!emails.length) return { sent: 0, failed: 0, total: 0, error: "Ni prejemnikov z e-pošto." };
-  const byo = venue.plan === "scale" && venue.resend_api_key
-    ? { apiKey: venue.resend_api_key as string, from: (venue.email_from as string) || undefined }
-    : null;
-  if (!byo && !emailConfigured()) return { sent: 0, failed: 0, total: 0, error: "E-pošta še ni nastavljena (RESEND_API_KEY)." };
-  const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "";
-  const ctaUrl = origin ? `${origin}/p/${venue.public_code}` : "#";
-  const items = emails.map((to) => ({
-    to,
-    subject: args.subject,
-    html: emailCampaign({ venueName: venue.name, brandColor: venue.brand_color, ctaUrl }, { heading: args.subject, message: args.message }),
+export async function sendCampaign(
+  venueId: string,
+  a: { subject: string; message: string; segment: Segment; couponName?: string },
+): Promise<{ ok: true; sent: number; failed: number; total: number } | { ok: false; error: string }> {
+  const { db, venue } = await owned(venueId);
+  const subject = text(a.subject, 120);
+  const message = text(a.message, 2000);
+  if (!subject || !message) return { ok: false, error: "Vpiši zadevo in sporočilo." };
+  if (!emailConfigured()) return { ok: false, error: "Pošiljanje pošte še ni nastavljeno." };
+
+  const { data: custs } = await db.from("customers").select("id, email, stamps").eq("venue_id", venue.id).not("email", "is", null).limit(5000);
+  let list = (custs ?? []) as { id: string; email: string; stamps: number }[];
+  if (a.segment === "close") {
+    const goal = venue.stamp_goal || 10;
+    list = list.filter((c) => goal - (c.stamps ?? 0) <= 2);
+  } else if (a.segment === "active" || a.segment === "inactive") {
+    const since = new Date(Date.now() - 30 * 864e5).toISOString();
+    const { data: recent } = await db.from("scans").select("customer_id").eq("venue_id", venue.id).gte("created_at", since).limit(20000);
+    const activeIds = new Set((recent ?? []).map((r) => r.customer_id as string));
+    list = list.filter((c) => (a.segment === "active" ? activeIds.has(c.id) : !activeIds.has(c.id)));
+  }
+  // gostje, ki so se odjavili od sporočil tega lokala, jih ne prejmejo
+  const off = await unsubscribedIds(db, venue.id);
+  list = list.filter((c) => !off.has(c.id));
+  if (!list.length) return { ok: false, error: "V izbrani skupini ni gostov." };
+  if (list.length > 400) return { ok: false, error: "Skupina je prevelika za eno pošiljanje. Izberi ožjo skupino." };
+
+  const couponName = text(a.couponName, 60);
+  const items = list.map((c) => ({
+    to: c.email,
+    subject,
+    html: emailCampaign(campaignParts(venue, c.id).base, { heading: subject, message, couponName: couponName || undefined }),
   }));
-  const { sent, failed } = await sendBatch(items, byo ? { apiKey: byo.apiKey, from: byo.from } : undefined);
-  // dnevnik pošiljanja (best-effort): zabeleži prejemnike kampanje
+  const { sent, failed } = await sendBatch(items, campaignParts(venue, list[0].id).sender);
+
   if (sent > 0) {
     try {
-      const db = getServiceClient();
-      const { data: recips } = await db.from("customers").select("id").eq("venue_id", venue.id).in("email", emails);
-      if (recips?.length) await db.from("email_log").insert(recips.map((r) => ({ kind: "campaign", venue_id: venue.id, customer_id: r.id })));
-    } catch { /* dnevnik ne sme podreti kampanje */ }
+      if (couponName) {
+        for (const c of list) await grantCoupon(db, { venueId: venue.id, customerId: c.id, name: couponName, source: "campaign", status: "ready", validDays: 30 });
+      }
+      await db.from("email_log").insert(list.map((c) => ({ kind: "campaign", venue_id: venue.id, customer_id: c.id })));
+    } catch {
+      /* dnevnik ne sme podreti kampanje */
+    }
   }
-  return { sent, failed, total: items.length };
-}
-
-/** Scale: shrani lasten Resend ključ + pošiljatelja (BYO domena). */
-export async function saveEmailSettings(formData: FormData) {
-  const { db, venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
-  const key = String(formData.get("resend_api_key") || "").trim() || null;
-  const from = String(formData.get("email_from") || "").trim() || null;
-  await db.from("venues").update({ resend_api_key: key, email_from: from }).eq("id", venue.id);
   revalidatePath("/dashboard");
+  return { ok: true, sent, failed, total: items.length };
 }
 
-/** Naloži logo lokala v Storage (bucket "logos") + shrani URL na venue. */
-export async function uploadLogo(formData: FormData): Promise<{ url?: string; error?: string }> {
-  const { db, venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
+// ── Logo ─────────────────────────────────────────────────────────────────────
+export async function uploadLogo(venueId: string, formData: FormData): Promise<Result> {
+  const { db, venue } = await owned(venueId);
   const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) return { error: "Ni datoteke." };
-  if (file.size > 2 * 1024 * 1024) return { error: "Slika naj bo manjša od 2 MB." };
-  if (!/^image\/(png|jpe?g|webp|svg\+xml)$/.test(file.type)) return { error: "Dovoljeni: PNG, JPG, WEBP, SVG." };
-  const ext = file.type.includes("svg") ? "svg" : file.type.includes("png") ? "png" : file.type.includes("webp") ? "webp" : "jpg";
+  if (!(file instanceof File) || file.size === 0) return fail("Izberi sliko.");
+  if (file.size > 2 * 1024 * 1024) return fail("Slika naj bo manjša od 2 MB.");
+  if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) return fail("Dovoljene so slike PNG, JPG in WEBP.");
+  const ext = file.type.includes("png") ? "png" : file.type.includes("webp") ? "webp" : "jpg";
   const path = `${venue.id}/logo-${Date.now()}.${ext}`;
   const buf = Buffer.from(await file.arrayBuffer());
   const { error: upErr } = await db.storage.from("logos").upload(path, buf, { contentType: file.type, upsert: true });
-  if (upErr) return { error: "Nalaganje ni uspelo: " + upErr.message };
+  if (upErr) return fail("Nalaganje ni uspelo.");
   const url = db.storage.from("logos").getPublicUrl(path).data.publicUrl;
-  const { error } = await db.from("venues").update({ logo_url: url }).eq("id", venue.id);
-  if (error) return { error: error.message };
+  await db.from("venues").update({ logo_url: url }).eq("id", venue.id);
   revalidatePath("/dashboard");
-  return { url };
+  return { ok: true };
 }
 
-export async function removeLogo() {
-  const { db, venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
+export async function removeLogo(venueId: string): Promise<Result> {
+  const { db, venue } = await owned(venueId);
   await db.from("venues").update({ logo_url: null }).eq("id", venue.id);
   revalidatePath("/dashboard");
-}
-
-/** Naloži sliko nagrade v Storage (bucket "logos") + shrani URL na nagrado. */
-export async function uploadRewardImage(formData: FormData): Promise<{ url?: string; error?: string }> {
-  const { db, venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
-  const rewardId = String(formData.get("rewardId") || "");
-  if (!rewardId) return { error: "Manjka nagrada." };
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) return { error: "Ni datoteke." };
-  if (file.size > 2 * 1024 * 1024) return { error: "Slika naj bo manjša od 2 MB." };
-  if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) return { error: "Dovoljeni: PNG, JPG, WEBP." };
-  // varnost: nagrada mora pripadati lokalu lastnika
-  const { data: rw } = await db.from("rewards").select("id").eq("id", rewardId).eq("venue_id", venue.id).maybeSingle();
-  if (!rw) return { error: "Nagrada ne obstaja." };
-  const ext = file.type.includes("png") ? "png" : file.type.includes("webp") ? "webp" : "jpg";
-  const path = `${venue.id}/reward-${rewardId}-${Date.now()}.${ext}`;
-  const buf = Buffer.from(await file.arrayBuffer());
-  const { error: upErr } = await db.storage.from("logos").upload(path, buf, { contentType: file.type, upsert: true });
-  if (upErr) return { error: "Nalaganje ni uspelo: " + upErr.message };
-  const url = db.storage.from("logos").getPublicUrl(path).data.publicUrl;
-  const { error } = await db.from("rewards").update({ image_url: url }).eq("id", rewardId).eq("venue_id", venue.id);
-  if (error) return { error: error.message };
-  revalidatePath("/dashboard");
-  return { url };
-}
-
-export async function removeRewardImage(rewardId: string) {
-  const { db, venue } = await ownerVenue();
-  if (!venue) throw new Error("Nimaš lokala.");
-  await db.from("rewards").update({ image_url: null }).eq("id", rewardId).eq("venue_id", venue.id);
-  revalidatePath("/dashboard");
+  return { ok: true };
 }
 
 export async function signOut() {
   const supabase = await createSSRClient();
   await supabase.auth.signOut();
-  redirect("/partner");
+  redirect("/");
 }

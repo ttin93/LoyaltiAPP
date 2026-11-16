@@ -49,6 +49,28 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-11-16 — seja 72 (Loyavi v2: vse na novo po vzoru Feedel, veja `v2`) — Fable 5.2
+> **Stanje:** vse delo je na veji **`v2`** (ni še v `main`, živa stran je še stara). Vir resnice za v2 je
+> [`docs/V2-PLAN.md`](docs/V2-PLAN.md). Razdelki nad dnevnikom (Aplikacija, Zagon, Kaj DELA) opisujejo staro različico.
+- **Produkt:** en gostov račun z vsemi karticami (`/app`: Kartice, Lokali, Profil), imenik lokalov, samo žigi (točke umaknjene).
+  Obisk po izbiri lokala: fiskalni račun (QR), stojalo ob blagajni (QR ali NFC, en žig na dan, `/s/[code]`) ali oboje.
+  Kolo dobrodošlice (zmagovalca izbere strežnik, en poskus), kuponi na strežniku s časovnikom, povabilo k oceni
+  (vsak lahko na Google, pri nižji oceni najprej zasebno sporočilo), rojstni dan v profilu.
+- **Lastnik:** `/partnerji` (B2B stran + cenik Lokal 49,99 € / Veriga 79,99 €, 30 dni preizkusa brez kartice),
+  `/partner` (prijava + onboarding v 3 korakih), `/dashboard` na novo: Pregled, Kartica, Gostje, Marketing
+  (samodejna sporočila, enkratno sporočilo, dnevnik), Ocene, Kolo, Obiski in koda QR (plakat za tisk, povezava za NFC),
+  Nastavitve, Naročnina (Polar).
+- **Brez sprememb sheme** (Supabase access token je potekel): kuponi živijo v `redemptions` (`lib/coupons.ts`), nastavitve
+  lokala v `venues.automations.__v2` (`lib/venueMeta.ts`), odjave od sporočil v `email_log` (`lib/unsub.ts`).
+- **Maili:** nove predloge (`lib/emailTemplate.ts`), brez izmišljenih kod, kupon je vedno resničen zapis v denarnici,
+  pošiljatelj »Ime lokala prek Loyavi«, povezava za odjavo (`/odjava`). Cron prepisan (lastnik po ID, pravi kuponi, odjave).
+- **Dizajn:** Tin je sredi dela zamenjal smer s temne na **svetlo**: modra `#1F8BF5` + skoraj bela, rdeča `#E63F26` samo za
+  glavne gumbe, pisava Anton za velike naslove, 10 fotografij (Gemini 3 Pro Image prek trega, 0,30 $). Vse barve so žetoni
+  v `app/globals.css`, zato je menjava palete delo ene datoteke.
+- **Preverjeno:** `tsc`, `eslint` (0 napak), `next build` (28 strani), E2E gost in lastnik v brskalniku, namizje + telefon.
+- **Naslednji koraki:** Tin pregleda predogled veje `v2` → potrditev → merge v `main`. Odprte točke so v `docs/V2-PLAN.md`
+  (»Odprto po v2«). Posnetki predogleda: `docs/predogled/`.
+
 ### 2026-07-07 — seja 70 (Google login + geslo pravila; gost desktop full-screen; rojstni-dan opt-in)
 - **Geslo:** gost min 6 (prej 4), lastnik-registracija min 8 + številka. Google login je ŽE v kodi (AuthForm + SpinFlow prek Supabase OAuth) — rabi le konfiguracijo → vodič [`docs/GOOGLE-LOGIN.md`](docs/GOOGLE-LOGIN.md).
 - **Gost desktop** ([`GuestApp.tsx`](app/p/[public_code]/GuestApp.tsx)): kohezivna **centrirana kartica** (max-w 1120, split levo welcome+stat / desno kartica+skeniraj+kuponi+nagrade, zaobljena+shadow, naravna višina). Prvi poskus je bil full-bleed `h-dvh` → na širokem ekranu OGROMNA prazna zelena ploskev; popravljeno na centrirano+omejeno (kot Mora). Mobilno = full-width zloženo.

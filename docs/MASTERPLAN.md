@@ -2,6 +2,8 @@
 > Temeljni dokument za Claude projekt. Preberi tega PRVEGA, preden karkoli graditi.
 > Namen: jasnost o tem, kaj gradimo, zakaj, kje smo šibki in kaj je naslednji pravi korak.
 > Zadnja posodobitev: 2026-08 (seja 71).
+> **2026-11-16:** produkt je prenovljen kot v2 (model Feedel: en gostov račun, vse kartice, žigi z računom ali stojalom).
+> Vizija in šibke točke spodaj še veljajo, tehnične podrobnosti in videz pa opisuje [`V2-PLAN.md`](V2-PLAN.md).
 
 ---
 

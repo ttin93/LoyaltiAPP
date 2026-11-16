@@ -1,72 +1,159 @@
 @import "tailwindcss";
 
+/* Loyavi v2: dizajn žetoni. Svetla tema: dve mirni barvi (skoraj bela, nebesno modra)
+   in ena glasna (rdeča) samo za glavna dejanja. Ozadja so ploska, brez gradientov. */
+@theme {
+  --color-base: #fdfdfe;
+  --color-s1: #f3f6fa;
+  --color-s2: #e9eef4;
+  --color-s3: #dde5ee;
+  --color-line: #d7dfe9;
+  --color-fg: #0b1826;
+  --color-mute: #4f5d70;
+  --color-dim: #6b7889;
+
+  /* mirna barva znamke */
+  --color-brand: #1f8bf5;
+  --color-brand-deep: #0f7ae6;
+  --color-brand-ink: #0b6bd0;
+  --color-on-brand: #ffffff;
+  --color-tint: #e3f1ff;
+
+  /* glasna barva: samo glavni gumbi */
+  --color-accent: #e63f26;
+  --color-accent-deep: #cf3520;
+  --color-on-accent: #ffffff;
+
+  --color-scrim: rgb(11 24 38 / 0.5);
+  --color-warn: #a85a00;
+  --color-bad: #c8281c;
+
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-display: var(--font-anton), "Arial Narrow", ui-sans-serif, sans-serif;
+
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 html {
   -webkit-tap-highlight-color: transparent;
+  background: #fdfdfe;
+  color-scheme: light;
 }
 
 body {
-  background: #f5efe6;
-  color: #2b1d17;
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  background: #fdfdfe;
+  color: #0b1826;
+  font-family: var(--font-sans);
+  font-synthesis: none;
 }
 
-.font-display {
-  font-family: var(--font-display), var(--font-sans), sans-serif;
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+::selection { background: #1f8bf5; color: #ffffff; }
+
+:focus-visible {
+  outline: 2px solid #0b6bd0;
+  outline-offset: 2px;
+}
+/* na modri podlagi je obroba fokusa bela */
+.on-brand :focus-visible { outline-color: #ffffff; }
+
+/* Velik zgoščen naslov (samo marketinške strani). */
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  line-height: 1.18; /* prostor za strešice nad velikimi črkami */
 }
 
-@keyframes stampIn {
-  0% { transform: scale(2.3); opacity: 0; }
-  55% { transform: scale(0.9); opacity: 1; }
+/* Naslov na beli podlagi: edino mesto z gradientom (na besedilu, nikoli na ozadju). */
+.text-hero {
+  background: linear-gradient(90deg, #000000, #666666);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Vstop ob drsenju (IntersectionObserver doda .is-in). */
+.reveal {
+  opacity: 0;
+  transform: translateY(4rem);
+  filter: blur(12px);
+  transition:
+    opacity 900ms var(--ease-spring),
+    transform 900ms var(--ease-spring),
+    filter 900ms var(--ease-spring);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform, filter;
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* Razkritje slogana po besedah. */
+.word {
+  color: var(--word-off, rgb(11 24 38 / 0.22));
+  transition: color 700ms var(--ease-spring);
+}
+.word.is-on { color: var(--word-on, #0b1826); }
+.on-brand .word { --word-off: rgb(255 255 255 / 0.4); --word-on: #ffffff; }
+
+@keyframes stamp-in {
+  0% { transform: scale(2.2); opacity: 0; }
+  60% { transform: scale(0.92); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
-@keyframes popIn {
-  0% { transform: scale(0.5); opacity: 0; }
-  70% { transform: scale(1.08); }
+@keyframes pop-in {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.04); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
-@keyframes scanSweep {
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scan-sweep {
   from { top: 8%; }
-  to { top: 90%; }
+  to { top: 88%; }
 }
-@keyframes ringPulse {
-  0% { transform: scale(0.85); opacity: 0.55; }
-  100% { transform: scale(1.65); opacity: 0; }
+@keyframes float-a {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50% { transform: translateY(-12px) rotate(-6deg); }
 }
-/* proslava ob polnem kartončku: kupon "odleti" navzdol v denarnico */
-@keyframes flyToWallet {
-  0% { transform: translateY(-6px) scale(0.7) rotate(-6deg); opacity: 0; }
-  22% { transform: translateY(0) scale(1.06) rotate(-3deg); opacity: 1; }
-  58% { transform: translateY(0) scale(1) rotate(-2deg); opacity: 1; }
-  100% { transform: translateY(360px) scale(0.18) rotate(12deg); opacity: 0; }
-}
-@keyframes confettiPop {
-  0% { transform: translate(0, 0) scale(0.2) rotate(0deg); opacity: 0; }
-  12% { opacity: 1; }
-  100% { transform: translate(var(--cx), var(--cy)) scale(0.6) rotate(var(--cr)); opacity: 0; }
-}
-@keyframes cardCelebrate {
-  0% { transform: scale(1); }
-  30% { transform: scale(0.93); }
-  55% { transform: scale(1.035); }
-  100% { transform: scale(1); }
-}
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
-@keyframes floaty {
-  0% { transform: translateY(0) rotate(-3deg); }
-  50% { transform: translateY(-12px) rotate(-3deg); }
-  100% { transform: translateY(0) rotate(-3deg); }
-}
-@keyframes floaty2 {
-  0% { transform: translateY(0) rotate(5deg); }
+@keyframes float-b {
+  0%, 100% { transform: translateY(0) rotate(5deg); }
   50% { transform: translateY(10px) rotate(5deg); }
-  100% { transform: translateY(0) rotate(5deg); }
 }
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes skeleton {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.animate-stamp-in { animation: stamp-in 550ms var(--ease-spring) both; }
+.animate-pop-in { animation: pop-in 500ms var(--ease-spring) both; }
+.animate-sheet-up { animation: sheet-up 500ms var(--ease-spring) both; }
+.animate-fade-in { animation: fade-in 300ms var(--ease-spring) both; }
+.animate-skeleton { animation: skeleton 1400ms ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *, *::before, *::after {
     animation-duration: 0.001s !important;
     animation-iteration-count: 1 !important;
-    transition: none !important;
+    transition-duration: 0.001s !important;
   }
+  .reveal { opacity: 1; transform: none; filter: none; }
+  .word { color: var(--word-on, #0b1826); }
 }

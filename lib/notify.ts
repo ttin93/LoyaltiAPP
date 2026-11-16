@@ -1,134 +1,133 @@
-// Best-effort e-poštni sprožilci. Vsak je varen: če ni RESEND ključa (ali emaila)
-// → tiho ne naredi nič. Nikoli ne vrže napake v glavni tok (vse v try/catch).
+// Sprožilci elektronskih sporočil. Vsak je varen: brez ključa za pošto ali naslova tiho
+// ne naredi nič in nikoli ne vrže napake v glavni tok.
 import { sendEmail, emailConfigured } from "@/lib/email";
 import * as T from "@/lib/emailTemplate";
 import { getServiceClient } from "@/lib/supabase/server";
+import { siteOrigin } from "@/lib/brand";
+import { venueMeta } from "@/lib/venueMeta";
+import { stampRewardName } from "@/lib/venues";
+import { categoryDefaultReward } from "@/lib/categories";
+import { unsubUrl } from "@/lib/unsub";
 import type { Venue } from "@/lib/types";
 
-type V = Pick<Venue, "id" | "name" | "brand_color" | "public_code" | "stamp_goal" | "plan" | "resend_api_key" | "email_from">;
+type V = Pick<Venue, "id" | "name" | "brand_color" | "public_code" | "stamp_goal" | "plan" | "resend_api_key" | "email_from" | "automations" | "venue_type">;
 
-function origin() {
-  return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "";
+/** Pošiljatelj za goste: ime lokala, naslov platforme (ali lastna domena pri paketu po meri). */
+function guestSender(v: V): { apiKey?: string; from?: string } {
+  if (v.plan === "scale" && v.resend_api_key) return { apiKey: v.resend_api_key, from: v.email_from || undefined };
+  const base = process.env.RESEND_FROM || "";
+  const addr = base.match(/<([^>]+)>/)?.[1] || (base.includes("@") ? base.trim() : "");
+  if (!addr) return {};
+  const name = v.name.replace(/["<>\r\n]/g, "").trim().slice(0, 60);
+  return { from: `${name} prek Loyavi <${addr}>` };
 }
-function guestSender(v: V) {
-  return v.plan === "scale" && v.resend_api_key ? { apiKey: v.resend_api_key, from: v.email_from || undefined } : {};
-}
-function canGuest(v: V) {
-  return emailConfigured() || !!(v.plan === "scale" && v.resend_api_key);
-}
-export function couponCode(v: { public_code?: string }) {
-  return `${(v.public_code || "LOYA").slice(0, 4).toUpperCase()}-${Math.random().toString(16).slice(2, 6).toUpperCase()}`;
-}
-function gBase(v: V) {
-  return { venueName: v.name, brandColor: v.brand_color, ctaUrl: `${origin()}/p/${v.public_code}` };
-}
-/** Best-effort vpis v email_log (lastnikov dnevnik pošiljanja). Nikoli ne vrže. */
-async function logEmail(kind: string, venueId: string, customerEmail?: string | null) {
+const canGuest = (v: V) => emailConfigured() || !!(v.plan === "scale" && v.resend_api_key);
+const base = (v: V, customerId?: string): T.GuestBase => ({
+  venueName: v.name,
+  brandColor: v.brand_color,
+  ctaUrl: `${siteOrigin()}/p/${v.public_code}`,
+  unsubUrl: customerId ? unsubUrl(customerId) : undefined,
+});
+
+/** Zapis v dnevnik pošiljanja (lastnik ga vidi v nadzorni plošči). Nikoli ne vrže. */
+async function logEmail(kind: string, venueId: string, customer: { id?: string | null; email?: string | null }) {
   try {
     const db = getServiceClient();
-    let customerId: string | null = null;
-    if (customerEmail) {
-      const { data } = await db.from("customers").select("id").eq("venue_id", venueId).eq("email", customerEmail).maybeSingle();
+    let customerId = customer.id ?? null;
+    if (!customerId && customer.email) {
+      const { data } = await db.from("customers").select("id").eq("venue_id", venueId).eq("email", customer.email).maybeSingle();
       customerId = (data?.id as string) ?? null;
     }
     await db.from("email_log").insert({ kind, venue_id: venueId, customer_id: customerId });
-  } catch { /* dnevnik ne sme podreti pošiljanja */ }
+  } catch {
+    /* dnevnik ne sme podreti pošiljanja */
+  }
 }
 
-// ── GOST ──────────────────────────────────────────────────────────────────
+async function rewardOf(v: V): Promise<string> {
+  try {
+    return (await stampRewardName(getServiceClient(), v.id)) || categoryDefaultReward(v.venue_type);
+  } catch {
+    return categoryDefaultReward(v.venue_type);
+  }
+}
+
+// ── GOST: osnovna sporočila ─────────────────────────────────────────────────
 export async function notifyWelcome(v: V, email?: string | null) {
   if (!email || !canGuest(v)) return;
   try {
-    const db = getServiceClient();
-    const { data: rw } = await db.from("rewards").select("name").eq("venue_id", v.id).eq("kind", "stamp").maybeSingle();
-    const { data: prs } = await db.from("rewards").select("name, points_required, image_url").eq("venue_id", v.id).eq("kind", "points").order("points_required", { ascending: true }).limit(5);
-    const pointRewards = (prs || []).map((r) => ({ name: r.name as string, points: r.points_required as number, image: (r.image_url as string | null) || null }));
-    const html = T.emailWelcome(gBase(v), { rewardName: (rw?.name as string) || "Brezplačna kava", stampsTotal: v.stamp_goal || 10, pointRewards });
-    const r = await sendEmail({ to: email, subject: `Dobrodošel pri ${v.name}! 👋`, html, ...guestSender(v) });
-    if (r.ok) await logEmail("welcome", v.id, email);
-  } catch (e) { console.error("[notify welcome]", e); }
-}
-
-export async function notifyPoints(v: V, email: string | null | undefined, d: { points: number; total: number; toReward: number | string; stampsFilled: number; rewardName: string }) {
-  if (!email || !canGuest(v)) return;
-  try {
-    const html = T.emailPoints(gBase(v), { points: d.points, totalPoints: d.total, toReward: d.toReward, stampsFilled: d.stampsFilled, stampsTotal: v.stamp_goal || 10, rewardName: d.rewardName });
-    const r = await sendEmail({ to: email, subject: "Dobil si točke za obisk! ⭐", html, ...guestSender(v) });
-    if (r.ok) await logEmail("points", v.id, email);
-  } catch (e) { console.error("[notify points]", e); }
+    const html = T.emailWelcome(base(v), { goal: v.stamp_goal || 10, reward: await rewardOf(v), checkin: venueMeta(v).checkin });
+    const r = await sendEmail({ to: email, subject: `Tvoja kartica pri lokalu ${v.name} je pripravljena`, html, ...guestSender(v) });
+    if (r.ok) await logEmail("welcome", v.id, { email });
+  } catch (e) {
+    console.error("[notify welcome]", e);
+  }
 }
 
 export async function notifyCouponEarned(v: V, email: string | null | undefined, d: { rewardName: string }) {
   if (!email || !canGuest(v)) return;
   try {
-    const html = T.emailCouponEarned(gBase(v), { rewardName: d.rewardName, couponCode: couponCode(v), stampsTotal: v.stamp_goal || 10 });
-    const r = await sendEmail({ to: email, subject: `🎉 Čestitke! Zaslužil si ${d.rewardName}!`, html, ...guestSender(v) });
-    if (r.ok) await logEmail("coupon_earned", v.id, email);
-  } catch (e) { console.error("[notify coupon-earned]", e); }
+    const html = T.emailCouponEarned(base(v), { goal: v.stamp_goal || 10, reward: d.rewardName });
+    const r = await sendEmail({ to: email, subject: `Kartica je polna. Čaka te: ${d.rewardName}`, html, ...guestSender(v) });
+    if (r.ok) await logEmail("coupon_earned", v.id, { email });
+  } catch (e) {
+    console.error("[notify coupon-earned]", e);
+  }
 }
 
-export async function notifyReviewThanks(v: V, email: string | null | undefined, d: { stars: number; comment?: string }) {
-  if (!email || !canGuest(v)) return;
+// ── GOST: samodejna marketinška sporočila (z odjavo) ────────────────────────
+const SUBJECT: Record<T.MarketingKind, (v: string) => string> = {
+  we_miss_you: (v) => `${v}: nekaj časa te ni bilo`,
+  birthday_guest: (v) => `Vse najboljše od ekipe ${v}`,
+  anniversary: (v) => `Eno leto s kartico lokala ${v}`,
+  birthday_venue: (v) => `${v} praznuje`,
+};
+
+/** Vrne true, če je bilo sporočilo oddano. Dnevnik zapiše klicatelj (cron), ker ga rabi za dedup. */
+export async function notifyMarketing(v: V, customer: { id: string; email: string }, kind: T.MarketingKind, d: { message: string; couponName?: string }): Promise<boolean> {
+  if (!customer.email || !canGuest(v)) return false;
   try {
-    const html = T.emailReviewThanks(gBase(v), { stars: d.stars, comment: d.comment });
-    const r = await sendEmail({ to: email, subject: "⭐ Hvala za vašo oceno!", html, ...guestSender(v) });
-    if (r.ok) await logEmail("review_thanks", v.id, email);
-  } catch (e) { console.error("[notify review]", e); }
+    const html = T.emailMarketing(base(v, customer.id), kind, d);
+    const r = await sendEmail({ to: customer.email, subject: SUBJECT[kind](v.name), html, ...guestSender(v) });
+    return r.ok;
+  } catch (e) {
+    console.error(`[notify ${kind}]`, e);
+    return false;
+  }
 }
 
-export async function notifyWeMissYou(v: V, email: string | null | undefined, d: { days: number; lastVisit?: string }) {
-  if (!email || !canGuest(v)) return;
-  try {
-    const html = T.emailWeMissYou(gBase(v), { days: d.days, lastVisit: d.lastVisit });
-    await sendEmail({ to: email, subject: `Pogrešamo te pri ${v.name} 😔`, html, ...guestSender(v) });
-  } catch (e) { console.error("[notify miss]", e); }
+/** Pošiljatelj in osnova za kampanje (uporabi strežniška akcija). */
+export function campaignParts(v: V, customerId: string) {
+  return { base: base(v, customerId), sender: guestSender(v) };
 }
 
-export async function notifyAnniversary(v: V, email: string | null | undefined, d: { visits: number | string; totalPoints: number | string; rewards: number | string; giftName: string }) {
-  if (!email || !canGuest(v)) return;
-  try {
-    const html = T.emailAnniversary(gBase(v), { visits: d.visits, totalPoints: d.totalPoints, rewards: d.rewards, giftName: d.giftName, couponCode: couponCode(v) });
-    await sendEmail({ to: email, subject: `🎂 Že eno leto skupaj — ${v.name} te razvaja!`, html, ...guestSender(v) });
-  } catch (e) { console.error("[notify anniversary]", e); }
-}
+// ── LASTNIK (Loyavi → lokal): samo platformni ključ ─────────────────────────
+const dash = () => `${siteOrigin()}/dashboard`;
 
-export async function notifyBirthdayVenue(v: V, email: string | null | undefined, d: { years: number | string; offer: string; offerDesc: string }) {
-  if (!email || !canGuest(v)) return;
-  try {
-    const html = T.emailBirthdayVenue(gBase(v), { years: d.years, offer: d.offer, offerDesc: d.offerDesc });
-    await sendEmail({ to: email, subject: `🎊 ${v.name} praznuje! Posebna ponudba.`, html, ...guestSender(v) });
-  } catch (e) { console.error("[notify bday-venue]", e); }
-}
-
-export async function notifyBirthdayGuest(v: V, email: string | null | undefined, d: { giftName: string }) {
-  if (!email || !canGuest(v)) return;
-  try {
-    const html = T.emailBirthdayGuest(gBase(v), { giftName: d.giftName, couponCode: couponCode(v) });
-    await sendEmail({ to: email, subject: `🎂 Vse najboljše od ${v.name}!`, html, ...guestSender(v) });
-  } catch (e) { console.error("[notify bday-guest]", e); }
-}
-
-// ── ADMIN (Loyavi → lastnik) — samo platformni ključ ─────────────────────────
-export async function notifyOwnerWelcome(email: string | null | undefined, ownerName: string | null | undefined, venueName: string) {
+export async function notifyOwnerWelcome(email: string | null | undefined, _ownerName: string | null | undefined, venueName: string) {
   if (!email || !emailConfigured()) return;
   try {
-    const html = T.emailOwnerWelcome({ ownerName: ownerName || undefined, venueName, ctaUrl: `${origin()}/dashboard` });
-    await sendEmail({ to: email, subject: "🏪 Dobrodošli v Loyavi!", html });
-  } catch (e) { console.error("[notify owner-welcome]", e); }
+    await sendEmail({ to: email, subject: `Lokal ${venueName} je ustvarjen. Kaj sledi`, html: T.emailOwnerWelcome({ venueName, ctaUrl: dash() }) });
+  } catch (e) {
+    console.error("[notify owner-welcome]", e);
+  }
 }
 
 export async function notifyAdminPurchase(email: string | null | undefined, d: { venueName: string; plan: string; amount: string; date: string; nextRenewal: string }) {
   if (!email || !emailConfigured()) return;
   try {
-    const html = T.emailAdminPurchase({ ...d, ctaUrl: `${origin()}/dashboard` });
-    await sendEmail({ to: email, subject: "✅ Hvala za naročnino Loyavi", html });
-  } catch (e) { console.error("[notify admin-purchase]", e); }
+    await sendEmail({ to: email, subject: "Naročnina Loyavi je aktivna", html: T.emailAdminPurchase({ ...d, ctaUrl: dash() }) });
+  } catch (e) {
+    console.error("[notify admin-purchase]", e);
+  }
 }
 
-export async function notifyAdminExpiring(email: string | null | undefined, d: { venueName: string; plan: string; expiresOn: string }) {
+export async function notifyAdminExpiring(email: string | null | undefined, d: { venueName: string; plan: string; expiresOn: string; trial: boolean }) {
   if (!email || !emailConfigured()) return;
   try {
-    const html = T.emailAdminExpiring({ ...d, ctaUrl: `${origin()}/dashboard` });
-    await sendEmail({ to: email, subject: "⏰ Tvoja Loyavi naročnina kmalu poteče", html });
-  } catch (e) { console.error("[notify admin-expiring]", e); }
+    const subject = d.trial ? `Brezplačni preizkus se izteče ${d.expiresOn}` : `Naročnina Loyavi se izteče ${d.expiresOn}`;
+    await sendEmail({ to: email, subject, html: T.emailAdminExpiring({ ...d, ctaUrl: `${dash()}?s=narocnina` }) });
+  } catch (e) {
+    console.error("[notify admin-expiring]", e);
+  }
 }

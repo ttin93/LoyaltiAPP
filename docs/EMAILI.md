@@ -1,65 +1,31 @@
-# Seznam vseh e-mailov (za redizajn)
+# Elektronska sporočila (v2)
 
-Vse predloge so v [`lib/emailTemplate.ts`](../lib/emailTemplate.ts). Pošiljanje jih ovija [`lib/notify.ts`](../lib/notify.ts).
-Dva ovoja (shell): **gostov** (barvna glava z inicialko lokala) in **lastnikov** (temna Loyavi glava).
+Predloge so v [`lib/emailTemplate.ts`](../lib/emailTemplate.ts), pošiljanje v [`lib/notify.ts`](../lib/notify.ts),
+samodejna sporočila sproži dnevni cron [`app/api/cron/daily/route.ts`](../app/api/cron/daily/route.ts).
+Videz: svetla podlaga, bela kartica, moder poudarek, rdeč gumb. Brez izmišljenih kod: kupon je vedno resničen
+zapis v gostovi denarnici, sporočilo nanj samo pokaže.
 
-## Živ predogled v brskalniku (brez pošiljanja)
-```
-https://loyavi.app/api/email-preview?type=<type>&venue=Kavarna%20Lipa&color=%23C4623D&name=Ana
-```
-Zamenjaj `type` s spodnjimi vrednostmi. Lokalno: `http://localhost:3000/api/email-preview?type=welcome`.
+## Predogled v brskalniku (brez pošiljanja)
+`http://localhost:3000/api/email-preview?type=<type>&venue=Kavarna%20Lipa&color=%231F8BF5`
+Na produkciji je predogled dostopen samo superadminu.
 
----
-
-## GOST — transakcijski (sprožijo se sami)
-| type | Naslov (subject) | Kdaj se pošlje | Ključna vsebina |
+| type | Kdaj se pošlje | Komu | Odjava |
 |---|---|---|---|
-| `welcome` | Dobrodošel pri {lokal}! 👋 | ob registraciji gosta | pozdrav · 3 koraki (skeniraj/zberi/unovči) · prazna kartica žigov · seznam nagrad za točke · CTA |
-| `points` | Dobil si točke za obisk! ⭐ | ob **mejniku** (1 žig do konca ALI odklenjena točkovna nagrada) | +X točk · skupaj/do nagrade · napredek žigov · CTA |
-| `coupon_earned` | 🎉 Čestitke! Zaslužil si {nagrada}! | ko se kartonček napolni | polna kartica · kupon s kodo · rok · CTA unovči |
-| `coupon_redeem` | ☕ Tvoj kupon čaka | opomnik za neunovčen kupon | kupon · rok/dnevi · CTA |
+| `welcome` | gost prvič doda kartico lokala | gost | ne (del storitve) |
+| `coupon_earned` | kartica je polna, nastane kupon | gost | ne (del storitve) |
+| `we_miss_you` | N dni brez obiska (lastnik vklopi in nastavi) | gost | da |
+| `birthday_guest` | rojstni dan gosta (lastnik vklopi) | gost | da |
+| `anniversary` | eno leto od dodane kartice (lastnik vklopi) | gost | da |
+| `birthday_venue` | praznik lokala na izbrani datum (lastnik vklopi) | vsi gostje lokala | da |
+| `campaign` | enkratno sporočilo iz nadzorne plošče | izbrana skupina gostov | da |
+| `owner_welcome` | lastnik ustvari lokal | lastnik | ne |
+| `admin_purchase` | naročnina je aktivirana (Polar webhook) | lastnik | ne |
+| `admin_expiring` | preizkus ali preklicana naročnina se izteče čez približno 3 dni | lastnik | ne |
+| `owner_message` | sporočilo ekipe Loyavi lastnikom (superadmin) | lastniki | ne |
 
-## GOST — po oceni
-| type | Naslov | Kdaj | Vsebina |
-|---|---|---|---|
-| `review_thanks` | ⭐ Hvala za vašo oceno! | ko gost pusti oceno | zvezdice · komentar · bonus točke · CTA |
-
-## GOST — avtomatizacije (cron, vklopi/nastavi lastnik)
-| type | Naslov | Kdaj | Vsebina |
-|---|---|---|---|
-| `we_miss_you` | Pogrešamo te pri {lokal} 😔 | neaktiven N dni | dni od zadnjega obiska · ponudba (dvojne točke) · CTA |
-| `anniversary` | 🎂 Že eno leto skupaj | 1 leto od registracije gosta | statistika (obiski/točke/nagrade) · obletniško darilo · CTA |
-| `birthday_guest` | 🎂 Vse najboljše od {lokal}! | rojstni dan gosta | rojstnodnevni kupon (7 dni) · CTA |
-| `birthday_venue` | 🎊 {lokal} praznuje! | obletnica lokala | velik banner ponudbe (npr. −20 %) · CTA |
-
-## GOST — marketing
-| type | Naslov | Kdaj | Vsebina |
-|---|---|---|---|
-| `campaign` | (lastnik napiše) | ročni blast iz Marketinga | naslov · sporočilo · opcijski kupon · opcijska opomba · CTA |
-
----
-
-## LASTNIK / SaaS (temna Loyavi glava)
-| type | Naslov | Kdaj | Vsebina |
-|---|---|---|---|
-| `owner_welcome` | 🏪 Dobrodošli v Loyavi! | ob registraciji lastnika | 3 koraki setupa · trial obvestilo · CTA |
-| `admin_purchase` | ✅ Hvala za naročnino Loyavi | ob nakupu naročnine | podrobnosti (paket/znesek/datum/podaljšanje) · CTA |
-| `admin_expiring` | ⏰ Naročnina kmalu poteče | opozorilo pred potekom | opozorilo · datum poteka · CTA podaljšaj |
-| `admin_renewal` | 🔄 Samodejno podaljšanje | pred samodejnim podaljšanjem | podrobnosti podaljšanja · CTA |
-| `owner_update` | (lastna) | novosti/update lastnikom | intro · seznam funkcij · outro · CTA |
-
-**Brez preview-type (obstajata v kodi):**
-- `emailOwnerMessage` — generično sporočilo super-admin → lastnikom
-- `brandedEmail` — enostaven fallback ovoj
-
----
-
-## LOČENO — Supabase Auth maili (NISO naše predloge)
-Potrditev e-pošte, ponastavitev gesla, magic link, sprememba e-pošte.
-Oblikujejo se v **Supabase Dashboard → Authentication → Email Templates** (ne v `emailTemplate.ts`).
-Če želiš enak dizajn kot ostali maili, jih je treba prilagoditi tam posebej (HTML).
-
----
-
-## Skupaj: 15 oblikovanih predlog + 2 pomožni + 4 Supabase Auth
-Ko delaš nove dizajne, ohrani iste `type` ključe in ime funkcije v `emailTemplate.ts` — pošiljanje se ne rabi spreminjati.
+## Pravila
+- Pošiljatelj za goste je »Ime lokala prek Loyavi« na naslovu platforme (`RESEND_FROM`).
+- Odjava (`/odjava?c=…&t=…`) velja za posamezen lokal in se zapiše v `email_log` (`kind = 'unsubscribe'`).
+  Odjavljeni gostje ne prejmejo samodejnih sporočil in kampanj, osnovna sporočila o kartici pa še vedno.
+- Samodejna sporočila s kuponom dodajo kupon v denarnico šele, ko je sporočilo uspešno oddano. Kupon velja 30 dni.
+- Lokal brez veljavnega dostopa (iztekel preizkus) ne pošilja samodejnih sporočil.

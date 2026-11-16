@@ -1,0 +1,257 @@
+import type { Metadata } from "next";
+import {
+  ArrowRight, ArrowsClockwise, Check, ContactlessPayment, EnvelopeSimple, Receipt, Star, Storefront, Users,
+} from "@phosphor-icons/react/dist/ssr";
+import SiteNav from "@/app/ui/SiteNav";
+import SiteFooter from "@/app/ui/SiteFooter";
+import { ButtonLink } from "@/app/ui/Button";
+import { Reveal, WordReveal } from "@/app/ui/Reveal";
+import { DashboardMock, StandMock } from "@/app/ui/PartnerVisuals";
+import Photo from "@/app/ui/Photo";
+import PricingPlans from "@/app/ui/PricingPlans";
+import Faq, { type FaqItem } from "@/app/ui/Faq";
+
+export const metadata: Metadata = {
+  title: "Loyavi za lokale: digitalna kartica zvestobe",
+  description:
+    "Digitalna kartica zvestobe za kavarne, lokale in storitve. Gostje zbirajo žige z računom ali na stojalu, ti določiš nagrade. Prvih 30 dni brezplačno, brez kartice.",
+  alternates: { canonical: "/partnerji" },
+};
+
+const NAV = [
+  { href: "/partnerji#prednosti", label: "Prednosti" },
+  { href: "/partnerji#kako", label: "Kako deluje" },
+  { href: "/partnerji#cenik", label: "Cenik" },
+  { href: "/", label: "Za goste" },
+];
+const CTA = { href: "/partner", label: "Preizkusi brezplačno" };
+
+const STATS = [
+  { value: "25 do 95 %", text: "več dobička, ko se delež gostov, ki se vračajo, poveča za 5 %.", ref: 1 },
+  { value: "5 do 25×", text: "dražje je pridobiti novega gosta, kot obdržati obstoječega.", ref: 1 },
+  { value: "34 % proti 19 %", text: "gostov napolni kartico, če jo začnejo z dvema podarjenima žigoma, v primerjavi s prazno kartico.", ref: 2 },
+];
+
+const BENEFITS = [
+  { icon: ArrowsClockwise, title: "Gostje se vračajo pogosteje", text: "Kartica je vedno v telefonu in napredek do nagrade vedno na očeh. Pozabljen kartonček ni več izgovor.", wide: true },
+  { icon: Users, title: "Veš, kdo so tvoji stalni gostje", text: "Vidiš obiske, zadnji obisk in koga loči en sam žig do nagrade. Prvič imaš seznam svojih gostov.", wide: true },
+  { icon: Star, title: "Več ocen na Googlu", text: "Po obisku gosta povabimo k oceni. Kdor ni bil zadovoljen, lahko to najprej sporoči tebi." },
+  { icon: EnvelopeSimple, title: "Povabilo, ko gosta dolgo ni", text: "Samodejno sporočilo z darilom za goste, ki jih ni bilo več tednov. Nastaviš enkrat." },
+  { icon: Storefront, title: "Brez nove opreme", text: "Deluje z računom, ki ga že izdajaš, ali s kodo na pultu. Blagajne ne menjaš." },
+];
+
+const STEPS = [
+  { title: "Ustvari račun lokala", text: "Vpišeš ime, vrsto in kraj lokala. Dve minuti, brez kartice." },
+  { title: "Določi kartico in nagrado", text: "Izbereš barvo, število žigov in nagrado, na primer brezplačno kavo po osmih obiskih." },
+  { title: "Povabi goste", text: "Natisneš kodo za pult ali prilepiš nalepko NFC. Gostje začnejo zbirati še isti dan." },
+];
+
+const FAQ: FaqItem[] = [
+  { q: "Koliko stane Loyavi?", a: "Paket Lokal stane 49,99 € na mesec za eno lokacijo, paket Veriga 79,99 € na mesec za do pet lokacij. Ob letnem plačilu sta dva meseca brezplačna. Prvih 30 dni je brezplačnih in brez vpisa kartice." },
+  { q: "Ali potrebujem novo blagajno ali opremo?", a: "Ne. Gost lahko obisk zabeleži s kodo QR na fiskalnem računu, ki ga tvoja blagajna že izda. Če želiš hitrejšo pot, natisneš kodo za pult ali uporabiš nalepko NFC." },
+  { q: "V čem je razlika med računom in stojalom?", a: "Račun je dokaz nakupa: vsak račun šteje enkrat in samo pri tvojem lokalu. Stojalo je hitrejše, saj gost samo približa telefon, vendar nakupa ne preverja, zato je omejeno na en žig na dan. Izbereš enega ali oba načina." },
+  { q: "Kaj je stojalo in kje ga dobim?", a: "Stojalo je koda QR, ki jo natisneš iz nadzorne plošče in postaviš ob blagajno. Dodaš lahko nalepko NFC, ki jo gost samo približa s telefonom. Navodila za oboje so v nadzorni plošči." },
+  { q: "Morajo gostje namestiti aplikacijo?", a: "Ne. Loyavi deluje v brskalniku telefona. Gost ustvari račun z elektronskim naslovom in geslom v manj kot minuti." },
+  { q: "Kaj se zgodi po 30 dneh?", a: "Izbereš paket in nadaljuješ brez prekinitve. Če se ne odločiš, se zbiranje žigov ustavi, kartice in podatki pa ostanejo shranjeni." },
+  { q: "Ali lahko kadar koli prekinem?", a: "Da. Mesečna naročnina nima vezave. Prekineš jo v nadzorni plošči in velja do konca plačanega obdobja." },
+  { q: "Kdo vidi podatke o mojih gostih?", a: "Podatke o gostih svojega lokala vidiš samo ti. Drugi lokali jih ne vidijo in jih ne prodajamo." },
+];
+
+function SectionHead({ eyebrow, title, text }: { eyebrow: string; title: string; text?: string }) {
+  return (
+    <Reveal className="flex max-w-3xl flex-col gap-4">
+      <p className="font-mono text-sm font-medium uppercase tracking-widest text-brand-ink">{eyebrow}</p>
+      <h2 className="display text-5xl text-fg lg:text-7xl">{title}</h2>
+      {text && <p className="max-w-2xl text-lg text-mute">{text}</p>}
+    </Reveal>
+  );
+}
+
+export default function Partnerji() {
+  return (
+    <>
+      <SiteNav links={NAV} cta={CTA} />
+      <main id="vsebina">
+        {/* HERO: modra podlaga, velik naslov, rdeč gumb */}
+        <section className="on-brand overflow-hidden bg-brand text-on-brand">
+          <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 px-6 pb-16 pt-32 lg:flex-row lg:items-end lg:gap-12 lg:pb-0">
+            <Reveal className="flex flex-1 flex-col items-start gap-6 lg:pb-24">
+              <p className="flex items-center gap-2 rounded-full bg-base/20 px-3 py-2 text-sm font-medium">
+                <span className="size-2 rounded-full bg-base" aria-hidden="true" />
+                Za kavarne, lokale in storitve
+              </p>
+              <h1 className="display text-6xl sm:text-8xl lg:text-9xl">
+                Gostje, ki
+                <br />
+                se vračajo.
+              </h1>
+              <p className="max-w-[680px] text-lg font-medium lg:text-xl">
+                Digitalna kartica zvestobe za tvoj lokal. Gost zabeleži obisk z računom ali na stojalu ob blagajni, ti določiš nagrade in vidiš, kdo se vrača.
+              </p>
+              <ButtonLink href={CTA.href} size="lg">
+                Preizkusi 30 dni brezplačno
+                <ArrowRight size={16} weight="bold" aria-hidden="true" />
+              </ButtonLink>
+              <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium">
+                {["Brez vpisa kartice", "Brez vezave", "Postavitev v nekaj minutah"].map((t) => (
+                  <li key={t} className="flex items-center gap-2 whitespace-nowrap">
+                    <Check size={16} weight="bold" aria-hidden="true" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+            <Reveal delay={150} className="relative w-full max-w-sm flex-1 lg:max-w-md">
+              <Photo src="/photos/bakery.jpg" alt="Lastnica pekarne za pultom s svežim pecivom" shape="arch" priority className="aspect-[3/4]" sizes="(min-width: 1024px) 40vw, 90vw" />
+              <StandMock className="absolute -left-8 bottom-16 hidden w-40 animate-[float-b_8s_ease-in-out_infinite] lg:flex" />
+            </Reveal>
+          </div>
+        </section>
+
+        {/* NADZORNA PLOŠČA */}
+        <section className="mx-auto max-w-6xl px-6 pt-24">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            <SectionHead eyebrow="Nadzorna plošča" title="Vidiš, kdo se vrača." text="Gostje, obiski, nagrade in ocene na enem zaslonu. Brez tabel in brez ugibanja, katera akcija je delovala." />
+            <Reveal delay={100} className="text-fg">
+              <DashboardMock />
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ZAKAJ ZVESTOBA */}
+        <section className="mx-auto max-w-6xl px-6 py-24">
+          <SectionHead eyebrow="Zakaj zvestoba" title="Stalni gost je vreden več kot nov." text="Raziskave to potrjujejo že desetletja. Loyavi ti da preprost način, da gosta pripelješ nazaj." />
+          <div className="mt-12 grid gap-4 lg:grid-cols-3">
+            {STATS.map((s, i) => (
+              <Reveal key={s.value} delay={i * 100} className="flex flex-col gap-4 rounded-3xl border border-line bg-s1 p-8">
+                <p className="font-mono text-4xl font-semibold tracking-tight text-brand-ink">{s.value}</p>
+                <p className="text-base text-mute">
+                  {s.text}
+                  <sup className="ml-1 text-dim">{s.ref}</sup>
+                </p>
+              </Reveal>
+            ))}
+          </div>
+          <Reveal className="mt-6 flex flex-col gap-1 text-xs text-dim">
+            <p>1 Frederick Reichheld, Bain &amp; Company, povzeto v Harvard Business Review, The Value of Keeping the Right Customers, 2014.</p>
+            <p>2 Nunes in Drèze, The Endowed Progress Effect, Journal of Consumer Research, 2006.</p>
+            <p>Številke so iz neodvisnih raziskav in niso rezultati, izmerjeni z Loyavi.</p>
+          </Reveal>
+        </section>
+
+        {/* SLOGAN */}
+        <section className="mx-auto max-w-6xl px-6 py-24">
+          <WordReveal
+            className="display max-w-4xl text-5xl sm:text-7xl lg:text-8xl"
+            lines={["Kartonček se izgubi.", "Gost s kartico v telefonu se vrne."]}
+          />
+        </section>
+
+        {/* PREDNOSTI */}
+        <section id="prednosti" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
+          <SectionHead eyebrow="Prednosti" title="Kaj dobi tvoj lokal." />
+          <div className="mt-12 grid gap-4 lg:grid-cols-6">
+            {BENEFITS.map((b, i) => (
+              <Reveal key={b.title} delay={i * 80} className={`flex flex-col gap-4 rounded-3xl border border-line bg-s1 p-8 ${b.wide ? "lg:col-span-3" : "lg:col-span-2"}`}>
+                <span className="flex size-12 items-center justify-center rounded-2xl bg-s3 text-brand-ink">
+                  <b.icon size={24} weight="bold" aria-hidden="true" />
+                </span>
+                <h3 className="text-xl font-semibold tracking-tight text-fg">{b.title}</h3>
+                <p className="text-base text-mute">{b.text}</p>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        {/* NAČINA BELEŽENJA */}
+        <section className="mx-auto max-w-6xl px-6 py-24">
+          <SectionHead eyebrow="Beleženje obiskov" title="Račun, stojalo ali oboje." text="Sam izbereš, kako gostje zabeležijo obisk. Način lahko kadar koli zamenjaš." />
+          <div className="mt-12 grid gap-4 lg:grid-cols-2">
+            <Reveal className="flex flex-col gap-4 rounded-3xl border border-line bg-s1 p-8">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-s3 text-brand-ink">
+                <Receipt size={24} weight="bold" aria-hidden="true" />
+              </span>
+              <h3 className="text-2xl font-semibold tracking-tight text-fg">Fiskalni račun</h3>
+              <p className="text-base text-mute">Gost skenira kodo QR na računu. Sistem preveri, da je račun tvoj, da je svež in da še ni bil uporabljen.</p>
+              <ul className="flex flex-col gap-2 text-sm text-fg">
+                {["Žig samo ob resničnem nakupu", "Vsak račun šteje enkrat", "Nič dodatne opreme"].map((t) => (
+                  <li key={t} className="flex items-center gap-2">
+                    <Check size={16} weight="bold" className="text-brand-ink" aria-hidden="true" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+            <Reveal delay={120} className="flex flex-col gap-4 rounded-3xl border border-line bg-s1 p-8">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-s3 text-brand-ink">
+                <ContactlessPayment size={24} weight="bold" aria-hidden="true" />
+              </span>
+              <h3 className="text-2xl font-semibold tracking-tight text-fg">Stojalo ob blagajni</h3>
+              <p className="text-base text-mute">Gost približa telefon nalepki NFC ali skenira kodo na pultu. Obisk je zabeležen v sekundi.</p>
+              <ul className="flex flex-col gap-2 text-sm text-fg">
+                {["Najhitrejša pot do žiga", "En žig na gosta na dan", "Kodo natisneš sam"].map((t) => (
+                  <li key={t} className="flex items-center gap-2">
+                    <Check size={16} weight="bold" className="text-brand-ink" aria-hidden="true" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* KAKO DELUJE */}
+        <section id="kako" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
+          <SectionHead eyebrow="Kako deluje" title="Od prijave do prvega žiga v enem popoldnevu." />
+          <ol className="mt-12 grid gap-4 lg:grid-cols-3">
+            {STEPS.map((s, i) => (
+              <Reveal key={s.title} delay={i * 100}>
+                <li className="flex h-full flex-col gap-4 rounded-3xl border border-line bg-s1 p-8">
+                  <span className="font-mono text-sm font-medium text-brand-ink">0{i + 1}</span>
+                  <h3 className="pt-8 text-2xl font-semibold tracking-tight text-fg">{s.title}</h3>
+                  <p className="text-base text-mute">{s.text}</p>
+                </li>
+              </Reveal>
+            ))}
+          </ol>
+        </section>
+
+        {/* CENIK */}
+        <section id="cenik" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
+          <SectionHead eyebrow="Cenik" title="Ena cena, vse vključeno." text="Brez doplačil za posamezne funkcije in brez provizij na obisk." />
+          <Reveal className="mt-12">
+            <PricingPlans />
+          </Reveal>
+        </section>
+
+        {/* VPRAŠANJA */}
+        <section id="vprasanja" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
+          <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr]">
+            <SectionHead eyebrow="Vprašanja" title="Preden se odločiš." text="Imaš drugo vprašanje? Piši nam na info@loyavi.app in odgovorimo osebno." />
+            <Reveal delay={100}>
+              <Faq items={FAQ} />
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ZAKLJUČNI POZIV */}
+        <section className="mx-auto max-w-6xl px-6 pb-24 pt-12">
+          <Reveal className="on-brand flex flex-col items-center gap-6 overflow-hidden rounded-3xl bg-brand px-8 pt-16 text-center text-on-brand lg:px-16 lg:pt-24">
+            <h2 className="display max-w-4xl text-6xl sm:text-7xl lg:text-8xl">Prvi žigi lahko padejo že danes.</h2>
+            <p className="max-w-xl text-lg font-medium">Ustvari račun lokala, določi nagrado in povabi goste. 30 dni brezplačno, brez vpisa kartice.</p>
+            <ButtonLink href={CTA.href} size="lg">
+              Preizkusi 30 dni brezplačno
+              <ArrowRight size={16} weight="bold" aria-hidden="true" />
+            </ButtonLink>
+            <div className="mt-8 grid w-full max-w-3xl grid-cols-3 items-end gap-4">
+              <Photo src="/photos/barista.jpg" alt="" shape="arch" className="aspect-[3/4]" sizes="25vw" />
+              <Photo src="/photos/tap.jpg" alt="" shape="rise" className="aspect-[3/5]" sizes="25vw" />
+              <Photo src="/photos/salon.jpg" alt="" shape="arch" className="aspect-[3/4]" sizes="25vw" />
+            </div>
+          </Reveal>
+        </section>
+      </main>
+      <SiteFooter />
+    </>
+  );
+}

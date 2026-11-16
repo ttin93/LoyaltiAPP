@@ -1,61 +1,45 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getServiceClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import SetupNotice from "@/app/components/SetupNotice";
-import GuestApp from "./GuestApp";
-import type { Venue, Reward } from "@/lib/types";
+import { getServiceClient } from "@/lib/supabase/server";
+import { getGuest, membership } from "@/lib/guest";
+import { hasWelcome, openCoupons } from "@/lib/coupons";
+import { stampRewardName, toVenueView, venueByCode } from "@/lib/venues";
+import { categoryLabel } from "@/lib/categories";
+import VenueClient from "./VenueClient";
 
 export const dynamic = "force-dynamic";
 
-// Demo podatki za predogled brez Supabase (samo /p/demo).
-const DEMO_VENUE: Venue = {
-  id: "demo",
-  owner_user_id: null,
-  name: "Kavarna Lipa",
-  public_code: "demo",
-  logo_url: null,
-  brand_color: "#2B1D17",
-  davcna_stevilka: "97384933",
-  points_model: "per_visit",
-  points_per_visit: 15,
-  points_per_euro: 50,
-  scan_window_hours: 9000,
-  redemption_minutes: 5,
-  daily_scan_cap: null,
-  created_at: "",
-};
-const DEMO_REWARDS: Reward[] = [
-  { id: "1", venue_id: "demo", name: "Kava po izbiri", image_url: null, points_required: 150, sort_order: 1 },
-  { id: "2", venue_id: "demo", name: "Domač rogljiček", image_url: null, points_required: 220, sort_order: 2 },
-  { id: "3", venue_id: "demo", name: "Kos torte dneva", image_url: null, points_required: 320, sort_order: 3 },
-];
+type Params = { params: Promise<{ public_code: string }>; searchParams: Promise<{ join?: string; stand?: string; kupon?: string }> };
 
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ public_code: string }>;
-}) {
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { public_code } = await params;
+  const venue = await venueByCode(getServiceClient(), public_code);
+  if (!venue) return { title: "Lokal ne obstaja" };
+  return {
+    title: `${venue.name}: kartica zvestobe`,
+    description: `Zbiraj žige pri lokalu ${venue.name} (${categoryLabel(venue.venue_type).toLowerCase()}${venue.city ? `, ${venue.city}` : ""}) in prevzemi nagrado. Brezplačno z Loyavi.`,
+  };
+}
 
-  if (!isSupabaseConfigured()) {
-    if (public_code === "demo") {
-      return <GuestApp venue={DEMO_VENUE} rewards={DEMO_REWARDS} demo />;
-    }
-    return <SetupNotice />;
-  }
-
+export default async function VenuePage({ params, searchParams }: Params) {
+  const [{ public_code }, sp] = await Promise.all([params, searchParams]);
   const db = getServiceClient();
-  const { data: venue } = await db
-    .from("venues")
-    .select("*")
-    .eq("public_code", public_code)
-    .single();
+  const venue = await venueByCode(db, public_code);
   if (!venue) notFound();
 
-  const { data: rewards } = await db
-    .from("rewards")
-    .select("*")
-    .eq("venue_id", venue.id)
-    .order("sort_order");
+  const [guest, reward] = await Promise.all([getGuest(), stampRewardName(db, venue.id)]);
+  const view = toVenueView(venue, reward);
+  const member = guest ? await membership(db, venue.id, guest.email) : null;
+  const [coupons, spun] = member ? await Promise.all([openCoupons(db, [member.id]), hasWelcome(db, member.id)]) : [[], true];
 
-  return <GuestApp venue={venue} rewards={rewards ?? []} />;
+  return (
+    <VenueClient
+      venue={view}
+      signedIn={!!guest}
+      member={member ? { stamps: member.stamps ?? 0 } : null}
+      coupons={coupons}
+      canSpin={view.wheel.enabled && !spun}
+      flags={{ join: sp.join === "1", stand: sp.stand === "1", coupon: sp.kupon ?? null }}
+    />
+  );
 }

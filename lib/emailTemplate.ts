@@ -1,312 +1,247 @@
-// Email predloge (HTML, inline stili — email-safe). Prenešeno iz Claude Design
-// "Email Šablone": gostov ovoj (barvna glava) + admin ovoj (Loyavi glava) + 16 predlog.
-// Vsi vrnejo cel HTML string za Resend.
+// Predloge elektronskih sporočil (HTML z vgrajenimi slogi, primerno za poštne odjemalce).
+// Svetla podoba znamke: bela kartica, modra za poudarke, rdeč gumb. Brez izmišljenih kod:
+// kupon je vedno resničen zapis v gostovi denarnici, sporočilo nanj samo pokaže.
+import { BRAND, BRAND_CITY, BRAND_EMAIL, siteOrigin } from "@/lib/brand";
+import { onColor, safeHex } from "@/lib/color";
 
-const FONT = "'Plus Jakarta Sans',-apple-system,'Segoe UI',Arial,sans-serif";
-const INK = "#1C1007";
-const MUTED = "#7A6855";
+const FONT = "'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+const MONO = "'Geist Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace";
+const C = { bg: "#F3F6FA", card: "#FFFFFF", s2: "#F3F6FA", s3: "#E9EEF4", line: "#D7DFE9", fg: "#0B1826", mute: "#4F5D70", dim: "#6B7889", brand: "#1F8BF5", brandInk: "#0B6BD0", accent: "#E63F26", white: "#FFFFFF" };
 
 export function esc(s: string): string {
-  return String(s)
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-/** Besedilo → HTML: dvojni newline = odstavek, enojni = <br>. */
-export function textToHtml(text: string): string {
+/** Besedilo → odstavki: prazna vrstica loči odstavek, enojen prelom ostane prelom. */
+export function textToHtml(text: string, color = C.fg): string {
   return String(text)
     .split(/\n{2,}/)
-    .map((p) => `<p style="margin:0 0 14px;font-size:15px;color:#5A4E43;line-height:1.65">${esc(p).replace(/\n/g, "<br>")}</p>`)
+    .filter((x) => x.trim())
+    .map((x) => `<p style="margin:0 0 16px;font-size:16px;line-height:24px;color:${color}">${esc(x.trim()).replace(/\n/g, "<br>")}</p>`)
     .join("");
 }
 
 // ── gradniki ────────────────────────────────────────────────────────────────
-const h1 = (html: string) => `<h1 style="margin:0 0 10px;font-weight:800;font-size:26px;line-height:1.18;color:${INK};letter-spacing:-0.02em">${html}</h1>`;
-const h2 = (html: string) => `<h2 style="margin:0 0 8px;font-weight:700;font-size:18px;color:${INK};letter-spacing:-0.01em">${html}</h2>`;
-const p = (html: string) => `<p style="margin:0 0 16px;font-size:15px;color:#5A4E43;line-height:1.65">${html}</p>`;
-const hline = () => `<div style="height:1px;background:#F0E8DC;margin:26px 0;font-size:0;line-height:0">&nbsp;</div>`;
-const big = (html: string) => `<div style="font-size:48px;line-height:1;margin-bottom:10px">${html}</div>`;
+const h1 = (t: string) => `<h1 style="margin:0 0 12px;font-size:30px;line-height:36px;font-weight:600;letter-spacing:-0.02em;color:${C.fg}">${esc(t)}</h1>`;
+const lead = (t: string) => `<p style="margin:0 0 24px;font-size:16px;line-height:24px;color:${C.mute}">${esc(t)}</p>`;
+const small = (t: string) => `<p style="margin:16px 0 0;font-size:14px;line-height:20px;color:${C.mute}">${esc(t)}</p>`;
+const eyebrow = (t: string) => `<p style="margin:0 0 12px;font-family:${MONO};font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:${C.brandInk}">${esc(t)}</p>`;
 
-function btn(text: string, href: string, color = INK): string {
-  return `<a href="${esc(href || "#")}" style="display:inline-block;background:${color};color:#FFFFFF;padding:13px 28px;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;letter-spacing:-0.01em">${esc(text)}</a>`;
+function button(text: string, href: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0 0"><tr><td style="border-radius:12px;background:${C.accent}"><a href="${esc(href)}" style="display:inline-block;padding:12px 20px;font-size:16px;line-height:24px;font-weight:600;color:${C.white};text-decoration:none;border-radius:12px">${esc(text)}</a></td></tr></table>`;
 }
-function ctaCenter(text: string, href: string, color = INK): string {
-  return `<div style="text-align:center;margin-top:30px">${btn(text, href, color)}</div>`;
+
+/** Kupon: limetna ploščica z imenom nagrade. */
+function coupon(name: string, note: string): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 0"><tr><td style="background:${C.brand};border-radius:16px;padding:24px">
+    <p style="margin:0 0 8px;font-family:${MONO};font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:${C.white};opacity:0.8">Kupon</p>
+    <p style="margin:0;font-size:24px;line-height:32px;font-weight:600;letter-spacing:-0.02em;color:${C.white}">${esc(name)}</p>
+    <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:${C.white};opacity:0.9">${esc(note)}</p>
+  </td></tr></table>`;
 }
-function notice(html: string, type: "green" | "amber" | "red" | "neutral" = "neutral"): string {
-  const bg = { green: "#EEF4EE", amber: "#FDF8EE", red: "#FEF2F2", neutral: "#F5EFE8" }[type];
-  const col = { green: "#2A5527", amber: "#7A5500", red: "#8B2020", neutral: "#4A3E33" }[type];
-  return `<div style="background:${bg};padding:14px 18px;border-radius:10px;font-size:13.5px;color:${col};line-height:1.55;margin:16px 0">${html}</div>`;
-}
-function statBox(stats: { value: string; label: string }[]): string {
-  const cells = stats
-    .map((s, i) => `<td style="text-align:center;padding:18px 12px;${i < stats.length - 1 ? "border-right:1px solid #EDE5D5;" : ""}"><div style="font-weight:800;font-size:26px;color:${INK};line-height:1.1">${esc(s.value)}</div><div style="font-size:12px;color:#9A8F80;margin-top:4px">${esc(s.label)}</div></td>`)
-    .join("");
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F8F2EA;border-radius:14px;margin:20px 0"><tr>${cells}</tr></table>`;
-}
-function stepList(steps: { title: string; sub: string }[]): string {
-  const rows = steps
-    .map((s, i) => `<tr><td valign="top" style="width:44px;padding:0 14px 13px 0"><div style="width:30px;height:30px;border-radius:50%;background:${INK};color:#fff;text-align:center;line-height:30px;font-weight:800;font-size:13px">${i + 1}</div></td><td valign="top" style="padding:0 0 13px"><div style="font-weight:700;font-size:15px;color:${INK}">${esc(s.title)}</div><div style="font-size:13.5px;color:${MUTED};margin-top:3px;line-height:1.5">${esc(s.sub)}</div></td></tr>`)
-    .join("");
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0">${rows}</table>`;
-}
-function featureList(features: { icon: string; title: string; sub: string }[]): string {
-  return features
-    .map((f) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F8F2EA;border-radius:12px;margin-bottom:12px"><tr><td valign="top" style="width:46px;padding:15px 0 15px 16px;font-size:22px">${f.icon}</td><td style="padding:15px 16px 15px 14px"><div style="font-weight:700;font-size:15px;color:${INK}">${esc(f.title)}</div><div style="font-size:13px;color:${MUTED};margin-top:3px;line-height:1.5">${esc(f.sub)}</div></td></tr></table>`)
-    .join("");
-}
-function stamps(filled: number, total: number, color: string): string {
-  let cells = "";
-  for (let i = 0; i < total; i++) {
-    const on = i < filled;
-    cells += `<td style="padding:0 9px 0 0"><div style="width:40px;height:40px;border-radius:50%;background:${on ? color : "#EDE5D8"};${on ? "" : "border:2px solid #D5C8B5;"}text-align:center;line-height:40px;color:#fff;font-size:17px">${on ? "☕" : "<span style='color:#C5B89A'>○</span>"}</div></td>`;
+
+/** Kartica zvestobe v barvi lokala (kot v aplikaciji). */
+function card(o: { venueName: string; color?: string | null; goal: number; filled: number; reward: string }): string {
+  const bg = safeHex(o.color);
+  const fg = onColor(bg);
+  const total = Math.min(12, Math.max(1, o.goal));
+  const perRow = total > 6 ? Math.ceil(total / 2) : total;
+  const dot = (i: number) => {
+    const on = i < o.filled;
+    return `<td style="padding:0 8px 8px 0"><div style="width:20px;height:20px;border-radius:50%;border:2px solid ${fg};${on ? `background:${fg};` : "opacity:0.35;"}font-size:0;line-height:0">&nbsp;</div></td>`;
+  };
+  let rows = "";
+  for (let r = 0; r * perRow < total; r++) {
+    let cells = "";
+    for (let i = r * perRow; i < Math.min(total, (r + 1) * perRow); i++) cells += dot(i);
+    rows += `<tr>${cells}</tr>`;
   }
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:14px 0"><tr>${cells}</tr></table>`;
-}
-function couponBlock(title: string, sub: string, code: string, color: string): string {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:2px dashed ${color};border-radius:16px;background:#FDFAF5;margin:16px 0"><tr>
-    <td valign="middle" style="width:54px;padding:20px 0 20px 22px"><div style="width:54px;height:54px;border-radius:13px;background:${color};text-align:center;line-height:54px;font-size:26px">☕</div></td>
-    <td valign="middle" style="padding:20px 22px"><div style="font-weight:800;font-size:17px;color:${INK}">${esc(title)}</div><div style="color:${MUTED};font-size:13px;margin-top:3px">${esc(sub)}</div><div style="margin-top:10px;display:inline-block;background:#F0E8DC;border-radius:7px;padding:4px 11px;font-family:monospace;font-size:12.5px;color:${MUTED};letter-spacing:0.08em">KODA: ${esc(code)}</div></td>
-  </tr></table>`;
-}
-function kvRows(title: string, rows: [string, string, string?][]): string {
-  const body = rows
-    .map(([l, v, vc]) => `<tr><td style="font-size:14px;color:${MUTED};padding:5px 0">${esc(l)}</td><td style="font-size:14px;font-weight:700;color:${vc || INK};text-align:right;padding:5px 0">${esc(v)}</td></tr>`)
-    .join("");
-  return `<div style="background:#F8F2EA;border-radius:14px;padding:18px 22px;margin:20px 0"><div style="font-size:11px;font-weight:700;color:#9A8F80;letter-spacing:0.06em;margin-bottom:8px">${esc(title)}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${body}</table></div>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 0"><tr><td style="background:${bg};border-radius:20px;padding:24px;color:${fg}">
+    <p style="margin:0 0 32px;font-size:24px;line-height:32px;font-weight:600;letter-spacing:-0.02em;color:${fg}">${esc(o.venueName)}</p>
+    <table role="presentation" cellpadding="0" cellspacing="0">${rows}</table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 0"><tr>
+      <td style="font-size:14px;line-height:20px;font-weight:500;color:${fg}">${esc(o.reward)}</td>
+      <td align="right" style="font-family:${MONO};font-size:14px;line-height:20px;font-weight:500;color:${fg}">${Math.min(o.filled, total)}/${total}</td>
+    </tr></table>
+  </td></tr></table>`;
 }
 
-// ── ovoja ─────────────────────────────────────────────────────────────────
-function shell(headerHtml: string, body: string, footer: string, unsubUrl?: string): string {
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;background:#E9E1D3;font-family:${FONT}">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#E9E1D3"><tr><td align="center" style="padding:28px 14px">
-    <table role="presentation" width="620" cellpadding="0" cellspacing="0" style="max-width:620px;width:100%;background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(42,36,29,0.1)">
-      <tr><td>${headerHtml}</td></tr>
-      <tr><td style="padding:40px">${body}</td></tr>
-      <tr><td style="border-top:1px solid #F0E8DC;padding:20px 40px">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td style="font-size:11.5px;color:#B5A890;line-height:1.5">${esc(footer)}</td>
-          <td style="text-align:right"><a href="${unsubUrl || "#"}" style="font-size:11.5px;color:#C5B89A;text-decoration:none">Odjava</a></td>
-        </tr></table>
-      </td></tr>
-    </table>
-  </td></tr></table>
+function steps(items: { title: string; text: string }[]): string {
+  const rows = items
+    .map(
+      (s, i) => `<tr><td valign="top" style="width:32px;padding:0 16px 16px 0"><div style="width:32px;height:32px;border-radius:50%;background:${C.fg};color:${C.white};text-align:center;font-family:${MONO};font-size:14px;line-height:32px;font-weight:600">${i + 1}</div></td>
+      <td valign="top" style="padding:0 0 16px"><p style="margin:0;font-size:16px;line-height:24px;font-weight:600;color:${C.fg}">${esc(s.title)}</p><p style="margin:0;font-size:14px;line-height:20px;color:${C.mute}">${esc(s.text)}</p></td></tr>`,
+    )
+    .join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 0">${rows}</table>`;
+}
+
+function facts(items: [string, string][]): string {
+  const rows = items
+    .map(([k, v]) => `<tr><td style="padding:12px 16px;font-size:14px;line-height:20px;color:${C.mute}">${esc(k)}</td><td align="right" style="padding:12px 16px;font-size:14px;line-height:20px;font-weight:600;color:${C.fg}">${esc(v)}</td></tr>`)
+    .join(`<tr><td colspan="2" style="height:1px;background:${C.line};font-size:0;line-height:0">&nbsp;</td></tr>`);
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 0;background:${C.s2};border-radius:16px">${rows}</table>`;
+}
+
+// ── ovoj ────────────────────────────────────────────────────────────────────
+function shell(o: { preheader: string; header: string; body: string; footer: string }): string {
+  return `<!doctype html><html lang="sl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>${esc(BRAND)}</title></head>
+<body style="margin:0;padding:0;background:${C.bg};font-family:${FONT};-webkit-font-smoothing:antialiased">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${C.bg}">${esc(o.preheader)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.bg}"><tr><td align="center" style="padding:32px 16px">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
+    <tr><td style="padding:0 8px 24px">${o.header}</td></tr>
+    <tr><td style="background:${C.card};border:1px solid ${C.line};border-radius:24px;padding:32px">${o.body}</td></tr>
+    <tr><td style="padding:24px 8px 0;font-size:12px;line-height:16px;color:${C.dim}">${o.footer}</td></tr>
+  </table>
+</td></tr></table>
 </body></html>`;
 }
 
-export type GuestBase = { venueName: string; brandColor?: string | null; ctaUrl?: string; unsubUrl?: string };
+const mark = () => `<img src="${siteOrigin()}/brand/mark.png" width="32" height="32" alt="${esc(BRAND)}" style="display:block;border:0;border-radius:8px">`;
+const link = (text: string, href: string) => `<a href="${esc(href)}" style="color:${C.mute};text-decoration:underline">${esc(text)}</a>`;
 
-function color(brand?: string | null): string {
-  return brand && /^#[0-9a-fA-F]{6}$/.test(brand) ? brand : "#2E5528";
+export type GuestBase = {
+  venueName: string;
+  brandColor?: string | null;
+  /** Povezava do kartice lokala v aplikaciji. */
+  ctaUrl: string;
+  /** Samo pri marketinških sporočilih. */
+  unsubUrl?: string;
+};
+
+function guestShell(b: GuestBase, preheader: string, body: string): string {
+  const header = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td style="font-size:20px;line-height:28px;font-weight:600;letter-spacing:-0.02em;color:${C.fg}">${esc(b.venueName)}</td>
+    <td align="right" width="40">${mark()}</td>
+  </tr></table>`;
+  const footer = `To sporočilo prejemaš, ker imaš kartico lokala ${esc(b.venueName)} v aplikaciji ${esc(BRAND)}.${b.unsubUrl ? ` ${link("Odjava od sporočil tega lokala", b.unsubUrl)}.` : ""}<br><br>${esc(BRAND)}, ${esc(BRAND_CITY)}`;
+  return shell({ preheader, header, body, footer });
 }
 
-function guestShell(base: GuestBase, subject: string, body: string): string {
-  const c = color(base.brandColor);
-  const ini = (base.venueName.trim()[0] || "L").toUpperCase();
-  const header = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${c}"><tr><td style="padding:26px 40px">
-    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-      <td style="width:46px"><div style="width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,0.18);text-align:center;line-height:46px;color:#fff;font-weight:800;font-size:20px">${esc(ini)}</div></td>
-      <td style="padding-left:14px"><div style="color:#fff;font-weight:700;font-size:16px;line-height:1.2">${esc(base.venueName)}</div><div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:2px">Kartica zvestobe · Loyavi</div></td>
-    </tr></table>
-  </td></tr></table>`;
-  return shell(header, body, `${base.venueName} · Kartica zvestobe · Powered by Loyavi`, base.unsubUrl) + `<!--${esc(subject)}-->`;
+function adminShell(preheader: string, body: string): string {
+  const header = `<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+    <td width="40">${mark()}</td>
+    <td style="padding-left:12px;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-0.02em;color:${C.fg}">loyavi</td>
+  </tr></table>`;
+  const footer = `To sporočilo prejemaš, ker imaš račun lokala v aplikaciji ${esc(BRAND)}. Vprašanja? Piši nam na ${link(BRAND_EMAIL, `mailto:${BRAND_EMAIL}`)}.<br><br>${esc(BRAND)}, ${esc(BRAND_CITY)}`;
+  return shell({ preheader, header, body, footer });
 }
 
-function adminShell(subject: string, body: string, unsubUrl?: string): string {
-  const header = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${INK}"><tr><td style="padding:26px 40px">
-    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-      <td style="width:46px"><div style="width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,0.15);text-align:center;line-height:46px;color:#fff;font-weight:800;font-size:22px">T</div></td>
-      <td style="padding-left:14px"><div style="color:#fff;font-weight:800;font-size:18px">Loyavi</div><div style="color:rgba(255,255,255,0.55);font-size:12px;margin-top:2px">Kartica zvestobe · SaaS platforma</div></td>
-    </tr></table>
-  </td></tr></table>`;
-  return shell(header, body, "© Loyavi · Kartica zvestobe platforma", unsubUrl) + `<!--${esc(subject)}-->`;
-}
+const COUPON_NOTE = "Shranjen je v tvoji denarnici. Pokaži ga osebju ob naslednjem obisku. Velja 30 dni.";
 
-// ─────────────────────────── GOSTJE · TRANSAKCIJSKI ───────────────────────────
-export function emailPoints(b: GuestBase, d: { points: number | string; totalPoints: number | string; toReward: number | string; stampsFilled: number; stampsTotal: number; rewardName: string }): string {
-  const c = color(b.brandColor);
-  return guestShell(b, "Dobil si točke za obisk! ⭐",
-    `<div style="text-align:center;margin-bottom:24px">${big("☕")}${h1("Hvala za obisk!")}${p(`Zabeležili smo tvoj obisk pri <b>${esc(b.venueName)}</b> in dodali točke na tvojo kartico.`)}</div>` +
-    `<div style="background:#F8F2EA;border-radius:16px;padding:28px;text-align:center;margin-bottom:24px"><div style="font-size:11px;font-weight:700;color:#9A8F80;letter-spacing:0.06em;margin-bottom:8px">DODANE TOČKE</div><div style="font-size:56px;font-weight:800;color:${c};line-height:1">+${esc(String(d.points))}</div>${hline()}<table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr><td style="text-align:center;padding:0 18px"><div style="font-weight:800;font-size:22px;color:${INK}">${esc(String(d.totalPoints))}</div><div style="font-size:12px;color:#9A8F80;margin-top:3px">skupaj točk</div></td><td style="text-align:center;padding:0 18px"><div style="font-weight:800;font-size:22px;color:${INK}">${esc(String(d.toReward))}</div><div style="font-size:12px;color:#9A8F80;margin-top:3px">do nagrade</div></td></tr></table></div>` +
-    `<div style="background:#FDFAF5;border-radius:12px;padding:18px 20px"><div style="font-size:11px;font-weight:700;color:#9A8F80;letter-spacing:0.06em;margin-bottom:6px">NAPREDEK KARTICE</div>${stamps(d.stampsFilled, d.stampsTotal, c)}<p style="margin:8px 0 0;font-size:13px;color:${MUTED}">Še <b>${esc(String(Math.max(0, d.stampsTotal - d.stampsFilled)))}</b> žigov do: <b>${esc(d.rewardName)}</b></p></div>` +
-    ctaCenter("Poglej svojo kartico →", b.ctaUrl || "#", INK),
+// ── GOST ────────────────────────────────────────────────────────────────────
+export function emailWelcome(b: GuestBase, d: { goal: number; reward: string; checkin: "receipt" | "stand" | "both" }): string {
+  const how =
+    d.checkin === "receipt"
+      ? { title: "Ob nakupu skeniraj račun", text: "Koda QR je na dnu vsakega računa. En račun, en žig." }
+      : d.checkin === "stand"
+        ? { title: "Ob obisku skeniraj kodo na pultu", text: "Ali približaj telefon nalepki ob blagajni. En žig na dan." }
+        : { title: "Ob obisku zabeleži žig", text: "Skeniraj kodo QR na računu ali kodo na pultu ob blagajni." };
+  return guestShell(
+    b,
+    `Zberi ${d.goal} žigov in prevzemi nagrado: ${d.reward}.`,
+    eyebrow("Kartica je dodana") +
+      h1("Tvoja kartica je pripravljena") +
+      lead(`Kartica lokala ${b.venueName} je v tvoji denarnici. Po ${d.goal} obiskih te čaka nagrada.`) +
+      card({ venueName: b.venueName, color: b.brandColor, goal: d.goal, filled: 0, reward: d.reward }) +
+      `<div style="height:24px;font-size:0;line-height:0">&nbsp;</div>` +
+      steps([how, { title: "Spremljaj kartico", text: "Vsak potrjen obisk doda žig. Stanje vidiš kadar koli." }, { title: "Prevzemi nagrado", text: `Ko je kartica polna, dobiš kupon: ${d.reward}.` }]) +
+      button("Odpri kartico", b.ctaUrl),
   );
 }
 
-export function emailCouponEarned(b: GuestBase, d: { guestName?: string; rewardName: string; couponCode: string; stampsTotal: number; expires?: string }): string {
-  const c = color(b.brandColor);
-  return guestShell(b, `🎉 Čestitke! Zaslužil si ${d.rewardName}!`,
-    `<div style="text-align:center;margin-bottom:20px">${big("🎉")}${h1("Kartica je polna!")}${p(`Čestitke${d.guestName ? ", " + esc(d.guestName) : ""}! Zbral si vseh ${esc(String(d.stampsTotal))} žigov in zaslužil brezplačno nagrado.`)}</div>` +
-    `<div style="text-align:center">${stamps(d.stampsTotal, d.stampsTotal, c)}</div>` +
-    notice("Tvoja nagrada je aktivna in čaka na unovčitev. Pokaži jo pri blagajni.", "green") +
-    couponBlock(d.rewardName, "Nagrada za polno kartico", d.couponCode, c) +
-    (d.expires ? `<p style="font-size:12.5px;color:#9A8F80;margin:0 0 4px;text-align:center">Kupon velja do: <b style="color:#5A4E43">${esc(d.expires)}</b></p>` : "") +
-    ctaCenter("Unovči kupon →", b.ctaUrl || "#", c),
+export function emailCouponEarned(b: GuestBase, d: { goal: number; reward: string }): string {
+  return guestShell(
+    b,
+    `Vseh ${d.goal} žigov je zbranih. Čaka te: ${d.reward}.`,
+    eyebrow("Kartica je polna") +
+      h1("Nagrada te čaka") +
+      lead(`Pri lokalu ${b.venueName} imaš zbranih vseh ${d.goal} žigov. Nova kartica se je že začela.`) +
+      coupon(d.reward, "Shranjen je v tvoji denarnici. Ob naslednjem obisku ga odpri in pokaži osebju.") +
+      button("Odpri kupon", b.ctaUrl),
   );
 }
 
-export function emailCouponRedeem(b: GuestBase, d: { guestName?: string; rewardName: string; couponCode: string; sub?: string; expires?: string; daysLeft?: number | string }): string {
-  const c = color(b.brandColor);
-  return guestShell(b, "☕ Tvoj kupon čaka — ne pozabi ga unovčiti!",
-    h1("Tvoja nagrada čaka") +
-    p(`Hej${d.guestName ? ", " + esc(d.guestName) : ""}! Imaš neunovčen kupon pri <b>${esc(b.venueName)}</b>. Pridi ga unovčit, preden poteče.`) +
-    couponBlock(d.rewardName, d.sub || "Tvoja nagrada", d.couponCode, c) +
-    (d.expires ? notice(`⏰ Kupon poteče <b>${esc(d.expires)}</b>${d.daysLeft != null ? `. Ostane ti še <b>${esc(String(d.daysLeft))}</b> dni!` : "."}`, "amber") : "") +
-    ctaCenter("Unovči zdaj →", b.ctaUrl || "#", c),
+export type MarketingKind = "we_miss_you" | "birthday_guest" | "anniversary" | "birthday_venue";
+
+const MARKETING: Record<MarketingKind, { eyebrow: string; heading: (v: string) => string; cta: string }> = {
+  we_miss_you: { eyebrow: "Dolgo se nismo videli", heading: () => "Pogrešamo te", cta: "Odpri kartico" },
+  birthday_guest: { eyebrow: "Tvoj dan", heading: () => "Vse najboljše", cta: "Odpri darilo" },
+  anniversary: { eyebrow: "Eno leto skupaj", heading: () => "Hvala, da se vračaš", cta: "Odpri kartico" },
+  birthday_venue: { eyebrow: "Praznujemo", heading: (v) => `${v} praznuje`, cta: "Odpri kartico" },
+};
+
+/** Samodejna sporočila lokala (besedilo napiše lastnik, kupon je neobvezen). */
+export function emailMarketing(b: GuestBase, kind: MarketingKind, d: { message: string; couponName?: string }): string {
+  const m = MARKETING[kind];
+  return guestShell(
+    b,
+    d.message.slice(0, 120),
+    eyebrow(m.eyebrow) + h1(m.heading(b.venueName)) + textToHtml(d.message) + (d.couponName ? coupon(d.couponName, COUPON_NOTE) : "") + button(d.couponName ? "Odpri kupon" : m.cta, b.ctaUrl),
   );
 }
 
-export function emailWelcome(b: GuestBase, d: { guestName?: string; rewardName: string; stampsTotal: number; pointRewards?: { name: string; points: number; image?: string | null }[] }): string {
-  const c = color(b.brandColor);
-  const rewards = (d.pointRewards || []).slice(0, 5);
-  const rewardsBlock = rewards.length
-    ? `<div style="margin:18px 0 4px"><div style="font-size:11px;font-weight:700;color:#9A8F80;letter-spacing:0.06em;margin-bottom:10px">UNOVČI S TOČKAMI</div>` +
-      rewards.map((r) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px"><tr><td valign="middle" style="width:46px">${r.image ? `<img src="${esc(r.image)}" width="44" height="44" alt="" style="width:44px;height:44px;border-radius:11px;object-fit:cover;display:block">` : `<div style="width:44px;height:44px;border-radius:11px;background:#F0E8DC;text-align:center;line-height:44px;font-size:22px">🎁</div>`}</td><td valign="middle" style="padding-left:12px"><div style="font-weight:700;font-size:15px;color:${INK}">${esc(r.name)}</div></td><td valign="middle" align="right" style="white-space:nowrap"><span style="display:inline-block;background:#FCEFD8;color:#B4781E;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:800">${esc(String(r.points))} točk</span></td></tr></table>`).join("") +
-      `</div>`
-    : "";
-  return guestShell(b, `Dobrodošel pri ${b.venueName}! 👋`,
-    `${big("👋")}${h1(`Dobrodošel${d.guestName ? ", " + esc(d.guestName) : ""}!`)}${p(`Veselimo se, da si del naše skupnosti pri <b>${esc(b.venueName)}</b>. Vsak obisk zdaj prinaša žig in točke — zberi jih in unovči nagrado!`)}` +
-    stepList([
-      { title: "Skeniraj račun", sub: "Ob vsakem obisku skeniraj račun in pridobi žig + točke." },
-      { title: "Zberi žige", sub: "Ko napolniš kartico, zasluži brezplačno nagrado." },
-      { title: "Unovči nagrade", sub: "Pokaži kupon pri blagajni in si privošči zasluženo." },
-    ]) +
-    `<div style="background:#F8F2EA;border-radius:12px;padding:18px 20px;margin:16px 0"><div style="font-size:11px;font-weight:700;color:#9A8F80;letter-spacing:0.06em;margin-bottom:6px">TVOJA KARTICA</div>${stamps(0, d.stampsTotal, c)}<p style="margin:10px 0 0;font-size:13px;color:${MUTED}">Zberi ${esc(String(d.stampsTotal))} žigov in zasluži: <b>${esc(d.rewardName)}</b></p></div>` +
-    rewardsBlock +
-    ctaCenter("Odpri svojo kartico →", b.ctaUrl || "#", INK),
-  );
+/** Enkratno sporočilo lokala gostom. */
+export function emailCampaign(b: GuestBase, d: { heading: string; message: string; couponName?: string }): string {
+  return guestShell(b, d.message.slice(0, 120), h1(d.heading) + textToHtml(d.message) + (d.couponName ? coupon(d.couponName, COUPON_NOTE) : "") + button(d.couponName ? "Odpri kupon" : "Odpri kartico", b.ctaUrl));
 }
 
-// ─────────────────────────── GOSTJE · AVTOMATIZACIJE ───────────────────────────
-export function emailWeMissYou(b: GuestBase, d: { guestName?: string; days: number | string; lastVisit?: string }): string {
-  const c = color(b.brandColor);
-  return guestShell(b, `Pogrešamo te pri ${b.venueName} 😔`,
-    `<div style="text-align:center;margin-bottom:24px">${big("😔")}${h1("Že dolgo te ni bilo...")}${p(`Hej${d.guestName ? ", " + esc(d.guestName) : ""}! Minilo je že ${esc(String(d.days))} dni od tvojega zadnjega obiska pri <b>${esc(b.venueName)}</b>. Pogrešamo te!`)}</div>` +
-    (d.lastVisit ? `<div style="background:#F8F2EA;border-radius:16px;padding:24px;text-align:center;margin-bottom:20px"><div style="font-size:11px;font-weight:700;color:#9A8F80;letter-spacing:0.06em;margin-bottom:8px">ZADNJI OBISK</div><div style="font-weight:800;font-size:28px;color:${INK}">${esc(d.lastVisit)}</div></div>` : "") +
-    notice("Samo za tebe: pridi ta teden in zasluži <b>dvojne točke</b> za naslednji obisk! 🎁", "amber") +
-    ctaCenter("Obišči nas →", b.ctaUrl || "#", c),
+// ── LASTNIK (Loyavi → lokal) ────────────────────────────────────────────────
+export type AdminBase = { ctaUrl: string };
+
+export function emailOwnerWelcome(d: AdminBase & { venueName: string }): string {
+  return adminShell(
+    "Trije koraki do prvega žiga.",
+    eyebrow("Lokal je ustvarjen") +
+      h1(`${d.venueName} je pripravljen`) +
+      lead("Brezplačni preizkus traja 30 dni, kartice ni treba vpisati. Do prvega žiga te ločijo trije koraki.") +
+      steps([
+        { title: "Vklopi beleženje obiskov", text: "Skeniraj en svoj račun ali natisni kodo QR za pult." },
+        { title: "Preizkusi kot gost", text: "Odpri svojo kartico v telefonu in zabeleži prvi obisk." },
+        { title: "Povabi goste", text: "Kodo postavi ob blagajno in osebju povej, naj jo omeni ob plačilu." },
+      ]) +
+      button("Odpri nadzorno ploščo", d.ctaUrl) +
+      small("Če se kje zatakne, odgovori na to sporočilo. Bere ga človek."),
   );
 }
-
-export function emailAnniversary(b: GuestBase, d: { guestName?: string; visits: number | string; totalPoints: number | string; rewards: number | string; giftName: string; couponCode: string }): string {
-  const c = color(b.brandColor);
-  return guestShell(b, `🎂 Že eno leto skupaj — ${b.venueName} te razvaja!`,
-    `<div style="text-align:center;margin-bottom:24px">${big("🎂")}${h1(`Že eno leto skupaj${d.guestName ? ", " + esc(d.guestName) : ""}!`)}${p(`Pred natanko enim letom si se prvič pridružil <b>${esc(b.venueName)}</b>. V tem letu je bilo lepo — hvala, da si z nami!`)}</div>` +
-    statBox([{ value: String(d.visits), label: "obiskov" }, { value: String(d.totalPoints), label: "točk skupaj" }, { value: String(d.rewards), label: "nagrad" }]) +
-    hline() + h2("Obletniško darilo 🎁") + p("Ker si z nami že eno leto, ti poklanjamo posebno darilo — samo za tebe.") +
-    couponBlock(d.giftName, "Obletniška nagrada · velja 14 dni", d.couponCode, c) +
-    ctaCenter("Unovči obletniško darilo →", b.ctaUrl || "#", c),
-  );
-}
-
-export function emailBirthdayGuest(b: GuestBase, d: { guestName?: string; giftName: string; couponCode: string }): string {
-  const c = color(b.brandColor);
-  return guestShell(b, "🎁 Vse najboljše! Rojstnodnevno darilo čaka tebe.",
-    `<div style="text-align:center;margin-bottom:24px">${big("🎂")}${h1(`Vse najboljše${d.guestName ? ", " + esc(d.guestName) : ""}!`)}${p(`Celotna ekipa pri <b>${esc(b.venueName)}</b> ti želi srečen rojstni dan! Poklanjamo ti posebno rojstnodnevno darilo.`)}</div>` +
-    couponBlock(d.giftName, "Rojstnodnevni kupon · velja 7 dni", d.couponCode, c) +
-    notice("Kupon pokaži pri blagajni. Velja samo na tvoj rojstni dan in 7 dni po njem.", "green") +
-    ctaCenter("Unovči darilo →", b.ctaUrl || "#", c),
-  );
-}
-
-export function emailBirthdayVenue(b: GuestBase, d: { years: number | string; offer: string; offerDesc: string; date?: string }): string {
-  const c = color(b.brandColor);
-  return guestShell(b, `🎊 ${b.venueName} praznuje! Posebna ponudba.`,
-    `<div style="text-align:center;margin-bottom:24px">${big("🎊")}${h1(`${esc(b.venueName)} praznuje ${esc(String(d.years))} let!`)}${p(`Hvala, da ste del naše zgodbe! Ob obletnici lokala vas razvajamo s posebno ponudbo${d.date ? " — samo " + esc(d.date) : ""}.`)}</div>` +
-    `<div style="background:${c};border-radius:16px;padding:28px;text-align:center;margin-bottom:24px;color:#fff"><div style="font-size:13px;font-weight:700;opacity:0.75;margin-bottom:8px">POSEBNA PONUDBA</div><div style="font-size:48px;font-weight:800;line-height:1;margin-bottom:8px">${esc(d.offer)}</div><div style="font-size:15px;opacity:0.85">${esc(d.offerDesc)}</div></div>` +
-    ctaCenter("Uveljavi ponudbo →", b.ctaUrl || "#", INK),
-  );
-}
-
-// ─────────────────────────── KAMPANJE ───────────────────────────
-export function emailCampaign(b: GuestBase, d: { heading: string; message: string; couponName?: string; couponCode?: string; offerNote?: string }): string {
-  const c = color(b.brandColor);
-  return guestShell(b, d.heading,
-    `${big("🏷")}${h1(esc(d.heading))}${textToHtml(d.message)}` +
-    (d.couponName ? couponBlock(d.couponName, "Kupon zate", d.couponCode || "—", c) : "") +
-    (d.offerNote ? `<div style="background:#F8F2EA;border-radius:14px;padding:16px 22px;border-left:4px solid ${c};margin:18px 0;font-size:14px;color:#5A4E43;line-height:1.6">${esc(d.offerNote)}</div>` : "") +
-    ctaCenter("Poglej ponudbo →", b.ctaUrl || "#", c),
-  );
-}
-
-export function emailReviewThanks(b: GuestBase, d: { guestName?: string; stars: number; comment?: string; bonusPoints?: number | string }): string {
-  const starRow = `<div style="text-align:center;margin:12px 0;font-size:26px">${"⭐".repeat(Math.max(1, Math.min(5, d.stars)))}</div>`;
-  return guestShell(b, "⭐ Hvala za vašo oceno!",
-    `<div style="text-align:center;margin-bottom:20px">${big("⭐")}${h1(`Hvala za oceno${d.guestName ? ", " + esc(d.guestName) : ""}!`)}${p("Cenimo vaš čas in mnenje. Vaša ocena nam pomaga izboljšati storitve za vse goste.")}${starRow}${d.comment ? `<div style="font-size:14px;color:${MUTED};font-style:italic;margin-top:4px">"${esc(d.comment)}"</div>` : ""}</div>` +
-    (d.bonusPoints != null ? hline() + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EEF4EE;border-radius:12px"><tr><td style="width:46px;padding:18px 0 18px 20px;font-size:28px">🎁</td><td style="padding:18px 20px"><div style="font-weight:700;font-size:15px;color:#2A5527">Nagrada za oceno</div><div style="font-size:13.5px;color:#4A7045;margin-top:3px">Dobil si <b>${esc(String(d.bonusPoints))}</b> bonus točk za poslano oceno!</div></td></tr></table>` : "") +
-    ctaCenter("Poglej svojo kartico →", b.ctaUrl || "#", INK),
-  );
-}
-
-// ─────────────────────────── ADMINISTRACIJA · SaaS ───────────────────────────
-export type AdminBase = { ctaUrl?: string; unsubUrl?: string };
 
 export function emailAdminPurchase(d: AdminBase & { venueName: string; plan: string; amount: string; date: string; nextRenewal: string }): string {
-  return adminShell("✅ Hvala za naročnino Loyavi · Potrditev plačila",
-    `<div style="text-align:center;margin-bottom:24px">${big("✅")}${h1("Hvala za nakup!")}${p(`Vaša naročnina za <b>${esc(d.venueName)}</b> je aktivna. Dostop do vseh funkcij je takoj na voljo.`)}</div>` +
-    kvRows("PODROBNOSTI NAROČNINE", [["Paket", d.plan], ["Znesek", d.amount], ["Datum naročnine", d.date], ["Naslednje podaljšanje", d.nextRenewal]]) +
-    ctaCenter("Odpri nadzorno ploščo →", d.ctaUrl || "#", INK),
-    d.unsubUrl,
+  return adminShell(
+    `Paket ${d.plan} je aktiven.`,
+    eyebrow("Naročnina je aktivna") +
+      h1("Hvala za zaupanje") +
+      lead(`Naročnina za lokal ${d.venueName} je aktivna. Račun ti pošlje naš plačilni partner Polar.`) +
+      facts([
+        ["Paket", d.plan],
+        ["Znesek", d.amount],
+        ["Datum", d.date],
+        ["Naslednji obračun", d.nextRenewal],
+      ]) +
+      button("Odpri nadzorno ploščo", d.ctaUrl),
   );
 }
 
-export function emailAdminExpiring(d: AdminBase & { venueName: string; plan: string; expiresOn: string }): string {
-  return adminShell("⏰ Vaša Loyavi naročnina kmalu poteče — ukrepajte",
-    `${big("⏰")}${h1("Naročnina kmalu poteče")}${p(`Vaša naročnina za <b>${esc(d.venueName)}</b> poteče <b>${esc(d.expiresOn)}</b>. Da bi ohranili neprekinjen dostop, prosimo podaljšajte naročnino.`)}` +
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FDF8EE;border-radius:14px;border:1px solid #E8D9A0;margin-bottom:8px"><tr><td style="width:44px;padding:18px 0 18px 20px;font-size:22px;vertical-align:top">⚠️</td><td style="padding:18px 20px"><div style="font-weight:700;font-size:15px;color:#7A5500">Opozorilo</div><div style="font-size:13.5px;color:#7A5500;margin-top:4px;line-height:1.55">Po poteku gostje ne bodo mogli skenirati računov in kartice bodo neaktivne.</div></td></tr></table>` +
-    kvRows("NAROČNINA", [["Paket", d.plan], ["Datum poteka", d.expiresOn, "#8B3030"]]) +
-    ctaCenter("Podaljšaj naročnino →", d.ctaUrl || "#", INK),
-    d.unsubUrl,
+export function emailAdminExpiring(d: AdminBase & { venueName: string; plan: string; expiresOn: string; trial: boolean }): string {
+  return adminShell(
+    d.trial ? `Preizkus se izteče ${d.expiresOn}.` : `Naročnina se izteče ${d.expiresOn}.`,
+    eyebrow(d.trial ? "Preizkus se izteka" : "Naročnina se izteka") +
+      h1(d.trial ? "Še nekaj dni preizkusa" : "Naročnina se kmalu izteče") +
+      lead(
+        d.trial
+          ? `Brezplačni preizkus za lokal ${d.venueName} se izteče ${d.expiresOn}. Izberi paket, da gostje zbirajo žige brez prekinitve.`
+          : `Naročnina za lokal ${d.venueName} se izteče ${d.expiresOn}. Po tem datumu gostje ne morejo več zbirati žigov, podatki pa ostanejo shranjeni.`,
+      ) +
+      facts([
+        ["Lokal", d.venueName],
+        [d.trial ? "Konec preizkusa" : "Velja do", d.expiresOn],
+        ...(d.trial ? [] : ([["Paket", d.plan]] as [string, string][])),
+      ]) +
+      button(d.trial ? "Izberi paket" : "Uredi naročnino", d.ctaUrl),
   );
 }
 
-export function emailAdminRenewal(d: AdminBase & { venueName: string; plan: string; amount: string; date: string; method?: string }): string {
-  return adminShell("🔄 Loyavi naročnina se samodejno podaljša",
-    `${big("🔄")}${h1("Samodejno podaljšanje")}${p(`Vaša naročnina za <b>${esc(d.venueName)}</b> se bo samodejno podaljšala <b>${esc(d.date)}</b>. Zaračunali bomo <b>${esc(d.amount)}</b> na shranjeno plačilno sredstvo.`)}` +
-    kvRows("PODROBNOSTI PODALJŠANJA", [["Paket", d.plan], ["Znesek", d.amount], ["Datum zaračunavanja", d.date], ["Plačilno sredstvo", d.method || "kartica"]]) +
-    notice("Če ne želite podaljšanja, ga preklicite vsaj 24 ur pred datumom zaračunavanja.", "neutral") +
-    ctaCenter("Upravljaj naročnino →", d.ctaUrl || "#", INK),
-    d.unsubUrl,
-  );
-}
-
-export function emailOwnerWelcome(d: AdminBase & { ownerName?: string; venueName: string }): string {
-  return adminShell("🏪 Dobrodošli v Loyavi! Začnite z nastavitvijo.",
-    `<div style="text-align:center;margin-bottom:28px">${big("👋")}${h1(`Dobrodošli${d.ownerName ? ", " + esc(d.ownerName) : ""}!`)}${p(`Veseli smo, da ste izbrali Loyavi za kartico zvestobe lokala <b>${esc(d.venueName)}</b>. Vse je pripravljeno za začetek.`)}</div>` +
-    stepList([
-      { title: "Nastavi kartico", sub: "Določi ime lokala, barvo, logo in število žigov za nagrado." },
-      { title: "Deli z gosti", sub: "Gostje skenirajo QR ali obiščejo tvojo stran in se prijavijo." },
-      { title: "Sledi in nagrajuj", sub: "V nadzorni plošči vidiš vse goste, točke in kupone v realnem času." },
-    ]) +
-    notice("🎁 Brezplačno preizkusno obdobje je aktivno. Vse funkcije so na voljo brez omejitev.", "green") +
-    ctaCenter("Začni z nastavitvijo →", d.ctaUrl || "#", INK),
-    d.unsubUrl,
-  );
-}
-
-export function emailOwnerUpdate(d: AdminBase & { heading: string; intro: string; features?: { icon: string; title: string; sub: string }[]; outro?: string; ctaText?: string }): string {
-  return adminShell(d.heading,
-    `${big("🚀")}${h1(esc(d.heading))}${textToHtml(d.intro)}` +
-    (d.features && d.features.length ? featureList(d.features) : "") +
-    (d.outro ? hline() + `<div style="font-size:13.5px;color:${MUTED};text-align:center;margin-bottom:20px">${esc(d.outro)}</div>` : "") +
-    ctaCenter(d.ctaText || "Preizkusi novosti →", d.ctaUrl || "#", INK),
-    d.unsubUrl,
-  );
-}
-
-/** Generičen owner mail (super-admin → lastniki, poljubno sporočilo). */
+/** Sporočilo ekipe Loyavi lastnikom (superadmin). */
 export function emailOwnerMessage(d: AdminBase & { heading: string; message: string; ctaText?: string }): string {
-  return adminShell(d.heading,
-    `${big("📣")}${h1(esc(d.heading))}${textToHtml(d.message)}` +
-    (d.ctaText ? ctaCenter(d.ctaText, d.ctaUrl || "#", INK) : ""),
-    d.unsubUrl,
-  );
-}
-
-/** Ohranjeno: preprosta branded predloga (fallback). */
-export function brandedEmail(o: { brandColor?: string | null; brandName: string; heading: string; bodyHtml: string; ctaText?: string; ctaUrl?: string; footer?: string }): string {
-  return guestShell({ venueName: o.brandName, brandColor: o.brandColor }, o.heading,
-    h1(esc(o.heading)) + o.bodyHtml + (o.ctaText ? ctaCenter(o.ctaText, o.ctaUrl || "#", color(o.brandColor)) : ""),
-  );
+  return adminShell(d.message.slice(0, 120), h1(d.heading) + textToHtml(d.message) + button(d.ctaText || "Odpri nadzorno ploščo", d.ctaUrl));
 }

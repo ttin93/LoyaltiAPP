@@ -1,94 +1,54 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { isSupabaseConfigured, getServiceClient } from "@/lib/supabase/server";
+import { getServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/ssrServer";
 import { isSuperadmin } from "@/lib/superadmin";
-import { bestOwnerPlan } from "@/lib/plans";
+import { bestOwnerPlan, planMaxVenues } from "@/lib/plans";
 import { ownerAccess } from "@/lib/access";
-import Dashboard, { type ReviewRow } from "./Dashboard";
-import DashboardDemo from "./DashboardDemo";
-import type { Venue, Reward, Customer, ScanRow, RedemptionRow, GrantRow } from "@/lib/types";
+import { emailConfigured } from "@/lib/email";
+import type { Venue } from "@/lib/types";
+import { loadDashboard, type DashData } from "./data";
+import Dashboard from "./Dashboard";
+import { SECTION_KEYS, type SectionKey } from "./keys";
 
+export const metadata: Metadata = { title: "Nadzorna plošča", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ v?: string }> }) {
-  if (!isSupabaseConfigured()) return <DashboardDemo />;
-
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ v?: string; s?: string; novo?: string; billing?: string }> }) {
   const user = await getCurrentUser();
   if (!user) redirect("/partner");
 
   const db = getServiceClient();
-  // lastnik ima lahko VEČ lokalov — naloži vse, izberi trenutnega po ?v=
-  const { data: venues } = await db
-    .from("venues")
-    .select("*")
-    .eq("owner_user_id", user.id)
-    .order("created_at", { ascending: true });
-  if (!venues || !venues.length) redirect("/partner");
+  // lastnik ima lahko več lokalov; trenutnega izbere ?v=
+  const { data: rows } = await db.from("venues").select("*").eq("owner_user_id", user.id).order("created_at", { ascending: true });
+  const venues = (rows ?? []) as Venue[];
+  if (!venues.length) redirect("/partner");
+
   const sp = await searchParams;
-  const venue = venues.find((v) => v.id === sp?.v) || venues[0];
+  const venue = venues.find((v) => v.id === sp?.v) ?? venues[0];
+  const plan = bestOwnerPlan(venues);
+  const bill = venues[0]; // naročnina živi na prvem lokalu
+  // eslint-disable-next-line react-hooks/purity -- strežniška komponenta, čas se prebere enkrat na zahtevek
+  const access = ownerAccess(plan, bill, Date.now());
 
-  const [{ data: rewards }, { data: customers }, { data: scans }, { data: redemptions }, { data: reviews }, { data: grants }, scanCountRes, customerCountRes, birthdayCountRes, { data: dailyScans }, { data: hourlyScans }, { data: emailLog }] =
-    await Promise.all([
-      db.from("rewards").select("*").eq("venue_id", venue.id).order("points_required"),
-      db.from("customers").select("*").eq("venue_id", venue.id).order("points", { ascending: false }),
-      db
-        .from("scans")
-        .select("id, created_at, points_awarded, customer_id, customers(phone, email)")
-        .eq("venue_id", venue.id)
-        .order("created_at", { ascending: false })
-        .limit(200),
-      db
-        .from("redemptions")
-        .select("id, created_at, points_spent, rewards(name), customers(phone, email)")
-        .eq("venue_id", venue.id)
-        .order("created_at", { ascending: false })
-        .limit(200),
-      db
-        .from("reviews")
-        .select("id, stars, comment, to_google, created_at")
-        .eq("venue_id", venue.id)
-        .order("created_at", { ascending: false })
-        .limit(300),
-      db
-        .from("point_grants")
-        .select("id, created_at, points, note, customers(phone, email)")
-        .eq("venue_id", venue.id)
-        .order("created_at", { ascending: false })
-        .limit(200),
-      // KPI-ji + grafi prek strežniške agregacije (mimo 1000-row PostgREST limita)
-      db.from("scans").select("id", { count: "exact", head: true }).eq("venue_id", venue.id),
-      db.from("customers").select("id", { count: "exact", head: true }).eq("venue_id", venue.id),
-      db.from("customers").select("id", { count: "exact", head: true }).eq("venue_id", venue.id).not("birthday", "is", null),
-      db.rpc("venue_daily_scans", { p_venue_id: venue.id, p_days: 365 }),
-      db.rpc("venue_hourly_scans", { p_venue_id: venue.id, p_days: 365 }),
-      // dnevnik pošiljanja (za Marketing → Dnevnik)
-      db.from("email_log").select("id, kind, created_at, customers(email)").eq("venue_id", venue.id).order("created_at", { ascending: false }).limit(150),
-    ]);
-  const scanCount = scanCountRes.count ?? (scans?.length ?? 0);
-  const customerCount = customerCountRes.count ?? (customers?.length ?? 0);
-  const birthdayCount = birthdayCountRes.count ?? 0;
+  const data: DashData = {
+    ...(await loadDashboard(db, venue)),
+    venues: venues.map((v) => ({ id: v.id, name: v.name })),
+    ownerEmail: user.email ?? "",
+    isAdmin: isSuperadmin(user.email),
+    emailReady: emailConfigured(),
+    billing: {
+      plan,
+      access,
+      venueId: bill.id,
+      cycle: bill.billing_cycle === "yearly" ? "yearly" : "monthly",
+      hasSubscription: !!bill.polar_customer_id,
+      cancelAtPeriodEnd: !!bill.cancel_at_period_end,
+      venueCount: venues.length,
+      maxVenues: planMaxVenues(plan),
+    },
+  };
 
-  return (
-    <Dashboard
-      venue={venue as Venue}
-      venues={venues.map((v) => ({ id: v.id as string, name: v.name as string }))}
-      rewards={(rewards ?? []) as Reward[]}
-      customers={(customers ?? []) as Customer[]}
-      scans={(scans ?? []) as unknown as ScanRow[]}
-      redemptions={(redemptions ?? []) as unknown as RedemptionRow[]}
-      reviews={(reviews ?? []) as unknown as ReviewRow[]}
-      grants={(grants ?? []) as unknown as GrantRow[]}
-      ownerEmail={user.email ?? ""}
-      isAdmin={isSuperadmin(user.email)}
-      ownerPlan={bestOwnerPlan(venues)}
-      billingVenue={venues[0] as Venue}
-      access={ownerAccess(bestOwnerPlan(venues), venues[0] as Venue, Date.now())}
-      scanCount={scanCount}
-      customerCount={customerCount}
-      birthdayCount={birthdayCount}
-      dailyScans={(dailyScans ?? []) as { day: string; cnt: number }[]}
-      hourlyScans={(hourlyScans ?? []) as { hour: number; cnt: number }[]}
-      emailLog={(emailLog ?? []) as unknown as { id: string; kind: string; created_at: string; customers: { email: string | null } | null }[]}
-    />
-  );
+  const initial = (SECTION_KEYS as readonly string[]).includes(sp?.s ?? "") ? (sp!.s as SectionKey) : "pregled";
+  return <Dashboard key={venue.id} data={data} initialSection={access.ok ? initial : "narocnina"} isNew={sp?.novo === "1"} billingSuccess={sp?.billing === "success"} />;
 }

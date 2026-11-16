@@ -139,7 +139,7 @@ export default function Dashboard({ data, initialSection, isNew, billingSuccess 
   return (
     <ToastProvider>
       {/* Namizje: lebdeča stranska vrstica */}
-      <aside className="fixed bottom-4 left-4 top-4 z-30 hidden w-60 flex-col gap-6 overflow-y-auto rounded-3xl border border-line bg-s1 p-4 lg:flex">
+      <aside className="fixed bottom-4 left-4 top-4 z-30 hidden w-60 flex-col gap-6 overflow-y-auto rounded-3xl bg-card shadow-card p-4 lg:flex">
         <div className="px-3 pt-2">
           <Logo href="/dashboard" size={20} />
         </div>
@@ -180,10 +180,10 @@ export default function Dashboard({ data, initialSection, isNew, billingSuccess 
         {footer}
       </div>
 
-      <main id="vsebina" className="px-4 pb-24 pt-24 lg:pb-16 lg:pl-72 lg:pr-8 lg:pt-12">
+      <main id="vsebina" className="min-h-svh bg-canvas px-4 pb-24 pt-24 lg:pb-16 lg:pl-72 lg:pr-8 lg:pt-12">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
           {locked && (
-            <div role="alert" className="flex flex-col gap-1 rounded-3xl border border-line bg-s1 p-6">
+            <div role="alert" className="flex flex-col gap-1 rounded-3xl bg-card shadow-card p-6">
               <p className="text-lg font-semibold tracking-tight text-fg">Brezplačni preizkus se je iztekel</p>
               <p className="text-sm text-mute">Tvoji podatki in gostje so shranjeni. Izberi paket in nadaljuj tam, kjer si ostal.</p>
             </div>

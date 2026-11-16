@@ -32,21 +32,21 @@ const COLS: { title: string; links: { href: string; label: string }[] }[] = [
 
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-line bg-base">
+    <footer className="bg-fg text-white [--logo-gap:#0B1826]">
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-16 lg:flex-row lg:justify-between">
         <div className="flex max-w-xs flex-col gap-4">
           <Logo />
-          <p className="text-sm text-mute">{BRAND_TAGLINE} Kartice zvestobe iz tvojih najljubših lokalov na enem mestu.</p>
-          <a href={`mailto:${BRAND_EMAIL}`} className="w-max rounded-lg text-sm font-medium text-fg transition-all duration-700 ease-spring hover:text-brand-ink">
+          <p className="text-sm text-white/60">{BRAND_TAGLINE} Kartice zvestobe iz tvojih najljubših lokalov na enem mestu.</p>
+          <a href={`mailto:${BRAND_EMAIL}`} className="w-max rounded-lg text-sm font-medium text-white transition-all duration-700 ease-spring hover:text-white/70">
             {BRAND_EMAIL}
           </a>
         </div>
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:gap-16">
           {COLS.map((c) => (
             <nav key={c.title} aria-label={c.title} className="flex flex-col gap-3">
-              <p className="text-sm font-semibold text-fg">{c.title}</p>
+              <p className="text-sm font-semibold text-white">{c.title}</p>
               {c.links.map((l) => (
-                <Link key={l.href} href={l.href} className="w-max rounded-lg text-sm text-mute transition-all duration-700 ease-spring hover:text-fg">
+                <Link key={l.href} href={l.href} className="w-max rounded-lg text-sm text-white/60 transition-all duration-700 ease-spring hover:text-white">
                   {l.label}
                 </Link>
               ))}
@@ -55,7 +55,7 @@ export default function SiteFooter() {
         </div>
       </div>
       <div className="mx-auto max-w-6xl px-6 pb-8">
-        <p className="text-xs text-dim">© {new Date().getFullYear()} Loyavi. Narejeno v Sloveniji.</p>
+        <p className="text-xs text-white/40">© {new Date().getFullYear()} Loyavi. Narejeno v Sloveniji.</p>
       </div>
     </footer>
   );

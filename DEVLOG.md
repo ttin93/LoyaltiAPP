@@ -49,6 +49,18 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-11-17 — seja 72, nadaljevanje (v2: nov UI aplikacije, nova stran, nov logo) — Fable 5.2
+> Veja **`v2`**, živa stran še stara. Vir resnice: [`docs/V2-PLAN.md`](docs/V2-PLAN.md).
+- Tin je svetlo različico ocenil kot poceni in brez grafik ter poslal referenco (pristajalna stran za aplikacijo z
+  mehkimi prelivi in telefoni). Narejeno: **28 3D grafik** (`public/3d`), **nov logo** (kartici z rdečim žigom),
+  **prenovljena gostova aplikacija** (denarnica, kartica lokala, kuponi kot vstopnice, imenik, pojavna okna, namizni
+  razpored), **nova naslovnica** (bento s telefonom, koraki s pravimi zasloni, kolo, kategorije, blok s kodo QR, temna noga),
+  cenik s poudarjenim paketom, bele kartice s senco tudi v nadzorni plošči.
+- Posnetki zaslonov za stran nastanejo iz `/predstavitev/[zaslon]` (samo razvoj). Testna računa za ogled sta v
+  `docs/TESTNI-RACUN.local.md` (ni v gitu).
+- Treg: skupaj približno 0,40 $ (10 fotografij, 2 lista 3D ikon, list logotipov).
+- Preverjeno: `tsc`, `eslint` (0 napak), `next build`. Čaka: Tinova ocena novega videza, potem merge v `main`.
+
 ### 2026-11-16 — seja 72 (Loyavi v2: vse na novo po vzoru Feedel, veja `v2`) — Fable 5.2
 > **Stanje:** vse delo je na veji **`v2`** (ni še v `main`, živa stran je še stara). Vir resnice za v2 je
 > [`docs/V2-PLAN.md`](docs/V2-PLAN.md). Razdelki nad dnevnikom (Aplikacija, Zagon, Kaj DELA) opisujejo staro različico.

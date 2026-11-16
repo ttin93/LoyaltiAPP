@@ -122,7 +122,7 @@ export default function Onboarding({ signOut }: { signOut: () => Promise<void> }
               </div>
               <div className="flex flex-col gap-2">
                 <span className="text-sm font-medium text-mute">Obiskov do nagrade</span>
-                <div className="flex w-max items-center gap-4 rounded-2xl border border-line bg-s1 p-2">
+                <div className="flex w-max items-center gap-4 rounded-3xl bg-card shadow-card p-2">
                   <button type="button" aria-label="Manj" onClick={() => setGoal((g) => Math.max(4, g - 1))} className="flex size-10 items-center justify-center rounded-xl bg-s2 text-fg transition-all duration-700 ease-spring hover:bg-s3 active:scale-[0.98]">
                     <Minus size={16} weight="bold" aria-hidden="true" />
                   </button>

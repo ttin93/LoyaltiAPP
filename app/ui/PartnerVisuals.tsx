@@ -10,7 +10,7 @@ export function DashboardMock() {
     { name: "nika.z", visits: 6, note: "zadnjič pred 3 dnevi" },
   ];
   return (
-    <div className="flex w-full flex-col gap-3 rounded-3xl border border-line bg-s1 p-4" aria-hidden="true">
+    <div className="flex w-full flex-col gap-3 rounded-3xl bg-card shadow-pop p-4" aria-hidden="true">
       <div className="flex items-center justify-between px-2 pt-2">
         <p className="text-sm font-semibold text-fg">Pregled</p>
         <p className="font-mono text-xs text-dim">primer prikaza</p>

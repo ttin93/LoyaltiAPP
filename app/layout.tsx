@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin()),
   title: { default: TITLE, template: "%s | Loyavi" },
   description: BRAND_DESCRIPTION,
-  icons: { icon: "/icon.svg?v=4", apple: "/apple-icon.png?v=4" },
+  icons: { icon: "/icon.svg?v=5", apple: "/apple-icon.png?v=5" },
   appleWebApp: { capable: true, title: "Loyavi", statusBarStyle: "default" },
   openGraph: {
     type: "website",

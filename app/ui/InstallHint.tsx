@@ -2,7 +2,8 @@
 /* eslint-disable react-hooks/set-state-in-effect -- stanje se uskladi z brskalnikom ali s svežimi podatki s strežnika; preverjeno z E2E */
 
 import { useEffect, useState } from "react";
-import { DeviceMobile, X } from "@phosphor-icons/react/dist/ssr";
+import { X } from "@phosphor-icons/react/dist/ssr";
+import Icon3D from "./Icon3D";
 
 const KEY = "loyavi:install-hint";
 
@@ -25,9 +26,9 @@ export default function InstallHint() {
 
   if (!show) return null;
   return (
-    <aside className="flex items-start gap-4 rounded-2xl border border-line bg-s1 p-4">
-      <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-s3 text-brand-ink">
-        <DeviceMobile size={24} weight="bold" aria-hidden="true" />
+    <aside className="flex items-center gap-4 rounded-3xl bg-card p-4 shadow-card">
+      <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-tint">
+        <Icon3D name="telefon" size={52} />
       </span>
       <div className="flex-1">
         <p className="text-base font-semibold text-fg">Dodaj Loyavi na začetni zaslon</p>

@@ -57,7 +57,7 @@ export default function Billing({ billing, success }: { billing: BillingData; su
       <SectionHead title="Naročnina" text="Vsak paket vključuje vse funkcije, razlika je le v številu lokalov. Plačilo varno izvede naš partner Polar, račun prejmeš po elektronski pošti." />
 
       {success && (
-        <p role="status" className="flex items-start gap-3 rounded-3xl border border-line bg-s1 p-6 text-base text-fg">
+        <p role="status" className="flex items-start gap-3 rounded-3xl bg-card shadow-card p-6 text-base text-fg">
           <CheckCircle size={24} weight="fill" className="shrink-0 text-brand-ink" aria-hidden="true" />
           Hvala. Plačilo je sprejeto, naročnina se aktivira v nekaj trenutkih.
         </p>

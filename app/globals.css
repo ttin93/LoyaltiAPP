@@ -25,6 +25,13 @@
   --color-on-accent: #ffffff;
 
   --color-scrim: rgb(11 24 38 / 0.5);
+
+  /* aplikacija: tonirano platno, bele kartice z mehko senco */
+  --color-canvas: #f2f6fc;
+  --color-card: #ffffff;
+  --shadow-card: 0 1px 2px rgb(11 24 38 / 0.04), 0 10px 28px -14px rgb(11 24 38 / 0.14);
+  --shadow-pop: 0 2px 6px rgb(11 24 38 / 0.05), 0 28px 56px -20px rgb(11 24 38 / 0.22);
+  --shadow-brand: 0 20px 44px -18px rgb(15 122 230 / 0.55);
   --color-warn: #a85a00;
   --color-bad: #c8281c;
 
@@ -59,6 +66,27 @@ p { text-wrap: pretty; }
 }
 /* na modri podlagi je obroba fokusa bela */
 .on-brand :focus-visible { outline-color: #ffffff; }
+
+/* Mehka barvna atmosfera (hero, vrh aplikacije). Edina mesta s prelivi v ozadju. */
+.atmo {
+  background:
+    radial-gradient(55% 60% at 12% 0%, rgb(31 139 245 / 0.2), transparent 70%),
+    radial-gradient(45% 50% at 92% 8%, rgb(255 197 51 / 0.16), transparent 70%),
+    radial-gradient(50% 55% at 70% 100%, rgb(230 63 38 / 0.08), transparent 70%),
+    #f7faff;
+}
+.atmo-top {
+  background:
+    radial-gradient(60% 100% at 10% 0%, rgb(31 139 245 / 0.16), transparent 70%),
+    radial-gradient(50% 90% at 95% 0%, rgb(255 197 51 / 0.12), transparent 70%);
+}
+/* Modra ploskev z globino (nagrade, pozivi). */
+.atmo-brand {
+  background:
+    radial-gradient(70% 120% at 0% 0%, #5ab0ff, transparent 60%),
+    radial-gradient(60% 110% at 100% 100%, #0b63cf, transparent 62%),
+    #1f8bf5;
+}
 
 /* Velik zgoščen naslov (samo marketinške strani). */
 .display {

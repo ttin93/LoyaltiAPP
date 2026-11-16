@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, ArrowRight, CircleNotch, Clock, Confetti, ContactlessPayment, Globe, Lock, MapPin, Phone, Plus, Receipt, Ticket, Warning,
+  ArrowLeft, ArrowRight, CircleNotch, Clock, Globe, Lock, MapPin, Phone, Plus, Receipt, Warning,
 } from "@phosphor-icons/react/dist/ssr";
 import type { VenueView } from "@/lib/venues";
 import type { Coupon } from "@/lib/coupons";
@@ -17,6 +17,7 @@ import Scanner from "@/app/ui/Scanner";
 import WheelSheet from "@/app/ui/WheelSheet";
 import CouponSheet from "@/app/ui/CouponSheet";
 import ReviewSheet from "@/app/ui/ReviewSheet";
+import Icon3D from "@/app/ui/Icon3D";
 import { count, visitsLeft } from "@/lib/sl";
 
 type StampResult = { stamps: number; goal: number; cardCompleted: boolean; rewardName: string; unlocked: string[]; askReview: boolean };
@@ -128,8 +129,9 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
   const canStand = venue.checkin !== "receipt";
 
   return (
-    <div className="min-h-svh bg-base">
-      <header className="mx-auto flex max-w-4xl items-center justify-between px-6 pt-8">
+    <div className="relative min-h-svh bg-canvas">
+      <div className="atmo-top pointer-events-none absolute inset-x-0 top-0 h-96" aria-hidden="true" />
+      <header className="relative mx-auto flex max-w-4xl items-center justify-between px-6 pt-8">
         <Link
           href={signedIn ? "/app" : "/"}
           className="flex items-center gap-2 rounded-lg text-sm font-medium text-mute transition-all duration-700 ease-spring hover:text-fg"
@@ -140,7 +142,7 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
         <Logo href={signedIn ? "/app" : "/"} size={20} />
       </header>
 
-      <main id="vsebina" className="mx-auto grid max-w-4xl gap-8 px-6 pb-24 pt-8 lg:grid-cols-2 lg:gap-12 lg:pt-16">
+      <main id="vsebina" className="relative mx-auto grid max-w-4xl gap-8 px-6 pb-24 pt-8 lg:grid-cols-2 lg:gap-12 lg:pt-16">
         <section className="flex flex-col gap-4">
           <LoyaltyCard card={{ name: venue.name, category: venue.category, color: venue.color, logoUrl: venue.logoUrl, stamps, goal: venue.goal, reward: venue.reward }} />
           <p className="px-2 text-base font-medium text-mute">
@@ -150,14 +152,14 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
 
         <section className="flex flex-col gap-4">
           {error && (
-            <p role="alert" className="flex items-start gap-3 rounded-2xl border border-line bg-s1 p-4 text-sm text-bad">
+            <p role="alert" className="flex items-start gap-3 rounded-3xl bg-card shadow-card p-4 text-sm text-bad">
               <Warning size={20} weight="bold" className="shrink-0" aria-hidden="true" />
               {error}
             </p>
           )}
 
           {!signedIn && (
-            <div className="flex flex-col gap-4 rounded-3xl border border-line bg-s1 p-6">
+            <div className="flex flex-col gap-4 rounded-3xl bg-card shadow-card p-6">
               <h1 className="text-2xl font-semibold tracking-tight text-fg">Zbiraj žige pri lokalu {venue.name}</h1>
               <p className="text-base text-mute">Ustvari brezplačen račun in kartica se doda v tvojo denarnico. Traja manj kot minuto.</p>
               <ButtonLink href={`/prijava?next=${encodeURIComponent(next)}`} size="lg" full>
@@ -168,7 +170,7 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
           )}
 
           {signedIn && !isMember && (
-            <div className="flex flex-col gap-4 rounded-3xl border border-line bg-s1 p-6">
+            <div className="flex flex-col gap-4 rounded-3xl bg-card shadow-card p-6">
               <h1 className="text-2xl font-semibold tracking-tight text-fg">{venue.name}</h1>
               <p className="text-base text-mute">Dodaj kartico v denarnico in začni zbirati žige že ob naslednjem obisku.</p>
               <Button type="button" size="lg" full onClick={() => join(false)} disabled={busy !== null}>
@@ -181,7 +183,7 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
           {signedIn && isMember && (
             <>
               {!venue.live ? (
-                <p className="rounded-2xl border border-line bg-s1 p-4 text-sm text-mute">Lokal še pripravlja zbiranje žigov. Kartica te počaka v denarnici.</p>
+                <p className="rounded-3xl bg-card shadow-card p-4 text-sm text-mute">Lokal še pripravlja zbiranje žigov. Kartica te počaka v denarnici.</p>
               ) : (
                 <div className="flex flex-col gap-3">
                   {canReceipt && (
@@ -191,8 +193,10 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
                     </Button>
                   )}
                   {canStand && (
-                    <p className="flex items-start gap-3 rounded-2xl border border-line bg-s1 p-4 text-sm text-mute">
-                      <ContactlessPayment size={20} weight="bold" className="shrink-0 text-brand-ink" aria-hidden="true" />
+                    <p className="flex items-center gap-4 rounded-3xl bg-card p-4 text-sm text-mute shadow-card">
+                      <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-tint">
+                        <Icon3D name="telefon" size={44} />
+                      </span>
                       {busy === "stamp" && !canReceipt ? "Beležim obisk." : "Za žig približaj telefon stojalu Loyavi ob blagajni ali skeniraj kodo na njem."}
                     </p>
                   )}
@@ -203,10 +207,10 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
                 <button
                   type="button"
                   onClick={() => setSpinOpen(true)}
-                  className="flex items-center gap-4 rounded-2xl bg-brand p-4 text-left text-on-brand transition-all duration-700 ease-spring hover:bg-brand-deep active:scale-[0.98]"
+                  className="atmo-brand group flex items-center gap-4 rounded-3xl p-4 text-left text-on-brand shadow-brand transition-all duration-700 ease-spring hover:-translate-y-1 active:scale-[0.98]"
                 >
-                  <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-tint text-brand-ink">
-                    <Confetti size={24} weight="fill" aria-hidden="true" />
+                  <span className="flex size-16 shrink-0 items-center justify-center">
+                    <Icon3D name="kolo" size={64} className="drop-shadow-lg transition-all duration-700 ease-spring group-hover:rotate-12" />
                   </span>
                   <span className="flex-1">
                     <span className="block text-lg font-semibold tracking-tight">Zavrti kolo dobrodošlice</span>
@@ -221,9 +225,12 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
                   <h2 className="px-2 pt-2 text-sm font-semibold uppercase tracking-widest text-mute">Kuponi</h2>
                   {coupons.map((c) =>
                     c.status === "pending" ? (
-                      <div key={c.id} className="flex items-center gap-4 rounded-2xl border border-line bg-s1 p-4">
-                        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-s3 text-dim">
-                          <Lock size={24} weight="bold" aria-hidden="true" />
+                      <div key={c.id} className="flex items-center gap-4 rounded-3xl bg-card shadow-card p-4">
+                        <span className="relative flex size-14 shrink-0 items-center justify-center rounded-2xl bg-s2">
+                          <Icon3D name="kupon" size={44} className="opacity-60 grayscale" />
+                          <span className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full bg-fg text-card">
+                            <Lock size={12} weight="bold" aria-hidden="true" />
+                          </span>
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-base font-semibold text-fg">{c.name}</span>
@@ -235,16 +242,16 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
                         key={c.id}
                         type="button"
                         onClick={() => setSelected(c)}
-                        className="flex items-center gap-4 rounded-2xl border border-line bg-s1 p-4 text-left transition-all duration-700 ease-spring hover:bg-s2 active:scale-[0.98]"
+                        className="atmo-brand group flex items-center gap-4 rounded-3xl p-4 text-left text-on-brand shadow-brand transition-all duration-700 ease-spring hover:-translate-y-1 active:scale-[0.98]"
                       >
-                        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-brand text-on-brand">
-                          {c.status === "active" ? <Clock size={24} weight="bold" aria-hidden="true" /> : <Ticket size={24} weight="fill" aria-hidden="true" />}
+                        <span className="flex size-16 shrink-0 items-center justify-center">
+                          <Icon3D name="darilo" size={60} className="-rotate-6 drop-shadow-lg transition-all duration-700 ease-spring group-hover:rotate-0" />
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-base font-semibold text-fg">{c.name}</span>
-                          <span className="block text-sm text-mute">{c.status === "active" ? "Unovčevanje poteka" : "Pripravljen za prevzem"}</span>
+                          <span className="block text-xs font-semibold uppercase tracking-widest opacity-80">{c.status === "active" ? "Prevzem poteka" : "Pripravljen za prevzem"}</span>
+                          <span className="block text-lg font-semibold tracking-tight">{c.name}</span>
                         </span>
-                        <span className="rounded-full bg-s3 px-3 py-2 text-sm font-semibold text-fg">{c.status === "active" ? "Odpri" : "Unovči"}</span>
+                        <span className="shrink-0 rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-ink">{c.status === "active" ? "Odpri" : "Unovči"}</span>
                       </button>
                     ),
                   )}
@@ -254,7 +261,7 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
           )}
 
           {(venue.about || venue.address || venue.hours || venue.phone || venue.website) && (
-            <div className="flex flex-col gap-4 rounded-3xl border border-line bg-s1 p-6">
+            <div className="flex flex-col gap-4 rounded-3xl bg-card shadow-card p-6">
               <h2 className="text-lg font-semibold tracking-tight text-fg">O lokalu</h2>
               {venue.about && <p className="text-base text-mute">{venue.about}</p>}
               <ul className="flex flex-col gap-3 text-sm">
@@ -303,14 +310,15 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
       <Sheet open={!!result} onClose={closeResult}>
         {result && (
           <div className="flex flex-col items-center gap-6 pt-4 text-center">
+            <Icon3D name={result.cardCompleted ? "darilo" : "zig"} size={120} className="animate-pop-in drop-shadow-lg" />
             <div className="text-brand">
-              <StampDots total={result.goal} filled={result.cardCompleted ? result.goal : result.stamps} size="lg" fresh={(result.cardCompleted ? result.goal : result.stamps) - 1} />
+              <StampDots total={result.goal} filled={result.cardCompleted ? result.goal : result.stamps} size="lg" fresh={(result.cardCompleted ? result.goal : result.stamps) - 1} ink="#ffffff" />
             </div>
             <div className="flex flex-col gap-2">
               <h2 className="text-3xl font-semibold tracking-tight text-fg">{result.cardCompleted ? "Kartica je polna" : "Žig je tvoj"}</h2>
               <p className="text-base text-mute">
                 {result.cardCompleted
-                  ? `Zaslužil si nagrado: ${result.rewardName}. Kupon te čaka med kuponi.`
+                  ? `Nagrada je tvoja: ${result.rewardName}. Kupon te čaka med kuponi.`
                   : `${visitsLeft(result.goal - result.stamps)}: ${result.rewardName}.`}
               </p>
             </div>

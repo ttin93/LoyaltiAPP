@@ -36,27 +36,29 @@
 API: `/api/me` `/api/join` `/api/scan` `/api/checkin` `/api/wheel` `/api/coupons/activate` `/api/coupons/confirm`
 `/api/review` `/api/profile` + obstoječe billing/webhooks/cron/lead.
 
-## Dizajn sistem (posodobljeno 2026-11-16 po Tinovi referenci)
-Tin je sredi gradnje zamenjal smer: **svetla podoba, ne temna**; referenca = »dve mirni barvi in ena glasna«
-(nebesno modra + skoraj bela, rdeča samo za glavna dejanja), velik zgoščen naslov, kolaž fotografij.
-Kompozicija je naša, tuje predloge ne kopiramo.
-- **Barve (žetoni v `app/globals.css`, zrcalo v `lib/brand.ts`):** podlaga `#FDFDFE`, površine `#F3F6FA` / `#E9EEF4` / `#DDE5EE`,
-  črta `#D7DFE9`, besedilo `#0B1826`, utišano `#4F5D70` / `#6B7889`.
-  **Znamka (mirna):** modra `#1F8BF5`, za besedilo in ikone na beli `#0B6BD0`, nežna podlaga `#E3F1FF`.
-  **Glasna:** rdeča `#E63F26` (samo `Button` primary). Razredi: `bg-brand`, `text-brand-ink`, `bg-tint`, `bg-accent`, `text-on-brand` …
-- **Pisave:** Geist za vse (UI in besedilo), Geist Mono za številke, **Anton** (razred `.display`, velike črke) samo za velike
-  naslove na marketinških straneh. Razmik vrstic 1.18 zaradi strešic (Č Š Ž).
-- **Fotografije:** `public/photos/*.jpg` (10 kosov, ustvarjene z Gemini 3 Pro Image prek trega, enoten slog: sonce, modro nebo,
-  rdeči poudarki). Komponenta `app/ui/Photo.tsx` (oblike rect / rise / arch / circle / pill). Ko bodo na voljo prave
-  fotografije partnerjev, se zamenjajo datoteke.
-- **Pravila iz skilla landing-page-design, ki še veljajo:** razmiki samo 0,2,4,8,12,16,24,32,40,48,64,80,96 px; Tailwind lestvica
-  pisave; ploska ozadja brez gradientov; Phosphor ikone; gibanje `cubic-bezier(0.32,0.72,0,1)` 700 ms; reveal z
-  IntersectionObserver; lebdeča kapsula za navigacijo; razkritje slogana po besedah; stanja; 404; alt; meta.
-  Odstopanja po Tinovi želji: naslov hero je bel na modri (brez gradienta na besedilu), dodatna pisava za naslove.
-- **Besedila:** brez vezajev in pomišljajev v stavkih, brez klišejev, brez izmišljenih številk ali strank, tikanje,
-  spolno nevtralno (brez »prejel si«, »rad«), brezhibna slovenščina.
-- **Logo:** pet pik v obliki črke L (žigi), zadnja pika rdeča = nagrada. Ikona: temno modra ploščica z belimi pikami.
-  Ikone in slika za deljenje se izdelajo s skripto (puppeteer), izvorni SVG je `public/icon.svg`.
+## Dizajn sistem (tretja različica, 2026-11-17)
+Zgodovina: temna podoba (zavrnjena) → svetla modra, bela, rdeča (paleta in hero sprejeta kot »ajde«) → Tin je ploski
+UI in stran ocenil kot poceni (»brez grafik«) in poslal referenco pristajalne strani za aplikacijo: mehki prelivi, pravi
+zasloni aplikacije v telefonih, bele kartice z mehko senco, bento, poudarjen paket v ceniku, blok s kodo QR, temna noga.
+Zdaj velja:
+- **Barve (žetoni v `app/globals.css`):** podlaga `#FDFDFE`, platno aplikacije `canvas #F2F6FC`, kartice `card #FFFFFF`,
+  površine `s1 s2 s3`, besedilo `#0B1826`. Znamka: modra `#1F8BF5` (`brand`, `brand-ink`, `tint`), glasna rdeča `#E63F26`
+  samo za glavne gumbe. Sence `shadow-card`, `shadow-pop`, `shadow-brand`. Prelivi samo kot atmosfera: `.atmo`,
+  `.atmo-top`, `.atmo-brand`.
+- **Pisave:** Geist povsod, Geist Mono za številke. Anton (`.display`) samo v heroju in zaključnem pozivu.
+- **3D grafike:** `public/3d/*.webp` (28 kosov, prosojno ozadje): 14 vrst lokalov + darilo, kupon, kolo, torta, žig,
+  telefon, denarnica, konfeti, megafon, zvonec, srce, pokal, kartice, zvezda. Ustvarjene kot dva lista z Gemini 3 Pro
+  Image prek trega in razrezane s skripto. Komponenta `app/ui/Icon3D.tsx`. Kartica lokala samodejno dobi grafiko svoje vrste.
+- **Zasloni aplikacije na strani:** `public/screens/*.webp` so pravi posnetki predstavitvenih zaslonov
+  `/predstavitev/[zaslon]` (samo v razvoju, primeri podatkov, lokali niso resnični partnerji). Okvir: `app/ui/Phone.tsx`.
+  Ko se UI aplikacije spremeni, je treba posnetke zajeti znova.
+- **Aplikacija:** `WalletView` (pozdrav, nagrade kot vstopnice `RewardTicket`, kartice `LoyaltyCard` s prelivom barve
+  lokala, 3D grafiko in žigi s kljukico, bližnjice), pravi namizni razpored v dveh stolpcih.
+- **Logo:** dve kartici z rdečim žigom. Zasnova iz generatorja (6 predlogov v `docs/predogled/07-logo-predlogi.jpg`),
+  prerisana v SVG (`app/ui/Logo.tsx`, `public/icon.svg`). Tin lahko izbere drug predlog.
+- **Fotografije:** `public/photos/*.jpg` (10 kosov, generator), komponenta `Photo`.
+- **Besedila:** brez vezajev in pomišljajev v stavkih, brez klišejev, brez izmišljenih številk, strank ali mnenj, tikanje,
+  spolno nevtralno, brezhibna slovenščina.
 
 ## Kontrolni seznam
 - [x] A. Temelj: odvisnosti, fonti, žetoni, UI komponente, logo
@@ -76,7 +78,7 @@ Kompozicija je naša, tuje predloge ne kopiramo.
 - Google prijava (`docs/GOOGLE-LOGIN.md`) in lasten SMTP v Supabase (ponastavitev gesla) čakata na Tinovo nastavitev.
 - Testni podatki v produkcijski bazi: lokal »Test E2E Pekarna« (ni v imeniku) in gostje `delivered+loyavi…@resend.dev`
   na lokalu `demo`. Izbris po Tinovi potrditvi.
-- Sredina strani `/partnerji` je še pretežno besedilna; dodati fotografije ali posnetke plošče.
+- `/partnerji` in nadzorna plošča sta dobila nove kartice, sence in cenik, nista pa še predelana tako temeljito kot naslovnica in gostova aplikacija (bento, 3D grafike, zasloni plošče).
 - Lint: v treh datotekah je utišano pravilo `react-hooks/set-state-in-effect` (vzorci delujejo, preverjeno z E2E).
 
 ## Orodja za preverjanje (v začasni mapi seje, ne v repu)

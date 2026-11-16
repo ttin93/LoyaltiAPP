@@ -28,6 +28,18 @@ export function onColor(hex: string): "#0B1826" | "#FFFFFF" {
   return luminance(hex) > 0.36 ? "#0B1826" : "#FFFFFF";
 }
 
+/** Zmeša barvo s ciljno (t od 0 do 1). */
+export function mix(hex: string, target: string, t: number): string {
+  const a = rgb(hex);
+  const b = rgb(target);
+  const c = a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  return `#${c.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+}
+/** Temnejši odtenek iste barve. */
+export const shade = (hex: string, t: number) => mix(hex, "#000000", t);
+/** Svetlejši odtenek iste barve. */
+export const tint = (hex: string, t: number) => mix(hex, "#ffffff", t);
+
 export function withAlpha(hex: string, alpha: number): string {
   const [r, g, b] = rgb(hex);
   return `rgba(${r},${g},${b},${alpha})`;

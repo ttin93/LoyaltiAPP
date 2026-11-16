@@ -12,7 +12,7 @@ export default function Faq({ items }: { items: FaqItem[] }) {
       {items.map((it, i) => {
         const isOpen = open === i;
         return (
-          <li key={it.q} className="rounded-2xl border border-line bg-s1">
+          <li key={it.q} className="rounded-2xl bg-card shadow-card">
             <h3>
               <button
                 type="button"

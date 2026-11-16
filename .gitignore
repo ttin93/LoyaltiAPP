@@ -47,3 +47,6 @@ next-env.d.ts
 !.env.example
 
 .vercel
+
+# lokalni zapiski s testnimi računi (ne v git)
+*.local.md

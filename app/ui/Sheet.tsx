@@ -29,7 +29,7 @@ export default function Sheet({ open, onClose, title, children, dismissable = tr
       aria-label={title}
     >
       <div
-        className="animate-sheet-up lg:animate-pop-in relative max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl border border-line bg-s1 p-6 lg:max-w-md lg:rounded-3xl"
+        className="animate-sheet-up lg:animate-pop-in relative max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl bg-card p-6 shadow-pop lg:max-w-md lg:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {dismissable && (

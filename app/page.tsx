@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { ArrowRight, Check, X, Cards, Lightning, Gift, DeviceMobile, Wallet } from "@phosphor-icons/react/dist/ssr";
+import QRCode from "qrcode";
+import { ArrowRight, Check } from "@phosphor-icons/react/dist/ssr";
 import SiteNav from "@/app/ui/SiteNav";
 import SiteFooter from "@/app/ui/SiteFooter";
 import { ButtonLink } from "@/app/ui/Button";
 import { Reveal, WordReveal } from "@/app/ui/Reveal";
-import PhoneFrame from "@/app/ui/PhoneFrame";
-import WalletMock from "@/app/ui/WalletMock";
+import Phone from "@/app/ui/Phone";
 import Photo from "@/app/ui/Photo";
-import CategoryIcon from "@/app/ui/CategoryIcon";
+import Icon3D, { type Icon3DName } from "@/app/ui/Icon3D";
 import Faq, { type FaqItem } from "@/app/ui/Faq";
 import { CATEGORIES } from "@/lib/categories";
+import { siteOrigin } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: { absolute: "Loyavi: vse kartice zvestobe v telefonu" },
@@ -19,25 +20,24 @@ export const metadata: Metadata = {
 };
 
 const NAV = [
+  { href: "/#prednosti", label: "Prednosti" },
   { href: "/#kako", label: "Kako deluje" },
-  { href: "/#kje", label: "Kje deluje" },
   { href: "/#vprasanja", label: "Vprašanja" },
   { href: "/partnerji", label: "Za lokale" },
 ];
 const CTA = { href: "/app", label: "Odpri denarnico" };
 
-const BENEFITS = [
-  { icon: Cards, title: "Vse kartice na enem mestu", text: "Kavarna, brivec in cvetličarna v isti denarnici. Pri vsakem lokalu takoj vidiš, koliko obiskov te še loči od nagrade." },
-  { icon: Lightning, title: "Žig v nekaj sekundah", text: "Skeniraš kodo QR z računa ali približaš telefon stojalu ob blagajni. Obisk je zabeležen, še preden pospraviš denarnico." },
-  { icon: Gift, title: "Nagrade določi lokal", text: "Brezplačna kava, popust ali darilo. Ko je kartica polna, kupon pokažeš ob blagajni." },
-  { icon: DeviceMobile, title: "Brez nameščanja", text: "Deluje v brskalniku telefona. Če želiš, jo dodaš na začetni zaslon in odpreš kot aplikacijo." },
-  { icon: Wallet, title: "0 € za goste", text: "Brez naročnine in brez skritih stroškov. Nagrade ti podarijo lokali." },
+const FEATURES: { icon: Icon3DName; title: string; text: string }[] = [
+  { icon: "kartice", title: "Vse kartice na enem mestu", text: "Kavarna, brivec in cvetličarna v isti denarnici. Takoj vidiš, koliko obiskov te še loči od nagrade." },
+  { icon: "zig", title: "Žig v nekaj sekundah", text: "Skeniraš kodo QR z računa ali približaš telefon stojalu ob blagajni. Obisk je zabeležen." },
+  { icon: "darilo", title: "Nagrade določi lokal", text: "Brezplačna kava, popust ali darilo. Ko je kartica polna, kupon pokažeš ob blagajni." },
+  { icon: "denarnica", title: "0 € za goste", text: "Brez naročnine in brez skritih stroškov. Nagrade ti podarijo lokali." },
 ];
 
 const STEPS = [
-  { title: "Ustvari račun", text: "Vpišeš elektronski naslov in geslo. Traja manj kot minuto." },
-  { title: "Zabeleži obisk", text: "Skeniraj kodo QR z računa ali približaj telefon stojalu Loyavi." },
-  { title: "Prevzemi nagrado", text: "Polno kartico zamenjaš za nagrado, ki jo je določil lokal." },
+  { title: "Dodaj kartico", text: "Poišči lokal ali skeniraj kodo na pultu. Račun ustvariš v manj kot minuti.", src: "/screens/lokali.webp", alt: "Zaslon aplikacije s seznamom lokalov", bottom: false },
+  { title: "Zabeleži obisk", text: "Skeniraj kodo QR z računa ali približaj telefon stojalu. Žig je na kartici.", src: "/screens/zig.webp", alt: "Zaslon aplikacije s potrjenim žigom", bottom: true },
+  { title: "Prevzemi nagrado", text: "Polna kartica postane kupon. Pokažeš ga osebju in nagrada je tvoja.", src: "/screens/kupon.webp", alt: "Zaslon aplikacije s kuponom in časovnikom", bottom: true },
 ];
 
 const FAQ: FaqItem[] = [
@@ -58,22 +58,37 @@ const faqSchema = {
   mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
 };
 
-function SectionHead({ eyebrow, title, text }: { eyebrow: string; title: string; text?: string }) {
+function Head({ eyebrow, title, text }: { eyebrow: string; title: string; text?: string }) {
   return (
-    <Reveal className="flex max-w-3xl flex-col gap-4">
-      <p className="font-mono text-sm font-medium uppercase tracking-widest text-brand-ink">{eyebrow}</p>
-      <h2 className="display text-5xl text-fg lg:text-7xl">{title}</h2>
-      {text && <p className="max-w-2xl text-lg text-mute">{text}</p>}
+    <Reveal className="mx-auto flex max-w-2xl flex-col items-center gap-4 text-center">
+      <p className="rounded-full bg-tint px-3 py-1 text-sm font-semibold text-brand-ink">{eyebrow}</p>
+      <h2 className="text-4xl font-semibold tracking-tight text-fg lg:text-5xl">{title}</h2>
+      {text && <p className="text-lg text-mute">{text}</p>}
     </Reveal>
   );
 }
 
-export default function Home() {
+function Feature({ icon, title, text, delay = 0 }: { icon: Icon3DName; title: string; text: string; delay?: number }) {
+  return (
+    <Reveal delay={delay} className="group flex h-full flex-col gap-4 rounded-3xl bg-card p-6 shadow-card transition-all duration-700 ease-spring hover:-translate-y-1 hover:shadow-pop">
+      <span className="flex size-16 items-center justify-center rounded-2xl bg-tint">
+        <Icon3D name={icon} size={52} className="transition-all duration-700 ease-spring group-hover:scale-110" />
+      </span>
+      <h3 className="text-xl font-semibold tracking-tight text-fg">{title}</h3>
+      <p className="text-base text-mute">{text}</p>
+    </Reveal>
+  );
+}
+
+export default async function Home() {
+  const appUrl = `${siteOrigin()}/app`;
+  const qr = await QRCode.toString(appUrl, { type: "svg", margin: 0, errorCorrectionLevel: "M", color: { dark: "#0B1826", light: "#FFFFFF" } });
+
   return (
     <>
       <SiteNav links={NAV} cta={CTA} />
       <main id="vsebina">
-        {/* HERO: modra podlaga, velik naslov, rdeč gumb, kolaž raste iz spodnjega roba */}
+        {/* HERO: modra podlaga, velik naslov, rdeč gumb, kolaž s pravim zaslonom aplikacije */}
         <section className="on-brand overflow-hidden bg-brand text-on-brand">
           <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 pt-32 text-center">
             <Reveal className="flex flex-col items-center gap-6">
@@ -103,14 +118,12 @@ export default function Home() {
               </ul>
             </Reveal>
 
-            {/* namizje: pet oblik v vrsti */}
-            <Reveal delay={150} className="mt-8 hidden w-full grid-cols-[1fr_1fr_1.25fr_1fr_1fr] items-end gap-4 lg:grid">
+            {/* namizje: fotografije in telefon v vrsti */}
+            <Reveal delay={150} className="mt-8 hidden w-full grid-cols-[1fr_1fr_1.3fr_1fr_1fr] items-end gap-4 lg:grid">
               <Photo src="/photos/friends.jpg" alt="Prijatelja se smejita s kavo v rokah pod modrim nebom" shape="rise" priority className="aspect-[3/4]" />
               <Photo src="/photos/iced.jpg" alt="Dekle s sončnimi očali pije ledeno kavo" shape="arch" priority className="aspect-[3/5]" />
-              <div className="h-96 overflow-hidden" aria-hidden="true">
-                <PhoneFrame>
-                  <WalletMock />
-                </PhoneFrame>
+              <div className="relative h-96 overflow-hidden">
+                <Phone src="/screens/denarnica.webp" alt="Denarnica Loyavi s karticami zvestobe in nagradami" priority />
               </div>
               <Photo src="/photos/barista.jpg" alt="Natakarica čez pult podaja kapučino" shape="circle" priority className="mb-12 aspect-square" />
               <Photo src="/photos/tap.jpg" alt="Gost približa telefon stojalu ob blagajni" shape="rise" priority className="aspect-[3/4]" />
@@ -124,60 +137,59 @@ export default function Home() {
               <div className="absolute bottom-16 right-0 w-28">
                 <Photo src="/photos/barista.jpg" alt="Natakarica čez pult podaja kapučino" shape="circle" priority sizes="30vw" className="aspect-square" />
               </div>
-              <div className="relative z-10 h-72 w-48 overflow-hidden" aria-hidden="true">
-                <PhoneFrame>
-                  <WalletMock />
-                </PhoneFrame>
+              <div className="relative z-10 h-72 w-48 overflow-hidden">
+                <Phone src="/screens/denarnica.webp" alt="Denarnica Loyavi s karticami zvestobe in nagradami" priority sizes="50vw" />
               </div>
             </Reveal>
           </div>
         </section>
 
-        {/* KATEGORIJE: tekoči trak */}
-        <section aria-label="Vrste lokalov" className="overflow-hidden py-8">
-          <div className="flex w-max animate-[marquee_48s_linear_infinite] gap-3">
-            {[0, 1].map((copy) => (
-              <ul key={copy} className="flex gap-3" aria-hidden={copy === 1}>
-                {CATEGORIES.map((c) => (
-                  <li key={c.key} className="flex items-center gap-2 rounded-full bg-s1 px-4 py-3 text-base font-medium whitespace-nowrap text-fg">
-                    <CategoryIcon category={c.key} size={20} weight="bold" className="text-brand-ink" />
-                    {c.plural}
-                  </li>
-                ))}
-              </ul>
-            ))}
+        {/* PREDNOSTI: bento z zaslonom aplikacije v sredini */}
+        <section id="prednosti" className="atmo scroll-mt-24 px-6 py-24">
+          <div className="mx-auto flex max-w-6xl flex-col gap-12">
+            <Head eyebrow="Prednosti" title="Manj kartončkov, več nagrad." text="Loyavi zamenja kup papirnatih kartic z eno denarnico, ki jo imaš vedno pri sebi." />
+            <div className="grid gap-4 lg:grid-cols-3">
+              <div className="flex flex-col gap-4">
+                <Feature {...FEATURES[0]} />
+                <Feature {...FEATURES[1]} delay={80} />
+              </div>
+              <Reveal delay={120} className="atmo-brand flex flex-col items-center gap-6 overflow-hidden rounded-3xl px-8 pt-8 text-center text-on-brand shadow-brand">
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-2xl font-semibold tracking-tight">Kartica vsakega lokala</h3>
+                  <p className="text-base font-medium opacity-90">Žigi, nagrade in kuponi so vedno na dosegu roke.</p>
+                </div>
+                <div className="h-96 w-full max-w-64 overflow-hidden">
+                  <Phone src="/screens/lokal.webp" alt="Kartica lokala z žigi, gumbom za skeniranje računa in kuponom" />
+                </div>
+              </Reveal>
+              <div className="flex flex-col gap-4">
+                <Feature {...FEATURES[2]} delay={160} />
+                <Feature {...FEATURES[3]} delay={240} />
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* PROBLEM → REŠITEV */}
-        <section id="zakaj" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
-          <SectionHead eyebrow="Zakaj" title="Kartonček ostane doma. Telefon je vedno s tabo." />
-          <div className="mt-12 grid gap-4 lg:grid-cols-3">
-            <Reveal>
-              <Photo src="/photos/flatlay.jpg" alt="Kapučino in rogljiček na modri mizi" className="aspect-square lg:aspect-auto lg:h-full" sizes="(min-width: 1024px) 33vw, 100vw" />
-            </Reveal>
-            <Reveal delay={100} className="flex flex-col gap-6 rounded-3xl bg-s1 p-8">
-              <p className="text-2xl font-semibold tracking-tight text-mute">Papirnat kartonček</p>
-              <ul className="flex flex-col gap-4">
-                {["Ostane doma ravno takrat, ko ga potrebuješ.", "Se zmoči, strga ali izgubi skupaj z žigi.", "Vsak lokal ima svojega, denarnica pa je vse debelejša."].map((t) => (
-                  <li key={t} className="flex items-start gap-3 text-lg text-mute">
-                    <X size={24} weight="bold" className="mt-0.5 shrink-0 text-dim" aria-hidden="true" />
-                    {t}
+        {/* KAKO DELUJE: trije koraki, vsak s pravim zaslonom */}
+        <section id="kako" className="scroll-mt-24 px-6 py-24">
+          <div className="mx-auto flex max-w-6xl flex-col gap-12">
+            <Head eyebrow="Kako deluje" title="Trije koraki do prve nagrade." />
+            <ol className="grid gap-4 lg:grid-cols-3">
+              {STEPS.map((s, i) => (
+                <Reveal key={s.title} delay={i * 100}>
+                  <li className="flex h-full flex-col overflow-hidden rounded-3xl bg-card shadow-card">
+                    <div className="flex flex-col gap-3 p-6">
+                      <span className="flex size-10 items-center justify-center rounded-full bg-fg font-mono text-base font-semibold text-card">{i + 1}</span>
+                      <h3 className="text-2xl font-semibold tracking-tight text-fg">{s.title}</h3>
+                      <p className="text-base text-mute">{s.text}</p>
+                    </div>
+                    <div className={`mt-auto flex h-80 justify-center overflow-hidden bg-tint px-12 ${s.bottom ? "items-end pb-8" : "items-start pt-8"}`}>
+                      <Phone src={s.src} alt={s.alt} className="w-full max-w-56 shrink-0" />
+                    </div>
                   </li>
-                ))}
-              </ul>
-            </Reveal>
-            <Reveal delay={200} className="flex flex-col gap-6 rounded-3xl bg-brand p-8 text-on-brand">
-              <p className="text-2xl font-semibold tracking-tight">Kartica v Loyavi</p>
-              <ul className="flex flex-col gap-4">
-                {["Vedno v telefonu, ki ga imaš pri sebi.", "Žigi so varno shranjeni v tvojem računu.", "Vsi lokali v eni denarnici, brez iskanja."].map((t) => (
-                  <li key={t} className="flex items-start gap-3 text-lg font-medium">
-                    <Check size={24} weight="bold" className="mt-0.5 shrink-0" aria-hidden="true" />
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
+                </Reveal>
+              ))}
+            </ol>
           </div>
         </section>
 
@@ -186,121 +198,112 @@ export default function Home() {
           <WordReveal className="display max-w-4xl text-5xl sm:text-7xl lg:text-8xl" lines={["Vsak obisk šteje.", "Tudi tisti, ko kartonček ostane doma."]} />
         </section>
 
-        {/* PREDNOSTI: besedilo in fotografije v isti mreži */}
-        <section id="prednosti" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
-          <SectionHead eyebrow="Prednosti" title="Manj kartončkov, več nagrad." text="Loyavi zamenja kup papirnatih kartic z eno denarnico, ki jo imaš vedno pri sebi." />
-          <div className="mt-12 grid gap-4 lg:grid-cols-6">
-            {BENEFITS.slice(0, 2).map((b, i) => (
-              <Reveal key={b.title} delay={i * 80} className="flex flex-col gap-4 rounded-3xl bg-s1 p-8 lg:col-span-3">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-tint text-brand-ink">
-                  <b.icon size={24} weight="bold" aria-hidden="true" />
-                </span>
-                <h3 className="text-2xl font-semibold tracking-tight text-fg">{b.title}</h3>
-                <p className="text-base text-mute">{b.text}</p>
-              </Reveal>
-            ))}
-            <Reveal className="flex flex-col gap-4 rounded-3xl bg-s1 p-8 lg:col-span-2">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-tint text-brand-ink">
-                <Gift size={24} weight="bold" aria-hidden="true" />
-              </span>
-              <h3 className="text-2xl font-semibold tracking-tight text-fg">{BENEFITS[2].title}</h3>
-              <p className="text-base text-mute">{BENEFITS[2].text}</p>
+        {/* KOLO DOBRODOŠLICE */}
+        <section className="atmo px-6 py-24">
+          <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
+            <Reveal className="flex flex-col items-start gap-6">
+              <p className="rounded-full bg-card px-3 py-1 text-sm font-semibold text-brand-ink shadow-card">Dobrodošlica</p>
+              <h2 className="text-4xl font-semibold tracking-tight text-fg lg:text-5xl">Prvi obisk se začne z nagrado.</h2>
+              <p className="text-lg text-mute">Ko dodaš kartico lokala, enkrat zavrtiš kolo dobrodošlice. Vsako polje je nagrada, prevzameš jo ob prvem obisku.</p>
+              <ul className="flex flex-col gap-3">
+                {[
+                  ["kolo", "En poskus pri vsakem novem lokalu"],
+                  ["kupon", "Kupon se shrani v tvojo denarnico"],
+                  ["torta", "Ob rojstnem dnevu te lokal lahko preseneti z darilom"],
+                ].map(([icon, text]) => (
+                  <li key={text} className="flex items-center gap-4 rounded-2xl bg-card p-3 pr-6 shadow-card">
+                    <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-tint">
+                      <Icon3D name={icon as Icon3DName} size={40} />
+                    </span>
+                    <span className="text-base font-medium text-fg">{text}</span>
+                  </li>
+                ))}
+              </ul>
             </Reveal>
-            <Reveal delay={80} className="lg:col-span-2">
-              <Photo src="/photos/icecream.jpg" alt="Prijatelja s sladoledom pod modrim nebom" shape="circle" className="mx-auto aspect-square w-full max-w-sm" sizes="(min-width: 1024px) 33vw, 100vw" />
-            </Reveal>
-            <Reveal delay={160} className="flex flex-col gap-4 rounded-3xl bg-s1 p-8 lg:col-span-2">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-tint text-brand-ink">
-                <DeviceMobile size={24} weight="bold" aria-hidden="true" />
-              </span>
-              <h3 className="text-2xl font-semibold tracking-tight text-fg">{BENEFITS[3].title}</h3>
-              <p className="text-base text-mute">{BENEFITS[3].text}</p>
-            </Reveal>
-            <Reveal className="lg:col-span-4">
-              <Photo src="/photos/terrace.jpg" alt="Družba nazdravlja s kavo na sončni terasi" className="aspect-video lg:aspect-auto lg:h-full" sizes="(min-width: 1024px) 66vw, 100vw" />
-            </Reveal>
-            <Reveal delay={80} className="flex flex-col gap-4 rounded-3xl bg-brand p-8 text-on-brand lg:col-span-2">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-base/20">
-                <Wallet size={24} weight="bold" aria-hidden="true" />
-              </span>
-              <h3 className="display text-6xl">{BENEFITS[4].title}</h3>
-              <p className="text-base font-medium">{BENEFITS[4].text}</p>
+            <Reveal delay={150} className="relative mx-auto w-full max-w-xs">
+              <Phone src="/screens/kolo.webp" alt="Kolo dobrodošlice v aplikaciji" />
+              <Icon3D name="konfeti" size={120} className="absolute -left-16 top-24 hidden -rotate-12 drop-shadow-lg lg:block" />
+              <Icon3D name="darilo" size={112} className="absolute -right-12 bottom-24 hidden rotate-6 drop-shadow-lg lg:block" />
             </Reveal>
           </div>
         </section>
 
-        {/* KAKO DELUJE */}
-        <section id="kako" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
-          <SectionHead eyebrow="Kako deluje" title="Trije koraki do prve nagrade." />
-          <ol className="mt-12 grid gap-4 lg:grid-cols-3">
-            {STEPS.map((s, i) => (
-              <Reveal key={s.title} delay={i * 100}>
-                <li className="flex h-full flex-col gap-4 rounded-3xl bg-s1 p-8">
-                  <span className="display text-8xl text-brand" aria-hidden="true">
-                    {i + 1}
-                  </span>
-                  <h3 className="text-2xl font-semibold tracking-tight text-fg">{s.title}</h3>
-                  <p className="text-base text-mute">{s.text}</p>
-                </li>
-              </Reveal>
-            ))}
-          </ol>
-        </section>
-
         {/* KJE DELUJE */}
-        <section id="kje" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
-          <SectionHead eyebrow="Kje deluje" title="Povsod, kamor se vračaš." text="Loyavi je narejen za lokalne ponudnike vseh vrst. Seznam lokalov raste z vsakim novim partnerjem." />
-          <div className="mt-12 grid grid-cols-2 items-end gap-4 lg:grid-cols-4">
-            <Reveal className="col-span-2">
-              <Photo src="/photos/salon.jpg" alt="Frizerka in stranka se smejita v svetlem salonu" className="aspect-[4/3]" sizes="(min-width: 1024px) 50vw, 100vw" />
-            </Reveal>
-            <Reveal delay={100}>
-              <Photo src="/photos/florist.jpg" alt="Cvetličarka stranki podaja šopek" shape="pill" className="aspect-[3/5]" />
-            </Reveal>
-            <Reveal delay={200}>
-              <Photo src="/photos/bakery.jpg" alt="Lastnica pekarne za pultom s svežim pecivom" className="aspect-[3/4]" />
-            </Reveal>
+        <section id="kje" className="scroll-mt-24 px-6 py-24">
+          <div className="mx-auto flex max-w-6xl flex-col gap-12">
+            <Head eyebrow="Kje deluje" title="Povsod, kamor se vračaš." text="Loyavi je narejen za lokalne ponudnike vseh vrst. Seznam lokalov raste z vsakim novim partnerjem." />
+            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7">
+              {CATEGORIES.map((c, i) => (
+                <Reveal key={c.key} delay={(i % 7) * 50}>
+                  <li className="group flex h-full flex-col items-center gap-3 rounded-3xl bg-card p-4 text-center shadow-card transition-all duration-700 ease-spring hover:-translate-y-1 hover:shadow-pop">
+                    <Icon3D name={c.key as Icon3DName} size={72} className="transition-all duration-700 ease-spring group-hover:scale-110" />
+                    <span className="text-sm font-semibold text-fg">{c.plural}</span>
+                  </li>
+                </Reveal>
+              ))}
+            </ul>
+            <div className="grid grid-cols-2 items-end gap-4 lg:grid-cols-4">
+              <Reveal className="col-span-2">
+                <Photo src="/photos/salon.jpg" alt="Frizerka in stranka se smejita v svetlem salonu" className="aspect-[4/3]" sizes="(min-width: 1024px) 50vw, 100vw" />
+              </Reveal>
+              <Reveal delay={100}>
+                <Photo src="/photos/florist.jpg" alt="Cvetličarka stranki podaja šopek" shape="pill" className="aspect-[3/5]" />
+              </Reveal>
+              <Reveal delay={200}>
+                <Photo src="/photos/bakery.jpg" alt="Lastnica pekarne za pultom s svežim pecivom" className="aspect-[3/4]" />
+              </Reveal>
+            </div>
           </div>
         </section>
 
         {/* ZA LOKALE */}
-        <section id="lokali" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
-          <Reveal className="flex flex-col items-start gap-8 rounded-3xl bg-tint p-8 lg:flex-row lg:items-center lg:justify-between lg:p-16">
-            <div className="flex max-w-xl flex-col gap-4">
-              <p className="font-mono text-sm font-medium uppercase tracking-widest text-brand-ink">Za lokale</p>
-              <h2 className="display text-5xl text-fg lg:text-6xl">Imaš lokal? Gostje se bodo vračali pogosteje.</h2>
-              <p className="text-lg text-mute">Zamenjaj kartončke z digitalno kartico zvestobe. Postaviš jo v nekaj minutah, nagrade določiš sam.</p>
+        <section id="lokali" className="scroll-mt-24 px-6 py-12">
+          <Reveal className="mx-auto grid max-w-6xl items-center gap-8 overflow-hidden rounded-3xl bg-fg p-8 text-card lg:grid-cols-[1.2fr_1fr] lg:p-16">
+            <div className="flex flex-col items-start gap-6">
+              <p className="rounded-full bg-white/10 px-3 py-1 text-sm font-semibold">Za lokale</p>
+              <h2 className="text-4xl font-semibold tracking-tight lg:text-5xl">Imaš lokal? Gostje se bodo vračali pogosteje.</h2>
+              <p className="text-lg text-white/70">Zamenjaj kartončke z digitalno kartico zvestobe. Postaviš jo v nekaj minutah, nagrade določiš sam, prvih 30 dni je brezplačnih.</p>
+              <ButtonLink href="/partnerji" size="lg">
+                Loyavi za lokale
+                <ArrowRight size={16} weight="bold" aria-hidden="true" />
+              </ButtonLink>
             </div>
-            <ButtonLink href="/partnerji" size="lg">
-              Loyavi za lokale
-              <ArrowRight size={16} weight="bold" aria-hidden="true" />
-            </ButtonLink>
+            <div className="relative mx-auto w-full max-w-sm">
+              <Photo src="/photos/bakery.jpg" alt="Lastnica pekarne za pultom s svežim pecivom" shape="arch" className="aspect-[4/5]" sizes="(min-width: 1024px) 30vw, 80vw" />
+              <Icon3D name="megafon" size={104} className="absolute -left-8 bottom-8 -rotate-12 drop-shadow-lg" />
+            </div>
           </Reveal>
         </section>
 
         {/* VPRAŠANJA */}
-        <section id="vprasanja" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
-          <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr]">
-            <SectionHead eyebrow="Vprašanja" title="Preden začneš." text="Če odgovora ne najdeš, nam piši na info@loyavi.app." />
+        <section id="vprasanja" className="scroll-mt-24 px-6 py-24">
+          <div className="mx-auto flex max-w-3xl flex-col gap-12">
+            <Head eyebrow="Vprašanja" title="Preden začneš." text="Če odgovora ne najdeš, nam piši na info@loyavi.app." />
             <Reveal delay={100}>
               <Faq items={FAQ} />
             </Reveal>
           </div>
         </section>
 
-        {/* ZAKLJUČNI POZIV */}
-        <section id="zacni" className="mx-auto max-w-6xl scroll-mt-24 px-6 pb-24 pt-12">
-          <Reveal className="on-brand flex flex-col items-center gap-6 overflow-hidden rounded-3xl bg-brand px-8 pt-16 text-center text-on-brand lg:px-16 lg:pt-24">
-            <h2 className="display max-w-4xl text-6xl sm:text-7xl lg:text-8xl">Naslednja kava naj šteje.</h2>
-            <p className="max-w-xl text-lg font-medium">Ustvari račun v manj kot minuti in začni zbirati žige že ob naslednjem obisku.</p>
-            <ButtonLink href={CTA.href} size="lg">
-              Odpri svojo denarnico
-              <ArrowRight size={16} weight="bold" aria-hidden="true" />
-            </ButtonLink>
-            <div className="mt-8 grid w-full max-w-3xl grid-cols-3 items-end gap-4">
-              <Photo src="/photos/iced.jpg" alt="" shape="arch" className="aspect-[3/4]" sizes="25vw" />
-              <Photo src="/photos/friends.jpg" alt="" shape="rise" className="aspect-[3/5]" sizes="25vw" />
-              <Photo src="/photos/icecream.jpg" alt="" shape="arch" className="aspect-[3/4]" sizes="25vw" />
+        {/* ZAKLJUČNI POZIV: odpri na telefonu */}
+        <section id="zacni" className="scroll-mt-24 px-6 pb-24">
+          <Reveal className="on-brand atmo-brand mx-auto grid max-w-6xl items-center gap-8 overflow-hidden rounded-3xl px-8 pt-12 text-on-brand shadow-brand lg:grid-cols-[1.3fr_1fr] lg:px-16 lg:pt-16">
+            <div className="flex flex-col items-start gap-6 pb-12 lg:pb-16">
+              <h2 className="display text-6xl sm:text-7xl">Naslednja kava naj šteje.</h2>
+              <p className="max-w-xl text-lg font-medium">Ustvari račun v manj kot minuti in začni zbirati žige že ob naslednjem obisku.</p>
+              <div className="flex flex-wrap items-center gap-6">
+                <ButtonLink href={CTA.href} size="lg">
+                  Odpri svojo denarnico
+                  <ArrowRight size={16} weight="bold" aria-hidden="true" />
+                </ButtonLink>
+                <div className="hidden items-center gap-4 lg:flex">
+                  <div role="img" aria-label="Koda QR do denarnice Loyavi" className="size-24 rounded-2xl bg-white p-2 [&>svg]:block [&>svg]:size-full" dangerouslySetInnerHTML={{ __html: qr }} />
+                  <p className="max-w-40 text-sm font-medium">Skeniraj s telefonom in odpri denarnico.</p>
+                </div>
+              </div>
+            </div>
+            <div className="mx-auto h-80 w-full max-w-64 overflow-hidden lg:h-96">
+              <Phone src="/screens/denarnica.webp" alt="Denarnica Loyavi s karticami zvestobe in nagradami" />
             </div>
           </Reveal>
         </section>

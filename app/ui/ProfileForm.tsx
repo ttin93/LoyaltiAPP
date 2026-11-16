@@ -45,7 +45,7 @@ export default function ProfileForm({ email, name, birthday }: { email: string; 
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="flex flex-col gap-4 rounded-3xl border border-line bg-s1 p-6">
+      <section className="flex flex-col gap-4 rounded-3xl bg-card shadow-card p-6">
         <Field label="Elektronski naslov">
           <Input value={email} disabled readOnly />
         </Field>
@@ -65,7 +65,7 @@ export default function ProfileForm({ email, name, birthday }: { email: string; 
         </div>
       </section>
 
-      <section className="flex flex-col gap-4 rounded-3xl border border-line bg-s1 p-6">
+      <section className="flex flex-col gap-4 rounded-3xl bg-card shadow-card p-6">
         <div className="flex items-start gap-4">
           <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-s3 text-brand-ink">
             <Cake size={24} weight="bold" aria-hidden="true" />

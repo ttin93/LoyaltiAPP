@@ -72,7 +72,7 @@ export function SectionHead({ title, text, action }: { title: string; text?: str
 
 export function Panel({ title, text, action, children, className = "" }: { title?: string; text?: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={`flex flex-col gap-6 rounded-3xl border border-line bg-s1 p-6 ${className}`}>
+    <section className={`flex flex-col gap-6 rounded-3xl bg-card shadow-card p-6 ${className}`}>
       {(title || action) && (
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex flex-col gap-1">
@@ -89,7 +89,7 @@ export function Panel({ title, text, action, children, className = "" }: { title
 
 export function Stat({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <div className="flex flex-col gap-2 rounded-3xl border border-line bg-s1 p-6">
+    <div className="flex flex-col gap-2 rounded-3xl bg-card shadow-card p-6">
       <p className="text-sm font-medium text-mute">{label}</p>
       <p className="font-mono text-4xl font-semibold tracking-tight text-fg">{value}</p>
       {note && <p className="text-sm text-dim">{note}</p>}
@@ -160,7 +160,7 @@ export function CopyField({ value, label }: { value: string; label: string }) {
 export function Stepper({ value, min, max, onChange, label, unit }: { value: number; min: number; max: number; onChange: (n: number) => void; label: string; unit?: string }) {
   const btn = "flex size-10 items-center justify-center rounded-xl bg-s2 text-lg font-semibold text-fg transition-all duration-700 ease-spring hover:bg-s3 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none";
   return (
-    <div className="flex w-max items-center gap-4 rounded-2xl border border-line bg-s1 p-2" role="group" aria-label={label}>
+    <div className="flex w-max items-center gap-4 rounded-3xl bg-card shadow-card p-2" role="group" aria-label={label}>
       <button type="button" aria-label="Manj" disabled={value <= min} onClick={() => onChange(Math.max(min, value - 1))} className={btn}>
         −
       </button>

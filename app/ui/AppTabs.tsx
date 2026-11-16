@@ -19,7 +19,7 @@ export default function AppTabs() {
       className="fixed inset-x-0 bottom-4 z-30 flex justify-center px-4 lg:bottom-auto lg:top-6"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="flex items-center gap-1 rounded-full border border-line bg-s1/80 p-2 backdrop-blur-xl">
+      <ul className="flex items-center gap-1 rounded-full border border-line bg-card/90 p-2 shadow-pop backdrop-blur-xl">
         {TABS.map((t) => {
           const on = pathname === t.href;
           return (
@@ -27,7 +27,7 @@ export default function AppTabs() {
               <Link
                 href={t.href}
                 aria-current={on ? "page" : undefined}
-                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-700 ease-spring active:scale-[0.98] ${on ? "bg-brand text-on-brand" : "text-mute hover:bg-s2 hover:text-fg"}`}
+                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-700 ease-spring active:scale-[0.98] ${on ? "bg-fg text-card" : "text-mute hover:bg-s2 hover:text-fg"}`}
               >
                 <t.icon size={20} weight={on ? "fill" : "bold"} aria-hidden="true" />
                 {t.label}

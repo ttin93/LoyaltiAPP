@@ -59,10 +59,10 @@ const FAQ: FaqItem[] = [
 
 function SectionHead({ eyebrow, title, text }: { eyebrow: string; title: string; text?: string }) {
   return (
-    <Reveal className="flex max-w-3xl flex-col gap-4">
-      <p className="font-mono text-sm font-medium uppercase tracking-widest text-brand-ink">{eyebrow}</p>
-      <h2 className="display text-5xl text-fg lg:text-7xl">{title}</h2>
-      {text && <p className="max-w-2xl text-lg text-mute">{text}</p>}
+    <Reveal className="flex max-w-2xl flex-col items-start gap-4">
+      <p className="rounded-full bg-tint px-3 py-1 text-sm font-semibold text-brand-ink">{eyebrow}</p>
+      <h2 className="text-4xl font-semibold tracking-tight text-fg lg:text-5xl">{title}</h2>
+      {text && <p className="text-lg text-mute">{text}</p>}
     </Reveal>
   );
 }
@@ -123,7 +123,7 @@ export default function Partnerji() {
           <SectionHead eyebrow="Zakaj zvestoba" title="Stalni gost je vreden več kot nov." text="Raziskave to potrjujejo že desetletja. Loyavi ti da preprost način, da gosta pripelješ nazaj." />
           <div className="mt-12 grid gap-4 lg:grid-cols-3">
             {STATS.map((s, i) => (
-              <Reveal key={s.value} delay={i * 100} className="flex flex-col gap-4 rounded-3xl border border-line bg-s1 p-8">
+              <Reveal key={s.value} delay={i * 100} className="flex flex-col gap-4 rounded-3xl bg-card shadow-card p-8">
                 <p className="font-mono text-4xl font-semibold tracking-tight text-brand-ink">{s.value}</p>
                 <p className="text-base text-mute">
                   {s.text}
@@ -152,8 +152,8 @@ export default function Partnerji() {
           <SectionHead eyebrow="Prednosti" title="Kaj dobi tvoj lokal." />
           <div className="mt-12 grid gap-4 lg:grid-cols-6">
             {BENEFITS.map((b, i) => (
-              <Reveal key={b.title} delay={i * 80} className={`flex flex-col gap-4 rounded-3xl border border-line bg-s1 p-8 ${b.wide ? "lg:col-span-3" : "lg:col-span-2"}`}>
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-s3 text-brand-ink">
+              <Reveal key={b.title} delay={i * 80} className={`flex flex-col gap-4 rounded-3xl bg-card shadow-card p-8 ${b.wide ? "lg:col-span-3" : "lg:col-span-2"}`}>
+                <span className="flex size-12 items-center justify-center rounded-2xl bg-tint text-brand-ink">
                   <b.icon size={24} weight="bold" aria-hidden="true" />
                 </span>
                 <h3 className="text-xl font-semibold tracking-tight text-fg">{b.title}</h3>
@@ -182,8 +182,8 @@ export default function Partnerji() {
         <section className="mx-auto max-w-6xl px-6 py-24">
           <SectionHead eyebrow="Beleženje obiskov" title="Račun, stojalo ali oboje." text="Sam izbereš, kako gostje zabeležijo obisk. Način lahko kadar koli zamenjaš." />
           <div className="mt-12 grid gap-4 lg:grid-cols-2">
-            <Reveal className="flex flex-col gap-4 rounded-3xl border border-line bg-s1 p-8">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-s3 text-brand-ink">
+            <Reveal className="flex flex-col gap-4 rounded-3xl bg-card shadow-card p-8">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-tint text-brand-ink">
                 <Receipt size={24} weight="bold" aria-hidden="true" />
               </span>
               <h3 className="text-2xl font-semibold tracking-tight text-fg">Fiskalni račun</h3>
@@ -197,8 +197,8 @@ export default function Partnerji() {
                 ))}
               </ul>
             </Reveal>
-            <Reveal delay={120} className="flex flex-col gap-4 rounded-3xl border border-line bg-s1 p-8">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-s3 text-brand-ink">
+            <Reveal delay={120} className="flex flex-col gap-4 rounded-3xl bg-card shadow-card p-8">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-tint text-brand-ink">
                 <ContactlessPayment size={24} weight="bold" aria-hidden="true" />
               </span>
               <h3 className="text-2xl font-semibold tracking-tight text-fg">Stojalo ob blagajni</h3>
@@ -221,7 +221,7 @@ export default function Partnerji() {
           <ol className="mt-12 grid gap-4 lg:grid-cols-3">
             {STEPS.map((s, i) => (
               <Reveal key={s.title} delay={i * 100}>
-                <li className="flex h-full flex-col gap-4 rounded-3xl border border-line bg-s1 p-8">
+                <li className="flex h-full flex-col gap-4 rounded-3xl bg-card shadow-card p-8">
                   <span className="font-mono text-sm font-medium text-brand-ink">0{i + 1}</span>
                   <h3 className="pt-8 text-2xl font-semibold tracking-tight text-fg">{s.title}</h3>
                   <p className="text-base text-mute">{s.text}</p>

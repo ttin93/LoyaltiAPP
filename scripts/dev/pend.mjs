@@ -1,0 +1,20 @@
+import puppeteer from "puppeteer-core";
+import os from "os"; import path from "path";
+const exe = path.join(os.homedir(), ".cache/hyperframes/chrome/chrome-headless-shell/win64-152.0.7977.30/chrome-headless-shell-win64/chrome-headless-shell.exe");
+const browser = await puppeteer.launch({ executablePath: exe, headless: "shell", args: ["--hide-scrollbars"] });
+const page = await browser.newPage();
+await page.setViewport({ width: 1440, height: 900 });
+const pending = new Map();
+page.on("request", (r) => pending.set(r.url(), Date.now()));
+page.on("requestfinished", (r) => pending.delete(r.url()));
+page.on("requestfailed", (r) => { console.log("FAILED", r.url().slice(0, 140), r.failure()?.errorText); pending.delete(r.url()); });
+page.on("pageerror", (e) => console.log("PAGEERROR", e.message.slice(0, 200)));
+await page.goto(process.argv[2], { waitUntil: "domcontentloaded", timeout: 60000 });
+await new Promise((r) => setTimeout(r, 15000));
+for (const [u] of pending) console.log("PENDING", u.slice(0, 160));
+const total = await page.evaluate(() => document.documentElement.scrollHeight);
+for (let y = 0; y < total; y += 540) { await page.evaluate((yy) => window.scrollTo(0, yy), y); await new Promise((r) => setTimeout(r, 300)); }
+await page.evaluate(() => window.scrollTo(0, 0)); await new Promise((r) => setTimeout(r, 1500));
+await page.screenshot({ path: path.join(import.meta.dirname, "shots", process.argv[3] + ".png"), fullPage: true });
+console.log("saved", total);
+await browser.close();

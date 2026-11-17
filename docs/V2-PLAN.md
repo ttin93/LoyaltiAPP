@@ -54,8 +54,11 @@ Zdaj velja:
   Ko se UI aplikacije spremeni, je treba posnetke zajeti znova.
 - **Aplikacija:** `WalletView` (pozdrav, nagrade kot vstopnice `RewardTicket`, kartice `LoyaltyCard` s prelivom barve
   lokala, 3D grafiko in žigi s kljukico, bližnjice), pravi namizni razpored v dveh stolpcih.
-- **Logo:** dve kartici z rdečim žigom. Zasnova iz generatorja (6 predlogov v `docs/predogled/07-logo-predlogi.jpg`),
-  prerisana v SVG (`app/ui/Logo.tsx`, `public/icon.svg`). Tin lahko izbere drug predlog.
+- **Logo (potrjen 2026-11-17):** samo besedni znak »loyavi« v pisavi Outfit (krepko), pika na črki i je rdeč krog.
+  Brez ikone ob napisu. Ikona aplikacije je modra ploščica s črko l in rdečo piko (`scripts/dev/icons.mjs`).
+  Zavrnjeno: pet pik v obliki črke L, dve kartici z žigom, 3D ikona ob napisu.
+- **Glava strani:** široka bela lebdeča vrstica (logo levo, povezave v sredini, rdeč gumb desno).
+- **FAQ:** `FaqBlock` (levo naslov in kartica za stik, desno harmonika v eni kartici).
 - **Fotografije:** `public/photos/*.jpg` (10 kosov, generator), komponenta `Photo`.
 - **Besedila:** brez vezajev in pomišljajev v stavkih, brez klišejev, brez izmišljenih številk, strank ali mnenj, tikanje,
   spolno nevtralno, brezhibna slovenščina.

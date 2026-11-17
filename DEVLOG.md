@@ -49,6 +49,19 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-11-17 — seja 72, zaključek dneva (FAQ, glava, logo) — Fable 5.2
+> Veja **`v2`**, živa stran je še stara. Naslednja seja: preberi [`docs/V2-PLAN.md`](docs/V2-PLAN.md).
+- **Logo potrjen:** samo besedni znak »loyavi« (pisava Outfit, krepko) z rdečo piko na črki i, brez ikone ob napisu
+  (`app/ui/Logo.tsx`). Ikona aplikacije: modra ploščica s črko l in rdečo piko (`scripts/dev/icons.mjs`).
+- **Glava strani:** široka bela lebdeča vrstica, logo levo, povezave v sredini, rdeč gumb desno (`app/ui/SiteNav.tsx`).
+- **FAQ:** dva stolpca, levo naslov in modra kartica za stik s 3D grafiko, desno harmonika v eni beli kartici
+  (`app/ui/FaqBlock.tsx`, `app/ui/Faq.tsx`). Uporabljata jo `/` in `/partnerji`.
+- Razvojne skripte in izvorni listi grafik so zdaj v repu: `scripts/dev/` in `docs/design-source/`.
+- Tinove ocene: naslovnica »že kr hud«, logo z napisom »čist kul«. FAQ, glavo in star logo je prej ocenil kot grde.
+- Treg skupaj približno 0,50 $.
+- **Odprto:** globlja prenova nadzorne plošče; ocena aplikacije; merge `v2` → `main` po Tinovi potrditvi; izbris testnih
+  podatkov v bazi po potrditvi; Supabase žeton, Google prijava, SMTP.
+
 ### 2026-11-17 — seja 72, tretji del (stran za lokale na ravni naslovnice) — Fable 5.2
 > Veja **`v2`**. Tin je novo naslovnico potrdil (»site je zdej že kr hud«), zato isti jezik velja naprej.
 - `/partnerji`: pravi posnetek nadzorne plošče v oknu brskalnika (`BrowserFrame` v `app/ui/Phone.tsx`) s telefonom ob njem,

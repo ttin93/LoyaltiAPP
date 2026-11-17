@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Anton, Geist, Geist_Mono } from "next/font/google";
+import { Anton, Geist, Geist_Mono, Outfit } from "next/font/google";
 import "./globals.css";
 import { BRAND_DESCRIPTION, siteOrigin } from "@/lib/brand";
 
@@ -23,13 +23,21 @@ const anton = Anton({
   display: "swap",
 });
 
+// Pisava besednega znaka v logotipu.
+const outfit = Outfit({
+  variable: "--font-outfit",
+  weight: "700",
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+});
+
 const TITLE = "Loyavi: vse kartice zvestobe v telefonu";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin()),
   title: { default: TITLE, template: "%s | Loyavi" },
   description: BRAND_DESCRIPTION,
-  icons: { icon: "/icon.svg?v=5", apple: "/apple-icon.png?v=5" },
+  icons: { icon: "/icon.png?v=6", apple: "/apple-icon.png?v=6" },
   appleWebApp: { capable: true, title: "Loyavi", statusBarStyle: "default" },
   openGraph: {
     type: "website",
@@ -50,7 +58,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="sl" className={`${geist.variable} ${geistMono.variable} ${anton.variable} h-full antialiased`}>
+    <html lang="sl" className={`${geist.variable} ${geistMono.variable} ${anton.variable} ${outfit.variable} h-full antialiased`}>
       <body className="min-h-full">
         <a
           href="#vsebina"

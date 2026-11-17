@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import Logo from "./Logo";
-import { buttonClass } from "./Button";
 
 export type NavLink = { href: string; label: string };
 
 /**
- * Lebdeča steklena kapsula. Na telefonu se hamburger preoblikuje v X in odpre
- * celozaslonski meni, povezave vstopijo z zamikom.
+ * Glava strani: široka bela lebdeča vrstica z logotipom levo, povezavami v sredini in gumbom desno.
+ * Na telefonu se hamburger preoblikuje v X in odpre celozaslonski meni, povezave vstopijo z zamikom.
  */
 export default function SiteNav({ links, cta }: { links: NavLink[]; cta: NavLink }) {
   const pathname = usePathname();
@@ -27,19 +27,16 @@ export default function SiteNav({ links, cta }: { links: NavLink[]; cta: NavLink
 
   return (
     <>
-      <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex justify-center px-4">
-        <nav
-          aria-label="Glavna navigacija"
-          className="pointer-events-auto mx-auto mt-6 flex w-max max-w-full items-center gap-6 rounded-full border border-line bg-base/80 py-2 pl-4 pr-2 backdrop-blur-xl"
-        >
-          <Logo size={20} />
-          <ul className="hidden items-center gap-6 lg:flex">
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-40 px-4">
+        <nav aria-label="Glavna navigacija" className="pointer-events-auto mx-auto mt-4 flex w-full max-w-5xl items-center justify-between gap-4 rounded-full bg-card/95 py-2 pl-4 pr-2 shadow-pop backdrop-blur-xl">
+          <Logo size={36} />
+          <ul className="hidden items-center gap-1 lg:flex">
             {links.map((l) => (
               <li key={l.href}>
                 <Link
                   href={l.href}
                   aria-current={isCurrent(l.href) ? "page" : undefined}
-                  className={`rounded-lg text-sm font-medium transition-all duration-700 ease-spring hover:text-fg ${isCurrent(l.href) ? "text-fg" : "text-mute"}`}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-all duration-700 ease-spring hover:bg-s1 hover:text-fg ${isCurrent(l.href) ? "bg-s1 text-fg" : "text-mute"}`}
                 >
                   {l.label}
                 </Link>
@@ -47,15 +44,21 @@ export default function SiteNav({ links, cta }: { links: NavLink[]; cta: NavLink
             ))}
           </ul>
           <div className="flex items-center gap-2">
-            <Link href={cta.href} className={buttonClass("primary", "sm", false, "rounded-full")}>
+            <Link
+              href={cta.href}
+              className="group flex items-center gap-2 rounded-full bg-accent py-2 pl-4 pr-2 text-sm font-semibold text-on-accent transition-all duration-700 ease-spring hover:bg-accent-deep active:scale-[0.98]"
+            >
               {cta.label}
+              <span className="flex size-6 items-center justify-center rounded-full bg-white/20 transition-all duration-700 ease-spring group-hover:translate-x-0.5">
+                <ArrowRight size={12} weight="bold" aria-hidden="true" />
+              </span>
             </Link>
             <button
               type="button"
               aria-label={open ? "Zapri meni" : "Odpri meni"}
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
-              className="relative flex size-10 items-center justify-center rounded-full bg-s2 transition-all duration-700 ease-spring hover:bg-s3 active:scale-[0.98] lg:hidden"
+              className="relative flex size-10 items-center justify-center rounded-full bg-s1 transition-all duration-700 ease-spring hover:bg-s2 active:scale-[0.98] lg:hidden"
             >
               <span className={`absolute h-0.5 w-4 rounded-full bg-fg transition-all duration-700 ease-spring ${open ? "rotate-45" : "-translate-y-1"}`} />
               <span className={`absolute h-0.5 w-4 rounded-full bg-fg transition-all duration-700 ease-spring ${open ? "-rotate-45" : "translate-y-1"}`} />

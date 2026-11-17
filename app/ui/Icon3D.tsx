@@ -6,7 +6,7 @@ export type Icon3DName =
   | "kavarna" | "restavracija" | "bar" | "slascicarna" | "pekarna" | "hitra-hrana" | "frizer" | "lepota"
   | "cvetlicarna" | "avtopralnica" | "trgovina" | "fitnes" | "hisni-ljubljencki" | "drugo"
   | "darilo" | "zvezda" | "kupon" | "kolo" | "torta" | "zig" | "telefon" | "denarnica" | "konfeti"
-  | "megafon" | "zvonec" | "srce" | "pokal" | "kartice";
+  | "megafon" | "zvonec" | "srce" | "pokal" | "kartice" | "vprasanje";
 
 /** Okrasna 3D grafika. Velikost v slikovnih pikah, razred lahko doda zasuk ali senco. */
 export default function Icon3D({ name, size = 64, className = "", priority = false }: { name: Icon3DName; size?: number; className?: string; priority?: boolean }) {

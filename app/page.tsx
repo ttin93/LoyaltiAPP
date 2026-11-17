@@ -8,7 +8,8 @@ import { Reveal, WordReveal } from "@/app/ui/Reveal";
 import Phone from "@/app/ui/Phone";
 import Photo from "@/app/ui/Photo";
 import Icon3D, { type Icon3DName } from "@/app/ui/Icon3D";
-import Faq, { type FaqItem } from "@/app/ui/Faq";
+import type { FaqItem } from "@/app/ui/Faq";
+import FaqBlock from "@/app/ui/FaqBlock";
 import { CATEGORIES } from "@/lib/categories";
 import { siteOrigin } from "@/lib/brand";
 
@@ -276,17 +277,10 @@ export default async function Home() {
         </section>
 
         {/* VPRAŠANJA */}
-        <section id="vprasanja" className="scroll-mt-24 px-6 py-24">
-          <div className="mx-auto flex max-w-3xl flex-col gap-12">
-            <Head eyebrow="Vprašanja" title="Preden začneš." text="Če odgovora ne najdeš, nam piši na info@loyavi.app." />
-            <Reveal delay={100}>
-              <Faq items={FAQ} />
-            </Reveal>
-          </div>
-        </section>
+        <FaqBlock title="Preden začneš." text="Najpogostejša vprašanja gostov na enem mestu." items={FAQ} />
 
         {/* ZAKLJUČNI POZIV: odpri na telefonu */}
-        <section id="zacni" className="scroll-mt-24 px-6 pb-24">
+        <section id="zacni" className="scroll-mt-24 px-6 py-24">
           <Reveal className="on-brand atmo-brand mx-auto grid max-w-6xl items-center gap-8 overflow-hidden rounded-3xl px-8 pt-12 text-on-brand shadow-brand lg:grid-cols-[1.3fr_1fr] lg:px-16 lg:pt-16">
             <div className="flex flex-col items-start gap-6 pb-12 lg:pb-16">
               <h2 className="display text-6xl sm:text-7xl">Naslednja kava naj šteje.</h2>

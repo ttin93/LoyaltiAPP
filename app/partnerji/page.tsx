@@ -9,7 +9,8 @@ import Phone, { BrowserFrame } from "@/app/ui/Phone";
 import Icon3D, { type Icon3DName } from "@/app/ui/Icon3D";
 import Photo from "@/app/ui/Photo";
 import PricingPlans from "@/app/ui/PricingPlans";
-import Faq, { type FaqItem } from "@/app/ui/Faq";
+import type { FaqItem } from "@/app/ui/Faq";
+import FaqBlock from "@/app/ui/FaqBlock";
 
 export const metadata: Metadata = {
   title: "Loyavi za lokale: digitalna kartica zvestobe",
@@ -242,17 +243,10 @@ export default function Partnerji() {
         </section>
 
         {/* VPRAŠANJA */}
-        <section id="vprasanja" className="scroll-mt-24 px-6 py-24">
-          <div className="mx-auto flex max-w-3xl flex-col gap-12">
-            <SectionHead eyebrow="Vprašanja" title="Preden se odločiš." text="Imaš drugo vprašanje? Piši nam na info@loyavi.app in odgovorimo osebno." />
-            <Reveal delay={100}>
-              <Faq items={FAQ} />
-            </Reveal>
-          </div>
-        </section>
+        <FaqBlock title="Preden se odločiš." text="Odgovori na vprašanja, ki jih lastniki lokalov postavijo najprej." items={FAQ} />
 
         {/* ZAKLJUČNI POZIV */}
-        <section className="mx-auto max-w-6xl px-6 pb-24 pt-12">
+        <section className="mx-auto max-w-6xl px-6 py-24">
           <Reveal className="on-brand flex flex-col items-center gap-6 overflow-hidden rounded-3xl bg-brand px-8 pt-16 text-center text-on-brand lg:px-16 lg:pt-24">
             <h2 className="display max-w-4xl text-6xl sm:text-7xl lg:text-8xl">Prvi žigi lahko padejo že danes.</h2>
             <p className="max-w-xl text-lg font-medium">Ustvari račun lokala, določi nagrado in povabi goste. 30 dni brezplačno, brez vpisa kartice.</p>

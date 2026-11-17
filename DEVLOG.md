@@ -57,6 +57,8 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 - **FAQ:** dva stolpca, levo naslov in modra kartica za stik s 3D grafiko, desno harmonika v eni beli kartici
   (`app/ui/FaqBlock.tsx`, `app/ui/Faq.tsx`). Uporabljata jo `/` in `/partnerji`.
 - Razvojne skripte in izvorni listi grafik so zdaj v repu: `scripts/dev/` in `docs/design-source/`.
+- **Hero naslovnice:** ena višina zaslona, levo naslov in gumb, desno velik kolaž celih slik v treh stolpcih. Tin je zavrnil
+  različici z odrezanimi slikami (»grdo«) in s pomanjšano vrsto slik (»premale«): slike morajo biti velike in cele.
 - Tinove ocene: naslovnica »že kr hud«, logo z napisom »čist kul«. FAQ, glavo in star logo je prej ocenil kot grde.
 - Treg skupaj približno 0,50 $.
 - **Odprto:** globlja prenova nadzorne plošče; ocena aplikacije; merge `v2` → `main` po Tinovi potrditvi; izbris testnih

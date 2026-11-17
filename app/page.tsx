@@ -89,27 +89,27 @@ export default async function Home() {
     <>
       <SiteNav links={NAV} cta={CTA} />
       <main id="vsebina">
-        {/* HERO: modra podlaga, velik naslov, rdeč gumb, kolaž s pravim zaslonom aplikacije */}
-        <section className="on-brand overflow-hidden bg-brand text-on-brand">
-          <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 pt-32 text-center">
-            <Reveal className="flex flex-col items-center gap-6">
+        {/* HERO: ena višina zaslona. Levo naslov in gumb, desno velik kolaž celih slik. */}
+        <section className="on-brand flex min-h-svh flex-col justify-center overflow-hidden bg-brand text-on-brand">
+          <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-6 pb-12 pt-28 lg:grid-cols-[1fr_1.2fr] lg:gap-8">
+            <Reveal className="flex flex-col items-center gap-6 text-center lg:items-start lg:text-left">
               <p className="flex items-center gap-2 rounded-full bg-base/20 px-3 py-2 text-sm font-medium">
                 <span className="size-2 rounded-full bg-base" aria-hidden="true" />
                 Digitalne kartice zvestobe za Slovenijo
               </p>
-              <h1 className="display text-6xl sm:text-8xl lg:text-9xl">
+              <h1 className="display text-6xl whitespace-nowrap sm:text-7xl lg:text-8xl">
                 Žigi, ki se
                 <br />
                 ne izgubijo.
               </h1>
-              <p className="max-w-[680px] text-lg font-medium lg:text-xl">
+              <p className="max-w-xl text-lg font-medium lg:text-xl">
                 Vse kartice zvestobe iz tvojih najljubših lokalov na enem mestu. Skeniraj račun ali približaj telefon stojalu in žig je tvoj.
               </p>
               <ButtonLink href={CTA.href} size="lg">
                 Odpri svojo denarnico
                 <ArrowRight size={16} weight="bold" aria-hidden="true" />
               </ButtonLink>
-              <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium">
+              <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium lg:justify-start">
                 {["Brezplačno za goste", "Brez nameščanja iz trgovine", "Deluje na vsakem telefonu"].map((t) => (
                   <li key={t} className="flex items-center gap-2 whitespace-nowrap">
                     <Check size={16} weight="bold" aria-hidden="true" />
@@ -119,27 +119,16 @@ export default async function Home() {
               </ul>
             </Reveal>
 
-            {/* namizje: fotografije in telefon v vrsti */}
-            <Reveal delay={150} className="mt-8 hidden w-full grid-cols-[1fr_1fr_1.3fr_1fr_1fr] items-end gap-4 lg:grid">
-              <Photo src="/photos/friends.jpg" alt="Prijatelja se smejita s kavo v rokah pod modrim nebom" shape="rise" priority className="aspect-[3/4]" />
-              <Photo src="/photos/iced.jpg" alt="Dekle s sončnimi očali pije ledeno kavo" shape="arch" priority className="aspect-[3/5]" />
-              <div className="relative h-96 overflow-hidden">
-                <Phone src="/screens/denarnica.webp" alt="Denarnica Loyavi s karticami zvestobe in nagradami" priority />
+            {/* kolaž: trije stolpci, vse slike cele */}
+            <Reveal delay={150} className="mx-auto grid w-full max-w-2xl grid-cols-3 items-center gap-4">
+              <div className="flex flex-col gap-4">
+                <Photo src="/photos/friends.jpg" alt="Prijatelja se smejita s kavo v rokah pod modrim nebom" priority className="aspect-[3/4]" sizes="(min-width: 1024px) 20vw, 33vw" />
+                <Photo src="/photos/barista.jpg" alt="Natakarica čez pult podaja kapučino" shape="circle" priority className="aspect-square" sizes="(min-width: 1024px) 20vw, 33vw" />
               </div>
-              <Photo src="/photos/barista.jpg" alt="Natakarica čez pult podaja kapučino" shape="circle" priority className="mb-12 aspect-square" />
-              <Photo src="/photos/tap.jpg" alt="Gost približa telefon stojalu ob blagajni" shape="rise" priority className="aspect-[3/4]" />
-            </Reveal>
-
-            {/* telefon: aplikacija v sredini, fotografiji ob straneh */}
-            <Reveal delay={150} className="relative mt-8 flex h-80 w-full max-w-sm items-end justify-center lg:hidden">
-              <div className="absolute bottom-0 left-0 w-28">
-                <Photo src="/photos/iced.jpg" alt="Dekle s sončnimi očali pije ledeno kavo" shape="arch" priority sizes="30vw" className="aspect-[3/5]" />
-              </div>
-              <div className="absolute bottom-16 right-0 w-28">
-                <Photo src="/photos/barista.jpg" alt="Natakarica čez pult podaja kapučino" shape="circle" priority sizes="30vw" className="aspect-square" />
-              </div>
-              <div className="relative z-10 h-72 w-48 overflow-hidden">
-                <Phone src="/screens/denarnica.webp" alt="Denarnica Loyavi s karticami zvestobe in nagradami" priority sizes="50vw" />
+              <Phone src="/screens/denarnica.webp" alt="Denarnica Loyavi s karticami zvestobe in nagradami" priority sizes="(min-width: 1024px) 20vw, 33vw" />
+              <div className="flex flex-col gap-4">
+                <Photo src="/photos/iced.jpg" alt="Dekle s sončnimi očali pije ledeno kavo" shape="arch" priority className="aspect-[3/5] rounded-b-3xl" sizes="(min-width: 1024px) 20vw, 33vw" />
+                <Photo src="/photos/tap.jpg" alt="Gost približa telefon stojalu ob blagajni" priority className="aspect-[4/3]" sizes="(min-width: 1024px) 20vw, 33vw" />
               </div>
             </Reveal>
           </div>

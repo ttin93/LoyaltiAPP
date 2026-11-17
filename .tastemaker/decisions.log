@@ -8,3 +8,6 @@
 2026-11-17 | rejected | logo | 3D app icon next to the wordmark | owner: without that one
 2026-11-17 | kept | logo | wordmark only: bold rounded 'loyavi' (Outfit) with a red dot on the i | owner: 'je cist kul'
 2026-11-17 | pending-review | landing | wide white floating header; two-column FAQ with contact card and single-card accordion | waiting for the owner's verdict
+2026-11-17 | rejected | landing hero | 100vh with images cropped by the bottom edge | owner: ugly, images cut off
+2026-11-17 | rejected | landing hero | 100vh with a shrunken full image row under centered text | owner: too small, wants big images
+2026-11-17 | pending-review | landing hero | 100vh split: text left, large three-column collage of whole images right | waiting for the owner's verdict

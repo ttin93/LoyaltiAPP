@@ -11,10 +11,10 @@ const SHAPE: Record<Shape, string> = {
 };
 
 /** Fotografija v eni od oblik kolaža. Razmerje stranic določi klicatelj (aspect-*). */
-export default function Photo({ src, alt, shape = "rect", sizes = "(min-width: 1024px) 25vw, 50vw", priority = false, className = "" }: { src: string; alt: string; shape?: Shape; sizes?: string; priority?: boolean; className?: string }) {
+export default function Photo({ src, alt, shape = "rect", sizes = "(min-width: 1024px) 25vw, 50vw", priority = false, top = false, className = "" }: { src: string; alt: string; shape?: Shape; sizes?: string; priority?: boolean; /** poravnaj izrez na vrh slike (obrazi ostanejo vidni) */ top?: boolean; className?: string }) {
   return (
     <div className={`relative overflow-hidden bg-s2 ${SHAPE[shape]} ${className}`}>
-      <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className="object-cover" />
+      <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className={`object-cover ${top ? "object-top" : ""}`} />
     </div>
   );
 }

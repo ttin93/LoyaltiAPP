@@ -74,9 +74,9 @@ export default function Partnerji() {
       <SiteNav links={NAV} cta={CTA} />
       <main id="vsebina">
         {/* HERO: modra podlaga, velik naslov, rdeč gumb */}
-        <section className="on-brand overflow-hidden bg-brand text-on-brand">
-          <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 px-6 pb-16 pt-32 lg:flex-row lg:items-end lg:gap-12 lg:pb-0">
-            <Reveal className="flex flex-1 flex-col items-start gap-6 lg:pb-24">
+        <section className="on-brand flex min-h-svh flex-col overflow-hidden bg-brand text-on-brand">
+          <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center gap-12 px-6 pb-16 pt-28 lg:flex-row lg:items-end lg:gap-12 lg:pb-0">
+            <Reveal className="flex flex-1 flex-col items-start gap-6 lg:self-center lg:pb-12">
               <p className="flex items-center gap-2 rounded-full bg-base/20 px-3 py-2 text-sm font-medium">
                 <span className="size-2 rounded-full bg-base" aria-hidden="true" />
                 Za kavarne, lokale in storitve

@@ -72,7 +72,7 @@ Zdaj velja:
 - [x] F. Maili v novi podobi, pravi kuponi, odjava od sporočil (`/odjava`, zapis v `email_log`), cron prepisan
 - [x] G. Čiščenje starega, PWA manifest, ikone, slika za deljenje, sitemap, preusmeritve starih poti
 - [x] H. tsc, eslint, `next build`, E2E gost + lastnik, mobilno + namizje
-- [ ] I. **Merge `v2` → `main` šele po Tinovi potrditvi** (zamenja živo stran)
+- [x] I. `v2` je na `main` in objavljen na loyavi.app (2026-11-17, po Tinovi potrditvi)
 
 ## Odprto po v2 (ni blokada za merge)
 - `/superadmin` je še v starem videzu (deluje, se prevede). Prenova pozneje.

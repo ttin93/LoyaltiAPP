@@ -49,6 +49,16 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-11-17 — OBJAVA: v2 je na `main` in na loyavi.app — Fable 5.2
+> Tin je potrdil objavo (»dej na domeno«). `main` je premaknjen naprej na `v2` (hiter premik, brez spojitvenega commita).
+> Od zdaj je **`main` spet glavna veja**; `v2` ostane kot kopija istega stanja.
+- Brez sprememb sheme in brez novih okoljskih spremenljivk, zato objava ne potrebuje dodatnih korakov na Vercelu ali v Supabase.
+- Povratek na staro različico: v Vercelu izberi prejšnjo produkcijsko objavo in »Instant Rollback«, ali `git revert` na `main`.
+- Obstoječi lokali iz v1 nimajo nastavitev v2: privzeto beležijo obiske z računom in niso v imeniku, dokler lastnik tega ne vklopi.
+  Gostje iz v1 si morajo ustvariti nov račun z istim elektronskim naslovom, žigi se povežejo po naslovu.
+- Še odprto: globlja prenova nadzorne plošče, `/superadmin` v starem videzu, čistilna migracija (Supabase žeton),
+  Google prijava, lasten SMTP in dovoljeni naslovi za preusmeritev v Supabase, izbris testnih podatkov po Tinovi potrditvi.
+
 ### 2026-11-17 — seja 72, zaključek dneva (FAQ, glava, logo) — Fable 5.2
 > Veja **`v2`**, živa stran je še stara. Naslednja seja: preberi [`docs/V2-PLAN.md`](docs/V2-PLAN.md).
 - **Logo potrjen:** samo besedni znak »loyavi« (pisava Outfit, krepko) z rdečo piko na črki i, brez ikone ob napisu

@@ -11,3 +11,20 @@ export default function Phone({ src, alt, priority = false, sizes = "(min-width:
     </div>
   );
 }
+
+/** Okno brskalnika s posnetkom nadzorne plošče. */
+export function BrowserFrame({ src, alt, priority = false, className = "" }: { src: string; alt: string; priority?: boolean; className?: string }) {
+  return (
+    <div className={`overflow-hidden rounded-3xl bg-card shadow-pop ${className}`}>
+      <div className="flex items-center gap-2 bg-s2 px-4 py-3" aria-hidden="true">
+        <span className="size-3 rounded-full bg-s3" />
+        <span className="size-3 rounded-full bg-s3" />
+        <span className="size-3 rounded-full bg-s3" />
+        <span className="ml-2 rounded-full bg-card px-3 py-1 font-mono text-xs text-dim">loyavi.app/dashboard</span>
+      </div>
+      <div className="relative aspect-[16/10]">
+        <Image src={src} alt={alt} fill sizes="(min-width: 1024px) 1100px, 100vw" priority={priority} className="object-cover object-top" />
+      </div>
+    </div>
+  );
+}

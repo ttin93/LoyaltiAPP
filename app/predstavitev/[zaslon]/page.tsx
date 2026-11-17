@@ -9,6 +9,8 @@ import VenueClient from "@/app/p/[public_code]/VenueClient";
 import WheelSheet from "@/app/ui/WheelSheet";
 import Icon3D from "@/app/ui/Icon3D";
 import { StampDots } from "@/app/ui/LoyaltyCard";
+import Dashboard from "@/app/dashboard/Dashboard";
+import { sampleDash } from "../sampleDash";
 
 // Predstavitveni zasloni s primeri podatkov (lokali niso resnični partnerji).
 // Namen: posnetki zaslona za pristajalno stran. Na produkciji strani ni.
@@ -55,6 +57,10 @@ function Shell({ children }: { children: React.ReactNode }) {
 export default async function Showcase({ params }: { params: Promise<{ zaslon: string }> }) {
   if (process.env.NODE_ENV === "production") notFound();
   const { zaslon } = await params;
+
+  if (zaslon === "plosca" || zaslon === "plosca-gostje") {
+    return <Dashboard data={sampleDash()} initialSection={zaslon === "plosca" ? "pregled" : "gostje"} isNew={false} billingSuccess={false} />;
+  }
 
   if (zaslon === "denarnica") {
     return (

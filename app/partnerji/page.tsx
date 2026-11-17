@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import {
-  ArrowRight, ArrowsClockwise, Check, ContactlessPayment, EnvelopeSimple, Receipt, Star, Storefront, Users,
-} from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, Check } from "@phosphor-icons/react/dist/ssr";
 import SiteNav from "@/app/ui/SiteNav";
 import SiteFooter from "@/app/ui/SiteFooter";
 import { ButtonLink } from "@/app/ui/Button";
 import { Reveal, WordReveal } from "@/app/ui/Reveal";
-import { DashboardMock, StandMock } from "@/app/ui/PartnerVisuals";
+import { StandMock } from "@/app/ui/PartnerVisuals";
+import Phone, { BrowserFrame } from "@/app/ui/Phone";
+import Icon3D, { type Icon3DName } from "@/app/ui/Icon3D";
 import Photo from "@/app/ui/Photo";
 import PricingPlans from "@/app/ui/PricingPlans";
 import Faq, { type FaqItem } from "@/app/ui/Faq";
@@ -33,11 +33,11 @@ const STATS = [
 ];
 
 const BENEFITS = [
-  { icon: ArrowsClockwise, title: "Gostje se vračajo pogosteje", text: "Kartica je vedno v telefonu in napredek do nagrade vedno na očeh. Pozabljen kartonček ni več izgovor.", wide: true },
-  { icon: Users, title: "Veš, kdo so tvoji stalni gostje", text: "Vidiš obiske, zadnji obisk in koga loči en sam žig do nagrade. Prvič imaš seznam svojih gostov.", wide: true },
-  { icon: Star, title: "Več ocen na Googlu", text: "Po obisku gosta povabimo k oceni. Kdor ni bil zadovoljen, lahko to najprej sporoči tebi." },
-  { icon: EnvelopeSimple, title: "Povabilo, ko gosta dolgo ni", text: "Samodejno sporočilo z darilom za goste, ki jih ni bilo več tednov. Nastaviš enkrat." },
-  { icon: Storefront, title: "Brez nove opreme", text: "Deluje z računom, ki ga že izdajaš, ali s kodo na pultu. Blagajne ne menjaš." },
+  { icon: "srce" as Icon3DName, title: "Gostje se vračajo pogosteje", text: "Kartica je vedno v telefonu in napredek do nagrade vedno na očeh. Pozabljen kartonček ni več izgovor.", wide: true },
+  { icon: "kartice" as Icon3DName, title: "Veš, kdo so tvoji stalni gostje", text: "Vidiš obiske, zadnji obisk in koga loči en sam žig do nagrade. Prvič imaš seznam svojih gostov.", wide: true },
+  { icon: "zvezda" as Icon3DName, title: "Več ocen na Googlu", text: "Po obisku gosta povabimo k oceni. Kdor ni bil zadovoljen, lahko to najprej sporoči tebi." },
+  { icon: "megafon" as Icon3DName, title: "Povabilo, ko gosta dolgo ni", text: "Samodejno sporočilo z darilom za goste, ki jih ni bilo več tednov. Nastaviš enkrat." },
+  { icon: "telefon" as Icon3DName, title: "Brez nove opreme", text: "Deluje z računom, ki ga že izdajaš, ali s kodo na pultu. Blagajne ne menjaš." },
 ];
 
 const STEPS = [
@@ -59,7 +59,7 @@ const FAQ: FaqItem[] = [
 
 function SectionHead({ eyebrow, title, text }: { eyebrow: string; title: string; text?: string }) {
   return (
-    <Reveal className="flex max-w-2xl flex-col items-start gap-4">
+    <Reveal className="mx-auto flex max-w-2xl flex-col items-center gap-4 text-center">
       <p className="rounded-full bg-tint px-3 py-1 text-sm font-semibold text-brand-ink">{eyebrow}</p>
       <h2 className="text-4xl font-semibold tracking-tight text-fg lg:text-5xl">{title}</h2>
       {text && <p className="text-lg text-mute">{text}</p>}
@@ -108,12 +108,16 @@ export default function Partnerji() {
           </div>
         </section>
 
-        {/* NADZORNA PLOŠČA */}
-        <section className="mx-auto max-w-6xl px-6 pt-24">
-          <div className="grid items-center gap-12 lg:grid-cols-2">
+        {/* NADZORNA PLOŠČA: pravi posnetek z vzorčnimi podatki */}
+        <section className="atmo px-6 py-24">
+          <div className="mx-auto flex max-w-6xl flex-col gap-12">
             <SectionHead eyebrow="Nadzorna plošča" title="Vidiš, kdo se vrača." text="Gostje, obiski, nagrade in ocene na enem zaslonu. Brez tabel in brez ugibanja, katera akcija je delovala." />
-            <Reveal delay={100} className="text-fg">
-              <DashboardMock />
+            <Reveal delay={100} className="relative mx-auto w-full max-w-5xl">
+              <BrowserFrame src="/screens/plosca.webp" alt="Nadzorna plošča Loyavi s pregledom gostov, obiskov in nagrad" />
+              <div className="absolute -bottom-12 -right-8 hidden w-52 lg:block">
+                <Phone src="/screens/denarnica.webp" alt="Denarnica gosta s karticami zvestobe" />
+              </div>
+              <p className="mt-4 text-center text-sm text-dim">Primer prikaza z vzorčnimi podatki.</p>
             </Reveal>
           </div>
         </section>
@@ -148,18 +152,20 @@ export default function Partnerji() {
         </section>
 
         {/* PREDNOSTI */}
-        <section id="prednosti" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
-          <SectionHead eyebrow="Prednosti" title="Kaj dobi tvoj lokal." />
-          <div className="mt-12 grid gap-4 lg:grid-cols-6">
-            {BENEFITS.map((b, i) => (
-              <Reveal key={b.title} delay={i * 80} className={`flex flex-col gap-4 rounded-3xl bg-card shadow-card p-8 ${b.wide ? "lg:col-span-3" : "lg:col-span-2"}`}>
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-tint text-brand-ink">
-                  <b.icon size={24} weight="bold" aria-hidden="true" />
-                </span>
-                <h3 className="text-xl font-semibold tracking-tight text-fg">{b.title}</h3>
-                <p className="text-base text-mute">{b.text}</p>
-              </Reveal>
-            ))}
+        <section id="prednosti" className="atmo scroll-mt-24 px-6 py-24">
+          <div className="mx-auto flex max-w-6xl flex-col gap-12">
+            <SectionHead eyebrow="Prednosti" title="Kaj dobi tvoj lokal." />
+            <div className="grid gap-4 lg:grid-cols-6">
+              {BENEFITS.map((b, i) => (
+                <Reveal key={b.title} delay={i * 80} className={`group flex flex-col gap-4 rounded-3xl bg-card p-8 shadow-card transition-all duration-700 ease-spring hover:-translate-y-1 hover:shadow-pop ${b.wide ? "lg:col-span-3" : "lg:col-span-2"}`}>
+                  <span className="flex size-16 items-center justify-center rounded-2xl bg-tint">
+                    <Icon3D name={b.icon} size={52} className="transition-all duration-700 ease-spring group-hover:scale-110" />
+                  </span>
+                  <h3 className="text-xl font-semibold tracking-tight text-fg">{b.title}</h3>
+                  <p className="text-base text-mute">{b.text}</p>
+                </Reveal>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -182,66 +188,62 @@ export default function Partnerji() {
         <section className="mx-auto max-w-6xl px-6 py-24">
           <SectionHead eyebrow="Beleženje obiskov" title="Račun, stojalo ali oboje." text="Sam izbereš, kako gostje zabeležijo obisk. Način lahko kadar koli zamenjaš." />
           <div className="mt-12 grid gap-4 lg:grid-cols-2">
-            <Reveal className="flex flex-col gap-4 rounded-3xl bg-card shadow-card p-8">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-tint text-brand-ink">
-                <Receipt size={24} weight="bold" aria-hidden="true" />
-              </span>
-              <h3 className="text-2xl font-semibold tracking-tight text-fg">Fiskalni račun</h3>
-              <p className="text-base text-mute">Gost skenira kodo QR na računu. Sistem preveri, da je račun tvoj, da je svež in da še ni bil uporabljen.</p>
-              <ul className="flex flex-col gap-2 text-sm text-fg">
-                {["Žig samo ob resničnem nakupu", "Vsak račun šteje enkrat", "Nič dodatne opreme"].map((t) => (
-                  <li key={t} className="flex items-center gap-2">
-                    <Check size={16} weight="bold" className="text-brand-ink" aria-hidden="true" />
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-            <Reveal delay={120} className="flex flex-col gap-4 rounded-3xl bg-card shadow-card p-8">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-tint text-brand-ink">
-                <ContactlessPayment size={24} weight="bold" aria-hidden="true" />
-              </span>
-              <h3 className="text-2xl font-semibold tracking-tight text-fg">Stojalo ob blagajni</h3>
-              <p className="text-base text-mute">Gost približa telefon nalepki NFC ali skenira kodo na pultu. Obisk je zabeležen v sekundi.</p>
-              <ul className="flex flex-col gap-2 text-sm text-fg">
-                {["Najhitrejša pot do žiga", "En žig na gosta na dan", "Kodo natisneš sam"].map((t) => (
-                  <li key={t} className="flex items-center gap-2">
-                    <Check size={16} weight="bold" className="text-brand-ink" aria-hidden="true" />
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
+            {[
+              { icon: "zig" as Icon3DName, title: "Fiskalni račun", text: "Gost skenira kodo QR na računu. Sistem preveri, da je račun tvoj, da je svež in da še ni bil uporabljen.", points: ["Žig samo ob resničnem nakupu", "Vsak račun šteje enkrat", "Nič dodatne opreme"] },
+              { icon: "telefon" as Icon3DName, title: "Stojalo ob blagajni", text: "Gost približa telefon nalepki NFC ali skenira kodo na pultu. Obisk je zabeležen v sekundi.", points: ["Najhitrejša pot do žiga", "En žig na gosta na dan", "Kodo natisneš sam"] },
+            ].map((m, i) => (
+              <Reveal key={m.title} delay={i * 120} className="group flex items-start gap-6 rounded-3xl bg-card p-8 shadow-card transition-all duration-700 ease-spring hover:-translate-y-1 hover:shadow-pop">
+                <span className="flex size-24 shrink-0 items-center justify-center rounded-3xl bg-tint">
+                  <Icon3D name={m.icon} size={80} className="transition-all duration-700 ease-spring group-hover:scale-110" />
+                </span>
+                <div className="flex flex-col gap-4">
+                  <h3 className="text-2xl font-semibold tracking-tight text-fg">{m.title}</h3>
+                  <p className="text-base text-mute">{m.text}</p>
+                  <ul className="flex flex-col gap-2 text-sm text-fg">
+                    {m.points.map((t) => (
+                      <li key={t} className="flex items-center gap-2">
+                        <span className="flex size-5 items-center justify-center rounded-full bg-tint text-brand-ink">
+                          <Check size={12} weight="bold" aria-hidden="true" />
+                        </span>
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            ))}
           </div>
         </section>
 
         {/* KAKO DELUJE */}
-        <section id="kako" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
-          <SectionHead eyebrow="Kako deluje" title="Od prijave do prvega žiga v enem popoldnevu." />
-          <ol className="mt-12 grid gap-4 lg:grid-cols-3">
-            {STEPS.map((s, i) => (
-              <Reveal key={s.title} delay={i * 100}>
-                <li className="flex h-full flex-col gap-4 rounded-3xl bg-card shadow-card p-8">
-                  <span className="font-mono text-sm font-medium text-brand-ink">0{i + 1}</span>
-                  <h3 className="pt-8 text-2xl font-semibold tracking-tight text-fg">{s.title}</h3>
-                  <p className="text-base text-mute">{s.text}</p>
-                </li>
-              </Reveal>
-            ))}
-          </ol>
+        <section id="kako" className="atmo scroll-mt-24 px-6 py-24">
+          <div className="mx-auto flex max-w-6xl flex-col gap-12">
+            <SectionHead eyebrow="Kako deluje" title="Od prijave do prvega žiga v enem popoldnevu." />
+            <ol className="grid gap-4 lg:grid-cols-3">
+              {STEPS.map((s, i) => (
+                <Reveal key={s.title} delay={i * 100}>
+                  <li className="flex h-full flex-col gap-4 rounded-3xl bg-card p-8 shadow-card">
+                    <span className="flex size-10 items-center justify-center rounded-full bg-fg font-mono text-base font-semibold text-card">{i + 1}</span>
+                    <h3 className="text-2xl font-semibold tracking-tight text-fg">{s.title}</h3>
+                    <p className="text-base text-mute">{s.text}</p>
+                  </li>
+                </Reveal>
+              ))}
+            </ol>
+          </div>
         </section>
 
         {/* CENIK */}
         <section id="cenik" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
-          <SectionHead eyebrow="Cenik" title="Ena cena, vse vključeno." text="Brez doplačil za posamezne funkcije in brez provizij na obisk." />
+          <SectionHead eyebrow="Cenik" title="Vse vključeno v vsakem paketu." text="Brez doplačil za posamezne funkcije in brez provizij na obisk." />
           <Reveal className="mt-12">
             <PricingPlans />
           </Reveal>
         </section>
 
         {/* VPRAŠANJA */}
-        <section id="vprasanja" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
-          <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr]">
+        <section id="vprasanja" className="scroll-mt-24 px-6 py-24">
+          <div className="mx-auto flex max-w-3xl flex-col gap-12">
             <SectionHead eyebrow="Vprašanja" title="Preden se odločiš." text="Imaš drugo vprašanje? Piši nam na info@loyavi.app in odgovorimo osebno." />
             <Reveal delay={100}>
               <Faq items={FAQ} />

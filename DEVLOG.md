@@ -49,6 +49,14 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-11-17 — seja 72, tretji del (stran za lokale na ravni naslovnice) — Fable 5.2
+> Veja **`v2`**. Tin je novo naslovnico potrdil (»site je zdej že kr hud«), zato isti jezik velja naprej.
+- `/partnerji`: pravi posnetek nadzorne plošče v oknu brskalnika (`BrowserFrame` v `app/ui/Phone.tsx`) s telefonom ob njem,
+  prednosti s 3D grafikami, načina beleženja, koraki, sredinsko poravnani naslovi sekcij, cenik s poudarjenim paketom.
+- Posnetek plošče nastane iz `/predstavitev/plosca` z vzorčnimi podatki (`app/predstavitev/sampleDash.ts`, samo razvoj).
+  Na strani je podpis »Primer prikaza z vzorčnimi podatki«.
+- Preverjeno: `tsc`, `eslint` (0 napak), `next build`. Še odprto: globlja prenova same nadzorne plošče, merge v `main`.
+
 ### 2026-11-17 — seja 72, nadaljevanje (v2: nov UI aplikacije, nova stran, nov logo) — Fable 5.2
 > Veja **`v2`**, živa stran še stara. Vir resnice: [`docs/V2-PLAN.md`](docs/V2-PLAN.md).
 - Tin je svetlo različico ocenil kot poceni in brez grafik ter poslal referenco (pristajalna stran za aplikacijo z

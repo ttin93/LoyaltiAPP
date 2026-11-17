@@ -9,6 +9,7 @@ import { categoryDefaultReward, categoryKey } from "@/lib/categories";
 import { safeHex } from "@/lib/color";
 import { mergeVenueMeta, newStandKey, type CheckinMode } from "@/lib/venueMeta";
 import { notifyOwnerWelcome } from "@/lib/notify";
+import { DEMO } from "@/lib/demo";
 
 function slugify(s: string): string {
   return (
@@ -36,6 +37,7 @@ export async function createVenue(_prev: CreateVenueState, formData: FormData): 
   const ownerPlan = bestOwnerPlan(owned ?? []);
   const max = planMaxVenues(ownerPlan);
   if ((owned?.length ?? 0) >= max) {
+    if (DEMO) return { error: `V demo obdobju ima en račun ${max === 1 ? "en lokal" : `do ${max} lokalov`}. Za več lokalov pošlji povpraševanje v nadzorni plošči, razdelek Demo.` };
     return { error: `Tvoj paket (${PLANS[ownerPlan].label}) omogoča ${max === 1 ? "en lokal" : `do ${max} lokalov`}. Za več lokalov izberi paket Veriga.` };
   }
 

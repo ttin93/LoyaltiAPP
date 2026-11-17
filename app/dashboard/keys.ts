@@ -1,3 +1,5 @@
+import { DEMO } from "@/lib/demo";
+
 // Razdelki nadzorne plošče (deljeno med strežnikom in klientom).
 export const SECTION_KEYS = ["pregled", "kartica", "gostje", "marketing", "ocene", "kolo", "obiski", "nastavitve", "narocnina"] as const;
 export type SectionKey = (typeof SECTION_KEYS)[number];
@@ -11,5 +13,5 @@ export const SECTION_LABEL: Record<SectionKey, string> = {
   kolo: "Kolo dobrodošlice",
   obiski: "Obiski in koda QR",
   nastavitve: "Nastavitve",
-  narocnina: "Naročnina",
+  narocnina: DEMO ? "Demo paket" : "Naročnina", // ključ ostane, da stare povezave (?s=narocnina) delujejo
 };

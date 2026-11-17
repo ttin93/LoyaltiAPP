@@ -8,6 +8,7 @@ import { venueMeta } from "@/lib/venueMeta";
 import { stampRewardName } from "@/lib/venues";
 import { categoryDefaultReward } from "@/lib/categories";
 import { unsubUrl } from "@/lib/unsub";
+import { superadminEmails } from "@/lib/superadmin";
 import type { Venue } from "@/lib/types";
 
 type V = Pick<Venue, "id" | "name" | "brand_color" | "public_code" | "stamp_goal" | "plan" | "resend_api_key" | "email_from" | "automations" | "venue_type">;
@@ -99,6 +100,19 @@ export async function notifyMarketing(v: V, customer: { id: string; email: strin
 /** Pošiljatelj in osnova za kampanje (uporabi strežniška akcija). */
 export function campaignParts(v: V, customerId: string) {
   return { base: base(v, customerId), sender: guestSender(v) };
+}
+
+// ── EKIPA LOYAVI: novo povpraševanje (kontaktni obrazec, prošnja za več lokalov) ──
+export async function notifyAdminLead(d: { heading: string; rows: [string, string][]; message: string; replyTo?: string | null }) {
+  if (!emailConfigured()) return;
+  try {
+    const html = T.emailLead({ ...d, ctaUrl: `${siteOrigin()}/superadmin` });
+    for (const to of superadminEmails()) {
+      await sendEmail({ to, subject: `Loyavi: ${d.heading}`, html, replyTo: d.replyTo || undefined });
+    }
+  } catch (e) {
+    console.error("[notify admin-lead]", e);
+  }
 }
 
 // ── LASTNIK (Loyavi → lokal): samo platformni ključ ─────────────────────────

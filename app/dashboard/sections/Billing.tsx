@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, CheckCircle, CircleNotch } from "@phosphor-icons/react/dist/ssr";
+import { Check, CheckCircle, CircleNotch, PaperPlaneTilt } from "@phosphor-icons/react/dist/ssr";
+import { requestMoreVenues } from "@/app/actions";
 import { Button } from "@/app/ui/Button";
+import { Field, Textarea } from "@/app/ui/Field";
+import Icon3D, { type Icon3DName } from "@/app/ui/Icon3D";
 import { PLANS, YEARLY_FREE_MONTHS, YEARLY_MONTHS } from "@/lib/plans";
 import { count, dateShort } from "@/lib/sl";
 import type { Billing as BillingData } from "../data";
-import { Badge, Panel, SectionHead, useToast } from "../parts";
+import { Badge, Panel, SectionHead, Stepper, useAct, useToast } from "../parts";
 
 const eur = (n: number) => n.toLocaleString("sl-SI", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -16,7 +19,144 @@ const TIERS = [
   { key: "grow" as const, desc: "Za več lokalov pod enim računom.", points: ["Do 5 lokacij", "Vse funkcije brez omejitev", "Ena naročnina za vse lokale"] },
 ];
 
-export default function Billing({ billing, success }: { billing: BillingData; success: boolean }) {
+// ── Demo obdobje: vse brezplačno, brez plačila (lib/demo.ts) ──────────────────
+const DEMO_INCLUDED = [
+  "Digitalna kartica zvestobe z nagradami",
+  "Beleženje obiskov z računom ali stojalom",
+  "Kolo dobrodošlice za nove goste",
+  "Povabilo k oceni na Googlu",
+  "Samodejna sporočila in kampanje",
+  "Gostje, obiski in ocene na enem mestu",
+];
+
+const DEMO_RULES: { icon: Icon3DName; title: string; text: string }[] = [
+  { icon: "veriga", title: "En račun, en lokal", text: "Več lokalov uredimo po dogovoru. Povpraševanje pošlješ spodaj." },
+  { icon: "znacka", title: "Podpis Loyavi", text: "Na strani gosta, v sporočilih in na plakatu piše, da kartica teče prek Loyavi. Podpisa ni mogoče odstraniti." },
+  { icon: "megafon", title: "Dve kampanji na teden", text: "Ena kampanja doseže do 400 gostov. Samodejna sporočila niso omejena." },
+];
+
+function DemoPlan({ billing }: { billing: BillingData }) {
+  const { pending, run } = useAct();
+  const [locations, setLocations] = useState(Math.max(2, billing.venueCount + 1));
+  const [message, setMessage] = useState("");
+  const [sent, setSent] = useState(false);
+  const approved = billing.maxVenues > 1;
+
+  return (
+    <>
+      <SectionHead title="Demo paket" text="Loyavi je v demo obdobju. Vse funkcije so odprte in brezplačne, plačilne kartice ni treba vpisati." />
+
+      <section className="on-brand atmo-brand relative flex flex-col gap-6 overflow-hidden rounded-3xl p-8 text-on-brand shadow-brand">
+        <Icon3D name="paket" size={256} className="absolute -right-6 -top-6 size-36 drop-shadow-2xl sm:size-52 lg:size-64" />
+        <p className="flex w-max items-center gap-2 rounded-full bg-white px-3 py-1 text-sm font-semibold text-brand-ink">
+          <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
+          Tvoj paket
+        </p>
+        <div className="flex flex-col gap-2">
+          <p className="text-7xl font-semibold tracking-tight lg:text-8xl">0 €</p>
+          <p className="text-base font-medium text-white/85">na mesec, dokler traja demo</p>
+        </div>
+        <ul className="grid gap-3 sm:max-w-md sm:grid-cols-1 lg:max-w-xl lg:grid-cols-2">
+          {DEMO_INCLUDED.map((item) => (
+            <li key={item} className="flex items-start gap-3 text-base font-medium">
+              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-white text-brand-ink">
+                <Check size={12} weight="bold" aria-hidden="true" />
+              </span>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Panel title="Kaj velja med demom">
+          <ul className="flex flex-col gap-4">
+            {DEMO_RULES.map((r) => (
+              <li key={r.title} className="flex items-start gap-4">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-tint">
+                  <Icon3D name={r.icon} size={40} />
+                </span>
+                <span className="flex flex-col gap-1">
+                  <span className="text-base font-semibold text-fg">{r.title}</span>
+                  <span className="text-sm text-mute">{r.text}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+        <Panel title="Kaj sledi po demu">
+          <ul className="flex flex-col gap-4">
+            {[
+              { icon: "koledar" as Icon3DName, title: "Obvestilo vnaprej", text: "Datum konca dema in cenik ti sporočimo po elektronski pošti." },
+              { icon: "scit" as Icon3DName, title: "Nič se ne zaračuna samodejno", text: "Plačilnih podatkov ne zbiramo. Plačljivo uporabo potrdiš sam." },
+              { icon: "kartice" as Icon3DName, title: "Podatki ostanejo", text: "Gostje, žigi in kuponi so shranjeni, tudi če se za nadaljevanje ne odločiš takoj." },
+            ].map((r) => (
+              <li key={r.title} className="flex items-start gap-4">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-tint">
+                  <Icon3D name={r.icon} size={40} />
+                </span>
+                <span className="flex flex-col gap-1">
+                  <span className="text-base font-semibold text-fg">{r.title}</span>
+                  <span className="text-sm text-mute">{r.text}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      </div>
+
+      <Panel
+        title="Več lokalov ali veriga"
+        text={
+          approved
+            ? `Tvoj račun ima odobrenih do ${billing.maxVenues} lokalov. Nov lokal dodaš v meniju z gumbom Dodaj lokal.`
+            : "V demo obdobju ima en račun en lokal. Če jih imaš več, povej, koliko, in dostop uredimo po dogovoru."
+        }
+      >
+        <p className="text-sm text-mute">
+          Lokali na tvojem računu: <span className="font-mono text-fg">{billing.venueCount}</span>
+          {approved ? ` od ${billing.maxVenues}` : ""}.
+        </p>
+        {sent ? (
+          <p role="status" className="flex items-start gap-3 rounded-2xl bg-tint p-4 text-base text-fg">
+            <CheckCircle size={24} weight="fill" className="shrink-0 text-brand-ink" aria-hidden="true" />
+            Povpraševanje je poslano. Odgovorimo ti po elektronski pošti, običajno v enem delovnem dnevu.
+          </p>
+        ) : (
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              run(() => requestMoreVenues(billing.venueId, { locations, message }), "Povpraševanje je poslano.", () => setSent(true));
+            }}
+          >
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-mute">Koliko lokalov imaš skupaj</span>
+              <Stepper value={locations} min={2} max={50} onChange={setLocations} label="Število lokalov" />
+            </div>
+            <Field label="Sporočilo (neobvezno)" hint="Na primer kraji lokalov ali kdaj bi želel začeti.">
+              <Textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={1000} />
+            </Field>
+            <div>
+              <Button type="submit" size="lg" disabled={pending}>
+                {pending ? <CircleNotch size={20} weight="bold" className="animate-spin" aria-hidden="true" /> : <PaperPlaneTilt size={20} weight="bold" aria-hidden="true" />}
+                Pošlji povpraševanje
+              </Button>
+            </div>
+          </form>
+        )}
+      </Panel>
+    </>
+  );
+}
+
+export default function Billing(props: { billing: BillingData; success: boolean }) {
+  // demo obdobje: namesto cenika in plačila pokaži demo paket
+  if (props.billing.access.state === "demo") return <DemoPlan billing={props.billing} />;
+  return <PaidPlans {...props} />;
+}
+
+function PaidPlans({ billing, success }: { billing: BillingData; success: boolean }) {
   const router = useRouter();
   const toast = useToast();
   const [yearly, setYearly] = useState(billing.cycle === "yearly");

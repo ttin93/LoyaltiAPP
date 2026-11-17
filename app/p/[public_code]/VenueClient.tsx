@@ -18,6 +18,7 @@ import WheelSheet from "@/app/ui/WheelSheet";
 import CouponSheet from "@/app/ui/CouponSheet";
 import ReviewSheet from "@/app/ui/ReviewSheet";
 import Icon3D from "@/app/ui/Icon3D";
+import LoyaviSignature from "@/app/ui/LoyaviSignature";
 import { count, visitsLeft } from "@/lib/sl";
 
 type StampResult = { stamps: number; goal: number; cardCompleted: boolean; rewardName: string; unlocked: string[]; askReview: boolean };
@@ -142,7 +143,7 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
         <Logo href={signedIn ? "/app" : "/"} size={20} />
       </header>
 
-      <main id="vsebina" className="relative mx-auto grid max-w-4xl gap-8 px-6 pb-24 pt-8 lg:grid-cols-2 lg:gap-12 lg:pt-16">
+      <main id="vsebina" className="relative mx-auto grid max-w-4xl gap-8 px-6 pb-16 pt-8 lg:grid-cols-2 lg:gap-12 lg:pt-16">
         <section className="flex flex-col gap-4">
           <LoyaltyCard card={{ name: venue.name, category: venue.category, color: venue.color, logoUrl: venue.logoUrl, stamps, goal: venue.goal, reward: venue.reward }} />
           <p className="px-2 text-base font-medium text-mute">
@@ -305,7 +306,10 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
         </section>
       </main>
 
-      {scanning && <Scanner onResult={onScan} onClose={() => setScanning(false)} />}
+      {/* obvezen podpis Loyavi: del strani, lokal ga ne more skriti */}
+      <LoyaviSignature className="relative" />
+
+      {scanning &&<Scanner onResult={onScan} onClose={() => setScanning(false)} />}
 
       <Sheet open={!!result} onClose={closeResult}>
         {result && (

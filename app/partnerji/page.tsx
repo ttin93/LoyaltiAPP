@@ -9,23 +9,31 @@ import Phone, { BrowserFrame } from "@/app/ui/Phone";
 import Icon3D, { type Icon3DName } from "@/app/ui/Icon3D";
 import Photo from "@/app/ui/Photo";
 import PricingPlans from "@/app/ui/PricingPlans";
+import DemoOffer from "@/app/ui/DemoOffer";
+import { DEMO } from "@/lib/demo";
 import type { FaqItem } from "@/app/ui/Faq";
 import FaqBlock from "@/app/ui/FaqBlock";
 
 export const metadata: Metadata = {
   title: "Loyavi za lokale: digitalna kartica zvestobe",
   description:
-    "Digitalna kartica zvestobe za kavarne, lokale in storitve. Gostje zbirajo žige z računom ali na stojalu, ti določiš nagrade. Prvih 30 dni brezplačno, brez kartice.",
+    DEMO
+      ? "Digitalna kartica zvestobe za kavarne, lokale in storitve. Gostje zbirajo žige z računom ali na stojalu, ti določiš nagrade. V demo obdobju brezplačno za vse lokale, brez kartice."
+      : "Digitalna kartica zvestobe za kavarne, lokale in storitve. Gostje zbirajo žige z računom ali na stojalu, ti določiš nagrade. Prvih 30 dni brezplačno, brez kartice.",
   alternates: { canonical: "/partnerji" },
 };
 
 const NAV = [
   { href: "/partnerji#prednosti", label: "Prednosti" },
   { href: "/partnerji#kako", label: "Kako deluje" },
-  { href: "/partnerji#cenik", label: "Cenik" },
+  DEMO ? { href: "/partnerji#demo", label: "Demo" } : { href: "/partnerji#cenik", label: "Cenik" },
   { href: "/", label: "Za goste" },
 ];
-const CTA = { href: "/partner", label: "Preizkusi brezplačno" };
+const CTA = { href: "/partner", label: DEMO ? "Začni brezplačno" : "Preizkusi brezplačno" };
+// besedila, ki se med demo obdobjem razlikujejo od rednega cenika
+const HERO_CTA = DEMO ? "Ustvari račun lokala" : "Preizkusi 30 dni brezplačno";
+const HERO_PILL = DEMO ? "Demo obdobje: brezplačno za vse lokale" : "Za kavarne, lokale in storitve";
+const HERO_TRUST = DEMO ? ["0 € v demo obdobju", "Brez vpisa kartice", "Vse funkcije vključene"] : ["Brez vpisa kartice", "Brez vezave", "Postavitev v nekaj minutah"];
 
 const STATS = [
   { value: "25 do 95 %", text: "več dobička, ko se delež gostov, ki se vračajo, poveča za 5 %.", ref: 1 },
@@ -42,12 +50,12 @@ const BENEFITS = [
 ];
 
 const STEPS = [
-  { title: "Ustvari račun lokala", text: "Vpišeš ime, vrsto in kraj lokala. Dve minuti, brez kartice." },
+  { title: "Ustvari račun lokala", text: "Vpišeš ime, vrsto in kraj lokala. Dve minuti, brez plačilne kartice." },
   { title: "Določi kartico in nagrado", text: "Izbereš barvo, število žigov in nagrado, na primer brezplačno kavo po osmih obiskih." },
   { title: "Povabi goste", text: "Natisneš kodo za pult ali prilepiš nalepko NFC. Gostje začnejo zbirati še isti dan." },
 ];
 
-const FAQ: FaqItem[] = [
+const FAQ_PAID: FaqItem[] = [
   { q: "Koliko stane Loyavi?", a: "Paket Lokal stane 49,99 € na mesec za eno lokacijo, paket Veriga 79,99 € na mesec za do pet lokacij. Ob letnem plačilu sta dva meseca brezplačna. Prvih 30 dni je brezplačnih in brez vpisa kartice." },
   { q: "Ali potrebujem novo blagajno ali opremo?", a: "Ne. Gost lahko obisk zabeleži s kodo QR na fiskalnem računu, ki ga tvoja blagajna že izda. Če želiš hitrejšo pot, natisneš kodo za pult ali uporabiš nalepko NFC." },
   { q: "V čem je razlika med računom in stojalom?", a: "Račun je dokaz nakupa: vsak račun šteje enkrat in samo pri tvojem lokalu. Stojalo je hitrejše, saj gost samo približa telefon, vendar nakupa ne preverja, zato je omejeno na en žig na dan. Izbereš enega ali oba načina." },
@@ -57,6 +65,21 @@ const FAQ: FaqItem[] = [
   { q: "Ali lahko kadar koli prekinem?", a: "Da. Mesečna naročnina nima vezave. Prekineš jo v nadzorni plošči in velja do konca plačanega obdobja." },
   { q: "Kdo vidi podatke o mojih gostih?", a: "Podatke o gostih svojega lokala vidiš samo ti. Drugi lokali jih ne vidijo in jih ne prodajamo." },
 ];
+
+const FAQ_DEMO: FaqItem[] = [
+  { q: "Koliko stane Loyavi?", a: "V demo obdobju nič. Vsak lokal dobi vse funkcije brezplačno in brez vpisa kartice. Po koncu dema bo Loyavi plačljiv. Ceno objavimo vnaprej, ali nadaljuješ, pa odločiš sam." },
+  { q: "Zakaj je brezplačno?", a: "Loyavi je nov. V demo obdobju zbiramo prve lokale in njihove odzive, da izdelek izpilimo skupaj z uporabniki. V zameno je na kartici, v sporočilih in na plakatu podpis Loyavi." },
+  { q: "Kako dolgo traja demo?", a: "Predvidoma še mesec ali dva. Datum konca sporočimo vnaprej po elektronski pošti, da te nič ne preseneti." },
+  { q: "Kaj se zgodi po koncu dema?", a: "Dobiš obvestilo z datumom in cenikom. Če želiš nadaljevati, izbereš paket. Če ne, se zbiranje žigov ustavi, kartice in podatki pa ostanejo shranjeni. Brez tvoje potrditve se nič ne zaračuna, saj plačilnih podatkov ne zbiramo." },
+  { q: "Kakšne so omejitve dema?", a: "En račun pomeni en lokal. Za verige in več lokalov nam pošlji povpraševanje in dostop uredimo po dogovoru. Podpisa Loyavi na strani gosta, v sporočilih in na plakatu ni mogoče odstraniti." },
+  { q: "Ali potrebujem novo blagajno ali opremo?", a: "Ne. Gost lahko obisk zabeleži s kodo QR na fiskalnem računu, ki ga tvoja blagajna že izda. Če želiš hitrejšo pot, natisneš kodo za pult ali uporabiš nalepko NFC." },
+  { q: "V čem je razlika med računom in stojalom?", a: "Račun je dokaz nakupa: vsak račun šteje enkrat in samo pri tvojem lokalu. Stojalo je hitrejše, saj gost samo približa telefon, vendar nakupa ne preverja, zato je omejeno na en žig na dan. Izbereš enega ali oba načina." },
+  { q: "Morajo gostje namestiti aplikacijo?", a: "Ne. Loyavi deluje v brskalniku telefona. Gost ustvari račun z elektronskim naslovom in geslom v manj kot minuti." },
+  { q: "Ali lahko kadar koli preneham?", a: "Da. Vezave ni. Če Loyavi ne želiš več uporabljati, nam piši in račun lokala s podatki izbrišemo." },
+  { q: "Kdo vidi podatke o mojih gostih?", a: "Podatke o gostih svojega lokala vidiš samo ti. Drugi lokali jih ne vidijo in jih ne prodajamo." },
+];
+
+const FAQ = DEMO ? FAQ_DEMO : FAQ_PAID;
 
 function SectionHead({ eyebrow, title, text }: { eyebrow: string; title: string; text?: string }) {
   return (
@@ -77,11 +100,15 @@ export default function Partnerji() {
         <section className="on-brand flex min-h-svh flex-col overflow-hidden bg-brand text-on-brand">
           <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center gap-12 px-6 pb-16 pt-28 lg:flex-row lg:items-end lg:gap-12 lg:pb-0">
             <Reveal className="flex flex-1 flex-col items-start gap-6 lg:self-center lg:pb-12">
-              <p className="flex items-center gap-2 rounded-full bg-base/20 px-3 py-2 text-sm font-medium">
-                <span className="size-2 rounded-full bg-base" aria-hidden="true" />
-                Za kavarne, lokale in storitve
+              <p className="flex items-center gap-2 rounded-full bg-base px-3 py-2 text-sm font-semibold text-brand-ink">
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-60" aria-hidden="true" />
+                  <span className="relative inline-flex size-2 rounded-full bg-accent" aria-hidden="true" />
+                </span>
+                {HERO_PILL}
               </p>
-              <h1 className="display text-6xl sm:text-8xl lg:text-9xl">
+              {/* večji razmik vrstic: vejica v prvi vrstici se sicer dotakne strešice na Č v drugi */}
+              <h1 className="display text-6xl sm:text-8xl lg:text-9xl" style={{ lineHeight: 1.3 }}>
                 Gostje, ki
                 <br />
                 se vračajo.
@@ -90,11 +117,11 @@ export default function Partnerji() {
                 Digitalna kartica zvestobe za tvoj lokal. Gost zabeleži obisk z računom ali na stojalu ob blagajni, ti določiš nagrade in vidiš, kdo se vrača.
               </p>
               <ButtonLink href={CTA.href} size="lg">
-                Preizkusi 30 dni brezplačno
+                {HERO_CTA}
                 <ArrowRight size={16} weight="bold" aria-hidden="true" />
               </ButtonLink>
               <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium">
-                {["Brez vpisa kartice", "Brez vezave", "Postavitev v nekaj minutah"].map((t) => (
+                {HERO_TRUST.map((t) => (
                   <li key={t} className="flex items-center gap-2 whitespace-nowrap">
                     <Check size={16} weight="bold" aria-hidden="true" />
                     {t}
@@ -103,7 +130,7 @@ export default function Partnerji() {
               </ul>
             </Reveal>
             <Reveal delay={150} className="relative w-full max-w-sm flex-1 lg:max-w-md">
-              <Photo src="/photos/bakery.jpg" alt="Lastnica pekarne za pultom s svežim pecivom" shape="arch" priority className="aspect-[3/4]" sizes="(min-width: 1024px) 40vw, 90vw" />
+              <Photo src="/photos/owner.jpg" alt="Lastnica kavarne z nasmehom stoji med modrimi vrati svojega lokala" shape="arch" priority className="aspect-[3/4]" sizes="(min-width: 1024px) 40vw, 90vw" />
               <StandMock className="absolute -left-8 bottom-16 hidden w-40 animate-[float-b_8s_ease-in-out_infinite] lg:flex" />
             </Reveal>
           </div>
@@ -234,13 +261,22 @@ export default function Partnerji() {
           </div>
         </section>
 
-        {/* CENIK */}
-        <section id="cenik" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
-          <SectionHead eyebrow="Cenik" title="Vse vključeno v vsakem paketu." text="Brez doplačil za posamezne funkcije in brez provizij na obisk." />
-          <Reveal className="mt-12">
-            <PricingPlans />
-          </Reveal>
-        </section>
+        {/* DEMO PONUDBA (med demo obdobjem namesto cenika) */}
+        {DEMO ? (
+          <section id="demo" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
+            <SectionHead eyebrow="Demo obdobje" title="Vse funkcije. Nič evrov." text="Loyavi je nov. Dokler traja demo, ga vsak lokal uporablja brezplačno in brez vpisa kartice." />
+            <div className="mt-12">
+              <DemoOffer cta={CTA.href} />
+            </div>
+          </section>
+        ) : (
+          <section id="cenik" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
+            <SectionHead eyebrow="Cenik" title="Vse vključeno v vsakem paketu." text="Brez doplačil za posamezne funkcije in brez provizij na obisk." />
+            <Reveal className="mt-12">
+              <PricingPlans />
+            </Reveal>
+          </section>
+        )}
 
         {/* VPRAŠANJA */}
         <FaqBlock title="Preden se odločiš." text="Odgovori na vprašanja, ki jih lastniki lokalov postavijo najprej." items={FAQ} />
@@ -249,9 +285,9 @@ export default function Partnerji() {
         <section className="mx-auto max-w-6xl px-6 py-24">
           <Reveal className="on-brand flex flex-col items-center gap-6 overflow-hidden rounded-3xl bg-brand px-8 pt-16 text-center text-on-brand lg:px-16 lg:pt-24">
             <h2 className="display max-w-4xl text-6xl sm:text-7xl lg:text-8xl">Prvi žigi lahko padejo že danes.</h2>
-            <p className="max-w-xl text-lg font-medium">Ustvari račun lokala, določi nagrado in povabi goste. 30 dni brezplačno, brez vpisa kartice.</p>
+            <p className="max-w-xl text-lg font-medium">Ustvari račun lokala, določi nagrado in povabi goste. {DEMO ? "V demo obdobju brezplačno, brez vpisa kartice." : "30 dni brezplačno, brez vpisa kartice."}</p>
             <ButtonLink href={CTA.href} size="lg">
-              Preizkusi 30 dni brezplačno
+              {HERO_CTA}
               <ArrowRight size={16} weight="bold" aria-hidden="true" />
             </ButtonLink>
             <div className="mt-8 grid w-full max-w-3xl grid-cols-3 items-end gap-4">

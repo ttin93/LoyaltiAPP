@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createSSRClient, getCurrentUser } from "@/lib/supabase/ssrServer";
 import { getServiceClient } from "@/lib/supabase/server";
 import { parseFiscalQR } from "@/lib/fiscalQr";
@@ -12,8 +13,9 @@ import { categoryKey } from "@/lib/categories";
 import { safeHex } from "@/lib/color";
 import { mergeVenueMeta, newStandKey, venueMeta, type CheckinMode } from "@/lib/venueMeta";
 import { grantCoupon } from "@/lib/coupons";
-import { campaignParts } from "@/lib/notify";
+import { campaignParts, notifyAdminLead } from "@/lib/notify";
 import { unsubscribedIds } from "@/lib/unsub";
+import { DEMO, DEMO_CAMPAIGNS_PER_WEEK } from "@/lib/demo";
 
 type Result = { ok: true } | { ok: false; error: string };
 const fail = (error: string): Result => ({ ok: false, error });
@@ -249,6 +251,17 @@ export async function sendCampaign(
   if (!list.length) return { ok: false, error: "V izbrani skupini ni gostov." };
   if (list.length > 400) return { ok: false, error: "Skupina je prevelika za eno pošiljanje. Izberi ožjo skupino." };
 
+  // demo: omejeno število kampanj na teden (vsi lokali si delijo isto kvoto pošte)
+  if (DEMO) {
+    const since = new Date(Date.now() - 7 * 864e5).toISOString();
+    const { data: recent } = await db.from("email_log").select("created_at").eq("venue_id", venue.id).eq("kind", "campaign").gte("created_at", since).limit(5000);
+    // vrstice ene kampanje se vpišejo skupaj; štejemo različne minute pošiljanja
+    const runs = new Set((recent ?? []).map((r) => String(r.created_at).slice(0, 16)));
+    if (runs.size >= DEMO_CAMPAIGNS_PER_WEEK) {
+      return { ok: false, error: `V demo obdobju lahko pošlješ ${DEMO_CAMPAIGNS_PER_WEEK} kampanji na teden. Naslednjo lahko pošlješ čez nekaj dni.` };
+    }
+  }
+
   const couponName = text(a.couponName, 60);
   const items = list.map((c) => ({
     to: c.email,
@@ -269,6 +282,39 @@ export async function sendCampaign(
   }
   revalidatePath("/dashboard");
   return { ok: true, sent, failed, total: items.length };
+}
+
+// ── Povpraševanje za več lokalov (demo: en račun = en lokal) ─────────────────
+export async function requestMoreVenues(venueId: string, a: { locations: number; message: string }): Promise<Result> {
+  const { user, db, venue } = await owned(venueId);
+  const email = user.email ?? "";
+  if (!email) return fail("Računu manjka elektronski naslov.");
+  const locations = clamp(a.locations, 2, 500, 2);
+  const message = text(a.message, 1000);
+
+  // največ eno povpraševanje na račun na dan
+  const since = new Date(Date.now() - 864e5).toISOString();
+  const { count } = await db.from("leads").select("id", { count: "exact", head: true }).eq("email", email).eq("heard", "veriga").gte("created_at", since);
+  if ((count ?? 0) > 0) return fail("Povpraševanje si že poslal. Odgovorimo ti po elektronski pošti.");
+
+  const body = `Število lokalov: ${locations}.${message ? `\n\n${message}` : ""}`;
+  const { error } = await db.from("leads").insert({ venue: venue.name, email, phone: venue.phone ?? null, venue_type: venue.venue_type ?? null, city: venue.city ?? null, heard: "veriga", message: body });
+  if (error) return fail("Povpraševanja ni bilo mogoče poslati. Poskusi znova ali nam piši.");
+
+  after(() =>
+    notifyAdminLead({
+      heading: "Povpraševanje za več lokalov",
+      rows: [
+        ["Lokal", venue.name],
+        ["Račun", email],
+        ["Kraj", venue.city ?? "ni vpisano"],
+        ["Število lokalov", String(locations)],
+      ],
+      message,
+      replyTo: email,
+    }),
+  );
+  return { ok: true };
 }
 
 // ── Logo ─────────────────────────────────────────────────────────────────────

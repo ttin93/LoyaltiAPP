@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import Logo from "./Logo";
+import { DEMO } from "@/lib/demo";
 
 export type NavLink = { href: string; label: string };
 
@@ -29,7 +30,22 @@ export default function SiteNav({ links, cta }: { links: NavLink[]; cta: NavLink
     <>
       <header className="pointer-events-none fixed inset-x-0 top-0 z-40 px-4">
         <nav aria-label="Glavna navigacija" className="pointer-events-auto mx-auto mt-4 flex w-full max-w-5xl items-center justify-between gap-4 rounded-full bg-card/95 py-2 pl-4 pr-2 shadow-pop backdrop-blur-xl">
-          <Logo size={36} />
+          <div className="flex items-center gap-3">
+            <Logo size={36} />
+            {DEMO && (
+              <Link
+                href="/partnerji#demo"
+                title="Loyavi je v demo obdobju: za lokale je brezplačen"
+                className="hidden items-center gap-2 rounded-full bg-tint px-3 py-1 text-xs font-semibold uppercase tracking-widest text-brand-ink transition-all duration-700 ease-spring hover:bg-s2 sm:flex"
+              >
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-60" aria-hidden="true" />
+                  <span className="relative inline-flex size-2 rounded-full bg-accent" aria-hidden="true" />
+                </span>
+                Demo
+              </Link>
+            )}
+          </div>
           <ul className="hidden items-center gap-1 lg:flex">
             {links.map((l) => (
               <li key={l.href}>

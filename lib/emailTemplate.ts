@@ -3,6 +3,7 @@
 // kupon je vedno resničen zapis v gostovi denarnici, sporočilo nanj samo pokaže.
 import { BRAND, BRAND_CITY, BRAND_EMAIL, siteOrigin } from "@/lib/brand";
 import { onColor, safeHex } from "@/lib/color";
+import { DEMO } from "@/lib/demo";
 
 const FONT = "'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
 const MONO = "'Geist Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace";
@@ -115,7 +116,8 @@ function guestShell(b: GuestBase, preheader: string, body: string): string {
     <td style="font-size:20px;line-height:28px;font-weight:600;letter-spacing:-0.02em;color:${C.fg}">${esc(b.venueName)}</td>
     <td align="right" width="40">${mark()}</td>
   </tr></table>`;
-  const footer = `To sporočilo prejemaš, ker imaš kartico lokala ${esc(b.venueName)} v aplikaciji ${esc(BRAND)}.${b.unsubUrl ? ` ${link("Odjava od sporočil tega lokala", b.unsubUrl)}.` : ""}<br><br>${esc(BRAND)}, ${esc(BRAND_CITY)}`;
+  // Podpis Loyavi je del vsakega sporočila gostom. Lokal ga ne more odstraniti, ker predloge ne ureja.
+  const footer = `To sporočilo prejemaš, ker imaš kartico lokala ${esc(b.venueName)} v aplikaciji ${esc(BRAND)}.${b.unsubUrl ? ` ${link("Odjava od sporočil tega lokala", b.unsubUrl)}.` : ""}<br><br>Kartica zvestobe prek ${link(BRAND, siteOrigin())}, ${esc(BRAND_CITY)}`;
   return shell({ preheader, header, body, footer });
 }
 
@@ -195,14 +197,30 @@ export function emailOwnerWelcome(d: AdminBase & { venueName: string }): string 
     "Trije koraki do prvega žiga.",
     eyebrow("Lokal je ustvarjen") +
       h1(`${d.venueName} je pripravljen`) +
-      lead("Brezplačni preizkus traja 30 dni, kartice ni treba vpisati. Do prvega žiga te ločijo trije koraki.") +
+      lead(
+        DEMO
+          ? "Loyavi je v demo obdobju: vse funkcije so brezplačne in kartice ni treba vpisati. Do prvega žiga te ločijo trije koraki."
+          : "Brezplačni preizkus traja 30 dni, kartice ni treba vpisati. Do prvega žiga te ločijo trije koraki.",
+      ) +
       steps([
         { title: "Vklopi beleženje obiskov", text: "Skeniraj en svoj račun ali natisni kodo QR za pult." },
         { title: "Preizkusi kot gost", text: "Odpri svojo kartico v telefonu in zabeleži prvi obisk." },
         { title: "Povabi goste", text: "Kodo postavi ob blagajno in osebju povej, naj jo omeni ob plačilu." },
       ]) +
       button("Odpri nadzorno ploščo", d.ctaUrl) +
-      small("Če se kje zatakne, odgovori na to sporočilo. Bere ga človek."),
+      small(
+        DEMO
+          ? "Preden se demo konča, te obvestimo po elektronski pošti. Brez tvoje potrditve se nič ne zaračuna. Če se kje zatakne, odgovori na to sporočilo. Bere ga človek."
+          : "Če se kje zatakne, odgovori na to sporočilo. Bere ga človek.",
+      ),
+  );
+}
+
+/** Obvestilo ekipi Loyavi o novem povpraševanju (kontaktni obrazec ali prošnja za več lokalov). */
+export function emailLead(d: AdminBase & { heading: string; rows: [string, string][]; message: string }): string {
+  return adminShell(
+    d.message.slice(0, 120) || d.heading,
+    eyebrow("Novo povpraševanje") + h1(d.heading) + facts(d.rows) + `<div style="height:24px;font-size:0;line-height:0">&nbsp;</div>` + textToHtml(d.message || "Brez sporočila.") + button("Odpri superadmin", d.ctaUrl),
   );
 }
 

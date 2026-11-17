@@ -4,7 +4,8 @@ const nextConfig: NextConfig = {
   // Stare poti iz prve različice vodijo na nove strani.
   async redirects() {
     return [
-      { source: "/cenik", destination: "/partnerji#cenik", permanent: true },
+      // med demo obdobjem cenika ni; povezava vodi na ponudbo za lokale (začasno, zato ni trajna preusmeritev)
+      { source: "/cenik", destination: "/partnerji#demo", permanent: false },
       { source: "/demo", destination: "/partnerji", permanent: true },
       { source: "/demo/dashboard", destination: "/partnerji", permanent: true },
       { source: "/embed/:code", destination: "/p/:code", permanent: true },

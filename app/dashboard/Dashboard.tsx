@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ArrowSquareOut, Cards, CreditCard, GearSix, LockKey, Megaphone, Pinwheel, Plus, QrCode, SignOut, SquaresFour, Star, Users,
+  ArrowSquareOut, Cards, CreditCard, GearSix, Gift, LockKey, Megaphone, Pinwheel, Plus, QrCode, SignOut, SquaresFour, Star, Users,
 } from "@phosphor-icons/react/dist/ssr";
+import { DEMO } from "@/lib/demo";
 import type { Icon } from "@phosphor-icons/react";
 import { signOut } from "@/app/actions";
 import Logo, { LogoMark } from "@/app/ui/Logo";
 import { Select } from "@/app/ui/Field";
+import Icon3D from "@/app/ui/Icon3D";
 import { count } from "@/lib/sl";
 import type { DashData } from "./data";
 import { SECTION_KEYS, SECTION_LABEL, type SectionKey } from "./keys";
@@ -33,7 +35,7 @@ const ICON: Record<SectionKey, Icon> = {
   kolo: Pinwheel,
   obiski: QrCode,
   nastavitve: GearSix,
-  narocnina: CreditCard,
+  narocnina: DEMO ? Gift : CreditCard,
 };
 
 export default function Dashboard({ data, initialSection, isNew, billingSuccess }: { data: DashData; initialSection: SectionKey; isNew: boolean; billingSuccess: boolean }) {
@@ -62,6 +64,7 @@ export default function Dashboard({ data, initialSection, isNew, billingSuccess 
   }, [menu]);
 
   const canAdd = billing.venueCount < billing.maxVenues;
+  const demo = billing.access.state === "demo";
 
   const navItems = (stagger: boolean) =>
     SECTION_KEYS.map((k, i) => {
@@ -103,6 +106,11 @@ export default function Dashboard({ data, initialSection, isNew, billingSuccess 
           <Plus size={20} aria-hidden="true" />
           Dodaj lokal
         </Link>
+      ) : demo ? (
+        <button type="button" onClick={() => go("narocnina")} className="flex items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-mute transition-all duration-700 ease-spring hover:bg-s2 hover:text-fg">
+          <Plus size={20} aria-hidden="true" />
+          Več lokalov
+        </button>
       ) : null}
     </div>
   );
@@ -110,6 +118,15 @@ export default function Dashboard({ data, initialSection, isNew, billingSuccess 
   const trial = billing.access.state === "trial" || billing.access.state === "trialing";
   const footer = (
     <div className="flex flex-col gap-2">
+      {demo && (
+        <button type="button" onClick={() => go("narocnina")} className="flex items-center gap-3 rounded-2xl bg-tint p-3 text-left transition-all duration-700 ease-spring hover:bg-s3 active:scale-[0.98]">
+          <Icon3D name="paket" size={44} className="shrink-0" />
+          <span className="flex flex-col">
+            <span className="text-sm font-semibold text-fg">Demo paket</span>
+            <span className="text-xs text-mute">Vse je brezplačno.</span>
+          </span>
+        </button>
+      )}
       {trial && (
         <button type="button" onClick={() => go("narocnina")} className="flex flex-col gap-1 rounded-2xl bg-tint p-4 text-left transition-all duration-700 ease-spring hover:bg-s3 active:scale-[0.98]">
           <span className="text-sm font-semibold text-fg">Brezplačni preizkus</span>

@@ -59,7 +59,7 @@ Zdaj velja:
   Zavrnjeno: pet pik v obliki črke L, dve kartici z žigom, 3D ikona ob napisu.
 - **Glava strani:** široka bela lebdeča vrstica (logo levo, povezave v sredini, rdeč gumb desno).
 - **FAQ:** `FaqBlock` (levo naslov in kartica za stik, desno harmonika v eni kartici).
-- **Fotografije:** `public/photos/*.jpg` (10 kosov, generator), komponenta `Photo`.
+- **Fotografije:** `public/photos/*.jpg` (12 kosov, generator), komponenta `Photo`.
 - **Besedila:** brez vezajev in pomišljajev v stavkih, brez klišejev, brez izmišljenih številk, strank ali mnenj, tikanje,
   spolno nevtralno, brezhibna slovenščina.
 
@@ -73,6 +73,17 @@ Zdaj velja:
 - [x] G. Čiščenje starega, PWA manifest, ikone, slika za deljenje, sitemap, preusmeritve starih poti
 - [x] H. tsc, eslint, `next build`, E2E gost + lastnik, mobilno + namizje
 - [x] I. `v2` je na `main` in objavljen na loyavi.app (2026-11-17, po Tinovi potrditvi)
+
+## Demo obdobje (od 2026-11-17, stikalo `DEMO` v `lib/demo.ts`)
+Tinova odločitev: dokler traja demo (predvidoma mesec ali dva), je Loyavi za lokale brezplačen. Cilj je zbrati bazo lokalov.
+- **Dostop:** `ownerAccess` vrne stanje `demo` (brez izteka, brez plačila). Cenik, preizkus in Polar so skriti, koda ostane.
+- **Omejitve:** en račun = en lokal (`DEMO_MAX_VENUES`), dve kampanji na teden na lokal (`DEMO_CAMPAIGNS_PER_WEEK`).
+  Več lokalov: lastnik pošlje povpraševanje (nadzorna plošča, razdelek Demo paket, ali `/kontakt?tema=veriga`), Tin ga odobri
+  v `/superadmin` tako, da lokalu dodeli paket Veriga (do 5) ali Po meri. Povpraševanje se zapiše v `leads` in pride po pošti.
+- **Obvezen podpis:** `LoyaviSignature` na strani gosta, noga v vsakem sporočilu gostom, noga plakata. Vse izriše Loyavi,
+  lokal nima nastavitve, s katero bi podpis skril. Vgradnega gradnika (embed) v v2 ni, zato ni kode, ki bi jo lokal lahko spremenil.
+- **Stran:** značka »Demo« v glavi, hero in zaključek `/partnerji`, razdelek `#demo` (`DemoOffer`) namesto cenika, nova vprašanja.
+- **Izklop:** `DEMO = false`. Pred tem vsem lokalom podaljšaj `trial_ends_at`, sicer se plošče zaklenejo isti dan.
 
 ## Odprto po v2 (ni blokada za merge)
 - `/superadmin` je še v starem videzu (deluje, se prevede). Prenova pozneje.

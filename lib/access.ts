@@ -1,6 +1,7 @@
 import type { Venue, PlanKey } from "@/lib/types";
+import { DEMO } from "@/lib/demo";
 
-export type AccessState = "active" | "trialing" | "trial" | "expired";
+export type AccessState = "active" | "trialing" | "trial" | "expired" | "demo";
 
 export type Access = {
   state: AccessState;
@@ -15,6 +16,8 @@ const DAY = 24 * 60 * 60 * 1000;
 /**
  * Dostop na nivoju LASTNIKA. `plan` = bestOwnerPlan, `bill` = primarni lokal
  * (kjer živi naročnina). nowMs prek argumenta (server/klient enako).
+ *
+ * Med demo obdobjem (lib/demo.ts) ima dostop vsak račun: preizkus se ne izteče in plačila ni.
  */
 export function ownerAccess(plan: PlanKey, bill: Pick<Venue, "subscription_status" | "current_period_end" | "trial_ends_at"> | null, nowMs: number): Access {
   const status = bill?.subscription_status ?? "active";
@@ -31,6 +34,8 @@ export function ownerAccess(plan: PlanKey, bill: Pick<Venue, "subscription_statu
   if (paid && (periodEnd == null || periodEnd > nowMs)) {
     return { state: "active", ok: true, daysLeft: 0, until: bill?.current_period_end ?? null };
   }
+  // demo obdobje: vse brezplačno, brez izteka
+  if (DEMO) return { state: "demo", ok: true, daysLeft: 0, until: null };
   // brezplačen trial / grace / superadmin podaljšanje
   if (trialEnd && trialEnd > nowMs) {
     const days = Math.max(0, Math.ceil((trialEnd - nowMs) / DAY));

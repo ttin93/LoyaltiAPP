@@ -49,6 +49,26 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-11-17 — DEMO OBDOBJE: vse brezplačno, en lokal na račun, obvezen podpis — Fable 5.2
+> Veja **`v2`**, commit je lokalen in **še ni na `main`** (živa stran še kaže cenik). Objava: ko Tin reče »dej na domeno«.
+> Tin: dokler traja demo (predvidoma mesec ali dva), je Loyavi za lokale brezplačen, s tem zbiramo bazo lokalov.
+- **Stikalo:** `lib/demo.ts` (`DEMO = true`). Podrobnosti v [`docs/V2-PLAN.md`](docs/V2-PLAN.md), razdelek »Demo obdobje«.
+- **Dostop in omejitve:** vsak račun lokala ima vse funkcije brez plačila in brez izteka (`lib/access.ts`, stanje `demo`).
+  En račun = en lokal (`lib/plans.ts`), dve kampanji na teden na lokal (`app/actions.ts`). Prijava ostaja obvezna.
+- **Več lokalov:** obrazec v nadzorni plošči (razdelek »Demo paket«, prej »Naročnina«) in `/kontakt?tema=veriga`.
+  Zapis v tabelo `leads` + sporočilo superadminom (`notifyAdminLead`). **Odobritev:** `/superadmin` → lokal → paket Veriga ali Po meri.
+  Kontaktni obrazec zdaj prav tako pošlje obvestilo po pošti (prej je povpraševanje obležalo v bazi).
+- **Obvezen podpis Loyavi:** `app/ui/LoyaviSignature.tsx` na dnu strani gosta (`/p/[koda]`) z vabilom za lokale, noga sporočil gostom,
+  noga plakata. Lokal ga ne more odstraniti, ker stran in sporočila izriše Loyavi in nastavitve za to ni.
+- **Stran:** značka »Demo« v glavi, nov hero `/partnerji` (fotografija lastnice), razdelek `#demo` (`app/ui/DemoOffer.tsx`) namesto cenika,
+  nova vprašanja, pas za lokale na naslovnici, `/pogoji` (4. člen), `/cenik` preusmeri na `#demo`.
+- **Nove grafike (Gemini 3 Pro Image prek trega, 0,12 $):** `public/3d/{paket,nic,odklenjeno,raketa,koledar,veriga,pismo,znacka,scit}.webp`,
+  `public/photos/{owner,team}.jpg`. Izvorne slike: `docs/design-source/demo/`. `scripts/dev/cut.py` ima nov argument `holes`.
+- **Preverjeno:** tsc, eslint (app, lib), `next build`, posnetki namizje in telefon, na localhostu s testnim lastnikom: meja lokalov,
+  demo paket, pošiljanje povpraševanja in zavrnitev drugega poskusa isti dan. Posnetka plošče v `public/screens/` sta posneta na novo.
+- **Ob preizkusu je nastalo:** en zapis v `leads` (testni lastnik, »Samodejni preizkus …«) in eno obvestilo superadminom po pošti.
+- **Po koncu dema:** `DEMO = false`, pred tem vsem lokalom podaljšaj `trial_ends_at` (sicer se plošče zaklenejo isti dan).
+
 ### 2026-11-17 — OBJAVA: v2 je na `main` in na loyavi.app — Fable 5.2
 > Tin je potrdil objavo (»dej na domeno«). `main` je premaknjen naprej na `v2` (hiter premik, brez spojitvenega commita).
 > Od zdaj je **`main` spet glavna veja**; `v2` ostane kot kopija istega stanja.

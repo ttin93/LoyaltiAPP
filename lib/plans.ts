@@ -1,4 +1,5 @@
 import type { PlanKey, BillingCycle } from "@/lib/types";
+import { DEMO, DEMO_MAX_VENUES } from "@/lib/demo";
 
 /**
  * Letni model: plačaš X mesecev, dobiš 12 (2 meseca gratis).
@@ -11,7 +12,7 @@ export const YEARLY_DISCOUNT = YEARLY_FREE_MONTHS / 12;
 
 // Ključi v bazi/Polarju = start/grow/scale (interno); oznake za prikaz = Lokal/Veriga/Po meri.
 export const PLANS: Record<PlanKey, { label: string; tag: string; monthly: number | null }> = {
-  free: { label: "Preizkus", tag: "Brez naročnine", monthly: 0 },
+  free: { label: DEMO ? "Demo" : "Preizkus", tag: DEMO ? "Vse funkcije, brezplačno" : "Brez naročnine", monthly: 0 },
   start: { label: "Lokal", tag: "En lokal", monthly: 49.99 },
   grow: { label: "Veriga", tag: "Do 5 lokalov", monthly: 79.99 },
   scale: { label: "Po meri", tag: "Več kot 5 lokalov, po dogovoru", monthly: null }, // cena po dogovoru → custom_price_eur
@@ -44,6 +45,8 @@ export function planFeature(plan: PlanKey | undefined, f: PlanFeature): boolean 
   return PLAN_FEATURES[plan ?? "free"]?.[f] ?? false;
 }
 export function planMaxVenues(plan: PlanKey | undefined): number {
+  // demo: en račun = en lokal; več lokalov odobri superadmin z dodelitvijo paketa Veriga ali Po meri
+  if (DEMO && (plan ?? "free") === "free") return DEMO_MAX_VENUES;
   return PLAN_MAX_VENUES[plan ?? "free"] ?? 1;
 }
 export function rankPlan(p: PlanKey | undefined): number {

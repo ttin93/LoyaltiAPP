@@ -22,6 +22,9 @@ Na produkciji je predogled dostopen samo superadminu.
 | `admin_purchase` | naročnina je aktivirana (Polar webhook) | lastnik | ne |
 | `admin_expiring` | preizkus ali preklicana naročnina se izteče čez približno 3 dni | lastnik | ne |
 | `owner_message` | sporočilo ekipe Loyavi lastnikom (superadmin) | lastniki | ne |
+| `lead` | nekdo odda kontaktni obrazec ali lastnik zaprosi za več lokalov (demo) | superadmini (`lib/superadmin.ts`) | ne |
+
+Med demo obdobjem (`lib/demo.ts`) se `admin_expiring` za preizkus ne pošilja, `owner_welcome` pa omeni, da je demo brezplačen.
 
 ## Pravila
 - Pošiljatelj za goste je »Ime lokala prek Loyavi« na naslovu platforme (`RESEND_FROM`).

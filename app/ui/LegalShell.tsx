@@ -2,11 +2,12 @@ import type { ReactNode } from "react";
 import { Info } from "@phosphor-icons/react/dist/ssr";
 import SiteNav from "./SiteNav";
 import SiteFooter from "./SiteFooter";
+import { DEMO } from "@/lib/demo";
 
 export const SITE_NAV = [
   { href: "/", label: "Za goste" },
   { href: "/partnerji", label: "Za lokale" },
-  { href: "/partnerji#cenik", label: "Cenik" },
+  DEMO ? { href: "/partnerji#demo", label: "Demo" } : { href: "/partnerji#cenik", label: "Cenik" },
   { href: "/kontakt", label: "Kontakt" },
 ];
 export const SITE_CTA = { href: "/app", label: "Odpri denarnico" };

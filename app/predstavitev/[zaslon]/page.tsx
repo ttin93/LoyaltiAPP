@@ -58,8 +58,8 @@ export default async function Showcase({ params }: { params: Promise<{ zaslon: s
   if (process.env.NODE_ENV === "production") notFound();
   const { zaslon } = await params;
 
-  if (zaslon === "plosca" || zaslon === "plosca-gostje") {
-    return <Dashboard data={sampleDash()} initialSection={zaslon === "plosca" ? "pregled" : "gostje"} isNew={false} billingSuccess={false} />;
+  if (zaslon === "plosca" || zaslon === "plosca-gostje" || zaslon === "plosca-demo") {
+    return <Dashboard data={sampleDash()} initialSection={zaslon === "plosca" ? "pregled" : zaslon === "plosca-demo" ? "narocnina" : "gostje"} isNew={false} billingSuccess={false} />;
   }
 
   if (zaslon === "denarnica") {

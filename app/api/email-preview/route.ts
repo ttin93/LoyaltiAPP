@@ -30,6 +30,7 @@ export async function GET(req: Request) {
     case "owner_welcome": html = T.emailOwnerWelcome({ ...a, venueName }); break;
     case "admin_purchase": html = T.emailAdminPurchase({ ...a, venueName, plan: "Lokal", amount: "49,99 €", date: "16. 11. 2026", nextRenewal: "16. 12. 2026" }); break;
     case "admin_expiring": html = T.emailAdminExpiring({ ...a, venueName, plan: "Lokal", expiresOn: "19. 11. 2026", trial: sp.get("trial") !== "0" }); break;
+    case "lead": html = T.emailLead({ ...a, heading: "Povpraševanje za več lokalov", rows: [["Lokal", venueName], ["Račun", "lastnik@primer.si"], ["Kraj", "Ljubljana"], ["Število lokalov", "3"]], message: "Imamo tri kavarne v Ljubljani. Začeli bi radi v vseh hkrati." }); break;
     case "owner_message": html = T.emailOwnerMessage({ ...a, heading: "Novo v Loyavi", message: "Dodali smo samodejna sporočila za rojstne dneve gostov.\n\nVklopiš jih v razdelku Marketing." }); break;
     default: html = T.emailWelcome(b, { goal: 8, reward: "Brezplačna kava", checkin: "both" });
   }

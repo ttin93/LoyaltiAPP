@@ -1,6 +1,7 @@
 // Vzorčni podatki za posnetek nadzorne plošče na strani za lokale.
 // Lokal in gostje so izmišljeni primeri, številke niso rezultati resničnega lokala.
 import type { DashData, GuestRow } from "@/app/dashboard/data";
+import { DEMO } from "@/lib/demo";
 
 const DAY = 864e5;
 const FIRST = ["maja", "luka", "nina", "tilen", "eva", "jan", "sara", "rok", "ana", "miha", "zala", "nejc", "lara", "žiga", "tjaša", "david", "ema", "matic", "pia", "gašper"];
@@ -44,7 +45,9 @@ export function sampleDash(): DashData {
     venues: [{ id: "demo", name: "Kavarna Lipa" }],
     ownerEmail: "lastnik@example.com",
     isAdmin: false,
-    billing: { plan: "start", access: { state: "active", ok: true, daysLeft: 0, until: iso(-19) }, venueId: "demo", cycle: "monthly", hasSubscription: true, cancelAtPeriodEnd: false, venueCount: 1, maxVenues: 1 },
+    billing: DEMO
+      ? { plan: "free", access: { state: "demo", ok: true, daysLeft: 0, until: null }, venueId: "demo", cycle: "monthly", hasSubscription: false, cancelAtPeriodEnd: false, venueCount: 1, maxVenues: 1 }
+      : { plan: "start", access: { state: "active", ok: true, daysLeft: 0, until: iso(-19) }, venueId: "demo", cycle: "monthly", hasSubscription: true, cancelAtPeriodEnd: false, venueCount: 1, maxVenues: 1 },
     stats: {
       guests: guests.length,
       guestsNew30: guests.filter((g) => now - new Date(g.joined).getTime() < 30 * DAY).length,

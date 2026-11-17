@@ -12,6 +12,7 @@ import type { FaqItem } from "@/app/ui/Faq";
 import FaqBlock from "@/app/ui/FaqBlock";
 import { CATEGORIES } from "@/lib/categories";
 import { siteOrigin } from "@/lib/brand";
+import { DEMO } from "@/lib/demo";
 
 export const metadata: Metadata = {
   title: { absolute: "Loyavi: vse kartice zvestobe v telefonu" },
@@ -250,17 +251,30 @@ export default async function Home() {
         <section id="lokali" className="scroll-mt-24 px-6 py-12">
           <Reveal className="mx-auto grid max-w-6xl items-center gap-8 overflow-hidden rounded-3xl bg-fg p-8 text-card lg:grid-cols-[1.2fr_1fr] lg:p-16">
             <div className="flex flex-col items-start gap-6">
-              <p className="rounded-full bg-white/10 px-3 py-1 text-sm font-semibold">Za lokale</p>
+              {DEMO ? (
+                <p className="flex items-center gap-2 rounded-full bg-white px-3 py-1 text-sm font-semibold text-brand-ink">
+                  <span className="relative flex size-2">
+                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-60" aria-hidden="true" />
+                    <span className="relative inline-flex size-2 rounded-full bg-accent" aria-hidden="true" />
+                  </span>
+                  Za lokale: demo je brezplačen
+                </p>
+              ) : (
+                <p className="rounded-full bg-white/10 px-3 py-1 text-sm font-semibold">Za lokale</p>
+              )}
               <h2 className="text-4xl font-semibold tracking-tight lg:text-5xl">Imaš lokal? Gostje se bodo vračali pogosteje.</h2>
-              <p className="text-lg text-white/70">Zamenjaj kartončke z digitalno kartico zvestobe. Postaviš jo v nekaj minutah, nagrade določiš sam, prvih 30 dni je brezplačnih.</p>
+              <p className="text-lg text-white/70">
+                Zamenjaj kartončke z digitalno kartico zvestobe. Postaviš jo v nekaj minutah, nagrade določiš sam.{" "}
+                {DEMO ? "V demo obdobju so vse funkcije brezplačne, brez vpisa kartice." : "Prvih 30 dni je brezplačnih."}
+              </p>
               <ButtonLink href="/partnerji" size="lg">
                 Loyavi za lokale
                 <ArrowRight size={16} weight="bold" aria-hidden="true" />
               </ButtonLink>
             </div>
             <div className="relative mx-auto w-full max-w-sm">
-              <Photo src="/photos/bakery.jpg" alt="Lastnica pekarne za pultom s svežim pecivom" shape="arch" className="aspect-[4/5]" sizes="(min-width: 1024px) 30vw, 80vw" />
-              <Icon3D name="megafon" size={104} className="absolute -left-8 bottom-8 -rotate-12 drop-shadow-lg" />
+              <Photo src="/photos/owner.jpg" alt="Lastnica kavarne z nasmehom stoji med modrimi vrati svojega lokala" shape="arch" className="aspect-[4/5]" sizes="(min-width: 1024px) 30vw, 80vw" />
+              <Icon3D name={DEMO ? "paket" : "megafon"} size={DEMO ? 168 : 104} className={`absolute drop-shadow-lg ${DEMO ? "-left-12 bottom-4" : "-left-8 bottom-8 -rotate-12"}`} />
             </div>
           </Reveal>
         </section>

@@ -7,7 +7,8 @@ import { Field, Input, Textarea } from "@/app/ui/Field";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function ContactForm() {
+/** `chain`: povpraševanje za več lokalov (demo: en račun = en lokal). */
+export default function ContactForm({ chain = false }: { chain?: boolean }) {
   const [f, setF] = useState({ name: "", venue: "", email: "", phone: "", message: "" });
   const [state, setState] = useState<"idle" | "sending" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +21,7 @@ export default function ContactForm() {
     setError(null);
     setState("sending");
     try {
-      const r = await fetch("/api/lead", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...f, email: f.email.trim() }) });
+      const r = await fetch("/api/lead", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...f, email: f.email.trim(), heard: chain ? "veriga" : undefined }) });
       const j = await r.json();
       if (!j.ok) throw new Error(j.error);
       setState("done");
@@ -46,7 +47,7 @@ export default function ContactForm() {
         <Field label="Ime">
           <Input value={f.name} onChange={up("name")} autoComplete="name" maxLength={80} />
         </Field>
-        <Field label="Lokal (neobvezno)">
+        <Field label={chain ? "Ime verige ali lokalov" : "Lokal (neobvezno)"}>
           <Input value={f.venue} onChange={up("venue")} maxLength={80} />
         </Field>
         <Field label="Elektronski naslov">
@@ -56,8 +57,8 @@ export default function ContactForm() {
           <Input type="tel" value={f.phone} onChange={up("phone")} autoComplete="tel" maxLength={30} />
         </Field>
       </div>
-      <Field label="Sporočilo">
-        <Textarea value={f.message} onChange={up("message")} required maxLength={2000} className="min-h-32" />
+      <Field label={chain ? "Koliko lokalov imaš in kje" : "Sporočilo"}>
+        <Textarea value={f.message} onChange={up("message")} required maxLength={2000} className="min-h-32" placeholder={chain ? "Na primer: tri kavarne v Ljubljani in ena v Kranju." : undefined} />
       </Field>
       {error && (
         <p role="alert" className="rounded-xl border border-line bg-s2 px-4 py-3 text-sm text-bad">
@@ -67,7 +68,7 @@ export default function ContactForm() {
       <div>
         <Button type="submit" size="lg" disabled={state === "sending"}>
           {state === "sending" ? <CircleNotch size={20} weight="bold" className="animate-spin" aria-hidden="true" /> : <PaperPlaneTilt size={20} weight="bold" aria-hidden="true" />}
-          Pošlji sporočilo
+          {chain ? "Pošlji povpraševanje" : "Pošlji sporočilo"}
         </Button>
       </div>
     </form>

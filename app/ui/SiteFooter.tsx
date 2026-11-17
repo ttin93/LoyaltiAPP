@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "./Logo";
 import { BRAND_EMAIL, BRAND_TAGLINE } from "@/lib/brand";
+import { DEMO } from "@/lib/demo";
 
 const COLS: { title: string; links: { href: string; label: string }[] }[] = [
   {
@@ -8,7 +9,7 @@ const COLS: { title: string; links: { href: string; label: string }[] }[] = [
     links: [
       { href: "/", label: "Za goste" },
       { href: "/partnerji", label: "Za lokale" },
-      { href: "/partnerji#cenik", label: "Cenik" },
+      DEMO ? { href: "/partnerji#demo", label: "Demo za lokale" } : { href: "/partnerji#cenik", label: "Cenik" },
       { href: "/app", label: "Moja denarnica" },
     ],
   },
@@ -55,7 +56,9 @@ export default function SiteFooter() {
         </div>
       </div>
       <div className="mx-auto max-w-6xl px-6 pb-8">
-        <p className="text-xs text-white/40">© {new Date().getFullYear()} Loyavi. Narejeno v Sloveniji.</p>
+        <p className="text-xs text-white/40">
+          © {new Date().getFullYear()} Loyavi. Narejeno v Sloveniji.{DEMO ? " Loyavi je v demo obdobju: za lokale je brezplačen." : ""}
+        </p>
       </div>
     </footer>
   );

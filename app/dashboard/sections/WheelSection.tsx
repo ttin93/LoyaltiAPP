@@ -102,7 +102,7 @@ export default function WheelSection({ venue }: { venue: DashVenue }) {
 
         <div className="flex flex-col gap-4 lg:sticky lg:top-12">
           <div className="rounded-3xl border border-line bg-s1 p-6">
-            <Wheel labels={segs.map((s) => s.label.trim() || "Nagrada")} rotation={0} winner={null} />
+            <Wheel color={venue.color} labels={segs.map((s) => s.label.trim() || "Nagrada")} rotation={0} winner={null} />
           </div>
           <p className="text-sm text-mute">Predogled. Zmagovalno polje vedno izbere strežnik, zato izida ni mogoče ponoviti ali izsiliti.</p>
         </div>

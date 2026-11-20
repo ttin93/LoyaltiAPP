@@ -47,6 +47,11 @@ export type VenuePatch = {
   hours?: string;
   about?: string;
   listed?: boolean;
+  tagline?: string;
+  wifiName?: string;
+  wifiPass?: string;
+  menuUrl?: string;
+  instagram?: string;
   checkin?: CheckinMode;
   color?: string;
   scanWindowHours?: number;
@@ -81,6 +86,19 @@ export async function saveVenue(venueId: string, p: VenuePatch): Promise<Result>
   if (p.hours !== undefined) meta.hours = text(p.hours, 200);
   if (p.about !== undefined) meta.about = text(p.about, 300);
   if (p.listed !== undefined) meta.listed = !!p.listed;
+  if (p.tagline !== undefined) meta.tagline = text(p.tagline, 80);
+  if (p.wifiName !== undefined) meta.wifiName = text(p.wifiName, 40);
+  if (p.wifiPass !== undefined) meta.wifiPass = text(p.wifiPass, 64);
+  if (p.menuUrl !== undefined) {
+    const m = text(p.menuUrl, 300);
+    meta.menuUrl = m && !/^https?:\/\//i.test(m) ? `https://${m}` : m;
+  }
+  if (p.instagram !== undefined) {
+    // sprejmemo @ime, ime ali celo povezavo do profila
+    const raw = text(p.instagram, 120).replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/^@/, "").replace(/[/?].*$/, "");
+    if (raw && !/^[A-Za-z0-9._]{1,30}$/.test(raw)) return fail("Vpiši uporabniško ime na Instagramu, na primer kavarnalipa.");
+    meta.instagram = raw;
+  }
   if (p.website !== undefined) {
     const w = text(p.website, 200);
     meta.website = w && !/^https?:\/\//i.test(w) ? `https://${w}` : w;
@@ -331,6 +349,51 @@ export async function uploadLogo(venueId: string, formData: FormData): Promise<R
   if (upErr) return fail("Nalaganje ni uspelo.");
   const url = db.storage.from("logos").getPublicUrl(path).data.publicUrl;
   await db.from("venues").update({ logo_url: url }).eq("id", venue.id);
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+/** Naloži sliko ali PDF v javno shrambo in vrne javni naslov. */
+async function storeFile(db: Awaited<ReturnType<typeof owned>>["db"], venueId: string, file: File, name: string): Promise<string | null> {
+  const ext = file.type === "application/pdf" ? "pdf" : file.type.includes("png") ? "png" : file.type.includes("webp") ? "webp" : "jpg";
+  const path = `${venueId}/${name}-${Date.now()}.${ext}`;
+  const buf = Buffer.from(await file.arrayBuffer());
+  const { error } = await db.storage.from("logos").upload(path, buf, { contentType: file.type, upsert: true });
+  if (error) return null;
+  return db.storage.from("logos").getPublicUrl(path).data.publicUrl;
+}
+
+// ── Naslovna fotografija strani lokala ───────────────────────────────────────
+export async function uploadCover(venueId: string, formData: FormData): Promise<Result> {
+  const { db, venue } = await owned(venueId);
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return fail("Izberi fotografijo.");
+  if (file.size > 4 * 1024 * 1024) return fail("Fotografija naj bo manjša od 4 MB.");
+  if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) return fail("Dovoljene so slike PNG, JPG in WEBP.");
+  const url = await storeFile(db, venue.id, file, "cover");
+  if (!url) return fail("Nalaganje ni uspelo.");
+  await db.from("venues").update({ automations: mergeVenueMeta(venue.automations, { coverUrl: url }) }).eq("id", venue.id);
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function removeCover(venueId: string): Promise<Result> {
+  const { db, venue } = await owned(venueId);
+  await db.from("venues").update({ automations: mergeVenueMeta(venue.automations, { coverUrl: "" }) }).eq("id", venue.id);
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+// ── Meni ali cenik kot datoteka (slika ali PDF) ──────────────────────────────
+export async function uploadMenu(venueId: string, formData: FormData): Promise<Result> {
+  const { db, venue } = await owned(venueId);
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return fail("Izberi datoteko.");
+  if (file.size > 4 * 1024 * 1024) return fail("Datoteka naj bo manjša od 4 MB.");
+  if (!/^(image\/(png|jpe?g|webp)|application\/pdf)$/.test(file.type)) return fail("Dovoljene so slike PNG, JPG, WEBP in dokumenti PDF.");
+  const url = await storeFile(db, venue.id, file, "menu");
+  if (!url) return fail("Nalaganje ni uspelo. Poskusi s sliko ali vpiši povezavo do menija.");
+  await db.from("venues").update({ automations: mergeVenueMeta(venue.automations, { menuUrl: url }) }).eq("id", venue.id);
   revalidatePath("/dashboard");
   return { ok: true };
 }

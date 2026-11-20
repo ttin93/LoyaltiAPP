@@ -74,6 +74,14 @@ Zdaj velja:
 - [x] H. tsc, eslint, `next build`, E2E gost + lastnik, mobilno + namizje
 - [x] I. `v2` je na `main` in objavljen na loyavi.app (2026-11-17, po Tinovi potrditvi)
 
+## Aplikacija gosta: lokal v ospredju (2026-11-20, veja `v2`)
+Vzor je Candour (candour.app), ki ga je Tin pohvalil. Pravila, ki veljajo za `/app`, `/p/[koda]`, pole in prijavo:
+- Lokal je v ospredju (naslovna fotografija, logotip, barva), Loyavi je okvir. Razred `.app-ui` zamenja rdečo za črnilo.
+- Kartica je predmet: odtisi žigov z znakom vrste lokala, oštevilčena prazna mesta, zadnje mesto je nagrada.
+- En zaslon, eno glavno dejanje. Vse drugo je seznam vrstic (meni, Wi-Fi, ocena, pot, povezave).
+- 3D grafike samo za velike trenutke (nagrada, kolo, prazna denarnica) in kot nadomestek, ko lokal nima fotografije.
+- Polja strani lokala so v `lib/venueMeta.ts` (`tagline`, `coverUrl`, `wifiName`, `wifiPass`, `menuUrl`, `instagram`).
+
 ## Demo obdobje (od 2026-11-17, stikalo `DEMO` v `lib/demo.ts`)
 Tinova odločitev: dokler traja demo (predvidoma mesec ali dva), je Loyavi za lokale brezplačen. Cilj je zbrati bazo lokalov.
 - **Dostop:** `ownerAccess` vrne stanje `demo` (brez izteka, brez plačila). Cenik, preizkus in Polar so skriti, koda ostane.

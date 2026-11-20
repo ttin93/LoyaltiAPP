@@ -49,6 +49,31 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-11-20 — Demo je na domeni; prenova aplikacije gosta (lokal v ospredju) — Fable 5.2
+> **Na `main` in loyavi.app:** demo obdobje (commit `2ffcc4c`, Tin potrdil). **Samo na veji `v2`, še NI na `main`:** prenova aplikacije
+> spodaj. Tin mora videz najprej potrditi (aplikacijo je do zdaj zavrnil trikrat), šele nato objava.
+- **Povod:** Tin je poslal konkurenta Candour (candour.app), ki mu je »res všeč«, in povedal, da sta UI in UX naše aplikacije še slaba.
+  Pri Candourju je v ospredju lokal (fotografija, logotip, seznam dejanj), pri nas je bilo vse Loyavi modro z rdečimi gumbi.
+- **Novo načelo aplikacije:** lokal je v ospredju, Loyavi je okvir. Nevtralna podlaga, glavna dejanja v črnilu, barvo prinese lokal.
+  Razred `.app-ui` (`app/globals.css`) v aplikaciji zamenja rdečo za črnilo; predstavitvene strani ostanejo rdeče.
+- **Kartica** (`app/ui/LoyaltyCard.tsx`): žigi so odtisi štampiljke z znakom vrste lokala, prazna mesta so oštevilčena, zadnje je nagrada.
+  `MiniPass` za denarnico (en trak na žig), `VenueAvatar` (logotip ali začetnici), `Stamps`.
+- **Stran lokala** (`app/p/[public_code]/VenueClient.tsx`): naslovna fotografija, logotip, ime, slogan, kartica, en glavni gumb,
+  kuponi kot črne vstopnice, seznam dejanj (Meni, Wi-Fi, Oceni obisk, Pot, Instagram, Splet, Telefon), opis, podpis Loyavi.
+  Brez fotografije: barva lokala s 3D grafiko vrste. Wi-Fi odpre polo z geslom in gumbom za kopiranje.
+- **Denarnica** (`app/ui/WalletView.tsx`) in **imenik** (`app/ui/VenueDirectory.tsx`, kartice s fotografijo) sta na novo. Kolo je v barvi lokala.
+- **Nova polja lokala** (brez spremembe sheme, `lib/venueMeta.ts`): `tagline`, `coverUrl`, `wifiName`, `wifiPass`, `menuUrl`, `instagram`.
+  Lastnik jih ureja v Nastavitve → »Stran lokala« (`uploadCover`, `removeCover`, `uploadMenu` v `app/actions.ts`; fotografija se
+  pred nalaganjem pomanjša v brskalniku; meja strežniške akcije je 5 MB v `next.config.ts`).
+- **Vzorčni lokali za predstavitvene zaslone:** `public/vzorec/` (logotipi in naslovna fotografija, generator, 0,06 $), izvor v
+  `docs/design-source/app/`. Posnetki v `public/screens/` so posneti na novo, naslovnica jih že kaže.
+- Popravek: `text-wrap` v `globals.css` je zdaj v sloju `base`, prej je razredu `truncate` na odstavkih preprečil krajšanje.
+- **Preverjeno:** tsc, eslint, `next build`, predstavitveni zasloni, pravi podatki s testnim gostom na localhostu.
+  **Ni preverjeno:** nalaganje fotografije in menija v pravo shrambo (akciji sta napisani, v brskalniku ju nisem sprožil).
+- **Ob objavi:** vzorčnemu lokalu `demo` v bazi nastavi logotip in naslovno fotografijo (`/vzorec/…`), sicer ostane brez slik.
+- **Naslednje po planu (Tin potrdil vrstni red):** takojšnji osebni demo iz imena lokala ali Instagrama, pridružitev brez gesla,
+  kartica v Apple in Google denarnici, nato prenova nadzorne plošče.
+
 ### 2026-11-17 — DEMO OBDOBJE: vse brezplačno, en lokal na račun, obvezen podpis — Fable 5.2
 > Veja **`v2`**, commit je lokalen in **še ni na `main`** (živa stran še kaže cenik). Objava: ko Tin reče »dej na domeno«.
 > Tin: dokler traja demo (predvidoma mesec ali dva), je Loyavi za lokale brezplačen, s tem zbiramo bazo lokalov.

@@ -37,7 +37,7 @@ export function sampleDash(): DashData {
     venue: {
       id: "demo", code: "kavarna-lipa", name: "Kavarna Lipa", category: "kavarna", city: "Ljubljana", phone: "", color: "#1F8BF5", logoUrl: null,
       goal: 8, reward: "Brezplačna kava", davcna: "12345678",
-      meta: { checkin: "both", standKey: "demo", address: "Trubarjeva cesta 21", website: "", hours: "Vsak dan od 7.00 do 20.00", about: "", listed: true },
+      meta: { checkin: "both", standKey: "demo", address: "Trubarjeva cesta 21", website: "", hours: "Vsak dan od 7.00 do 20.00", about: "", listed: true, tagline: "Sveže pražena kava in domače pecivo.", coverUrl: "/vzorec/lipa-cover.jpg", wifiName: "Lipa gostje", wifiPass: "kava2026", menuUrl: "", instagram: "kavarnalipa" },
       wheel: { enabled: true, mode: "weighted", winner: 0, segments: [{ label: "Brezplačna kava", weight: 2 }, { label: "Popust 10 %", weight: 4 }] },
       automations: {}, googleReviewUrl: "https://g.page/r/primer", scanWindowHours: 24, cooldownMinutes: 0, redemptionMinutes: 5,
       pageUrl: "https://loyavi.app/p/kavarna-lipa", standUrl: "https://loyavi.app/s/kavarna-lipa", pageQr: "", standQr: "",

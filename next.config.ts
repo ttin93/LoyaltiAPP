@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Naslovna fotografija in meni lokala se naložita prek strežniške akcije (privzeta meja je 1 MB).
+  experimental: { serverActions: { bodySizeLimit: "5mb" } },
   // Stare poti iz prve različice vodijo na nove strani.
   async redirects() {
     return [

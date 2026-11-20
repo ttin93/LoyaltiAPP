@@ -5,10 +5,15 @@ import { CircleNotch } from "@phosphor-icons/react/dist/ssr";
 import Sheet from "./Sheet";
 import { Button } from "./Button";
 import { LogoMark } from "./Logo";
+import { onColor, safeHex, tint } from "@/lib/color";
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
-export function Wheel({ labels, rotation, winner }: { labels: string[]; rotation: number; winner: number | null }) {
+/** Kolo v barvi lokala: polja se izmenjujejo med barvo in njenim svetlim odtenkom, zmagovalno polje je temno. */
+export function Wheel({ labels, rotation, winner, color }: { labels: string[]; rotation: number; winner: number | null; color?: string | null }) {
+  const main = safeHex(color);
+  const soft = tint(main, 0.86);
+  const INK = "#0B1826";
   const n = labels.length;
   const cx = 100, cy = 100, r = 94, seg = 360 / n;
   const polar = (deg: number, rad = r) => {
@@ -28,7 +33,7 @@ export function Wheel({ labels, rotation, winner }: { labels: string[]; rotation
   return (
     <div className="relative mx-auto aspect-square w-full max-w-xs">
       <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1" aria-hidden="true">
-        <svg width="28" height="24" viewBox="0 0 28 24"><path d="M14 23 L2 3 Q14 9 26 3 Z" fill="#E63F26" stroke="#FDFDFE" strokeWidth="2" /></svg>
+        <svg width="28" height="24" viewBox="0 0 28 24"><path d="M14 23 L2 3 Q14 9 26 3 Z" fill="#0B1826" stroke="#FFFFFF" strokeWidth="2" /></svg>
       </div>
       <div style={{ transform: `rotate(${rotation}deg)`, transition: "transform 4600ms cubic-bezier(0.16,0.7,0.18,1)" }}>
         <svg viewBox="0 0 200 200" className="block w-full" role="img" aria-label="Kolo dobrodošlice">
@@ -41,8 +46,8 @@ export function Wheel({ labels, rotation, winner }: { labels: string[]; rotation
             const lines = split(label);
             return (
               <g key={i}>
-                <path d={`M${cx} ${cy} L${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1} Z`} fill={win ? "#E63F26" : i % 2 ? "#E3F1FF" : "#1F8BF5"} stroke="#FDFDFE" strokeWidth="1.5" />
-                <text x={lx} y={ly} transform={`rotate(${mid} ${lx} ${ly})`} textAnchor="middle" dominantBaseline="middle" fontSize={n > 6 ? 7.5 : 8.5} fontWeight="600" fill={win || i % 2 === 0 ? "#FFFFFF" : "#0B1826"} style={{ fontFamily: "var(--font-sans)" }}>
+                <path d={`M${cx} ${cy} L${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1} Z`} fill={win ? INK : i % 2 ? soft : main} stroke="#FFFFFF" strokeWidth="1.5" />
+                <text x={lx} y={ly} transform={`rotate(${mid} ${lx} ${ly})`} textAnchor="middle" dominantBaseline="middle" fontSize={n > 6 ? 7.5 : 8.5} fontWeight="600" fill={win ? "#FFFFFF" : i % 2 === 0 ? onColor(main) : INK} style={{ fontFamily: "var(--font-sans)" }}>
                   {lines.length === 1 ? lines[0] : (<><tspan x={lx} dy="-0.5em">{lines[0]}</tspan><tspan x={lx} dy="1.1em">{lines[1]}</tspan></>)}
                 </text>
               </g>
@@ -51,7 +56,7 @@ export function Wheel({ labels, rotation, winner }: { labels: string[]; rotation
           <circle cx={cx} cy={cy} r={r} fill="none" stroke="#D7DFE9" strokeWidth="2" />
         </svg>
       </div>
-      <div className="absolute left-1/2 top-1/2 flex size-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-base bg-tint" aria-hidden="true">
+      <div className="absolute left-1/2 top-1/2 flex size-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-4 border-white bg-white shadow-card" aria-hidden="true">
         <LogoMark size={24} />
       </div>
     </div>
@@ -59,7 +64,7 @@ export function Wheel({ labels, rotation, winner }: { labels: string[]; rotation
 }
 
 /** Kolo dobrodošlice. Zmagovalni segment izbere strežnik, tu ga samo zavrtimo do njega. */
-export default function WheelSheet({ open, venueCode, venueName, labels, onClose, onWon }: { open: boolean; venueCode: string; venueName: string; labels: string[]; onClose: () => void; onWon: () => void }) {
+export default function WheelSheet({ open, venueCode, venueName, labels, onClose, onWon, color }: { open: boolean; venueCode: string; venueName: string; labels: string[]; onClose: () => void; onWon: () => void; color?: string | null }) {
   const [phase, setPhase] = useState<"idle" | "loading" | "spinning" | "won">("idle");
   const [rotation, setRotation] = useState(0);
   const [winner, setWinner] = useState<number | null>(null);
@@ -99,7 +104,7 @@ export default function WheelSheet({ open, venueCode, venueName, labels, onClose
             : `Ker si nov gost lokala ${venueName}, imaš en poskus. Vsak segment je nagrada.`}
         </p>
         {phase === "won" && winner !== null && <p className="animate-pop-in rounded-2xl bg-brand p-6 text-center text-2xl font-semibold tracking-tight text-on-brand">{labels[winner]}</p>}
-        <Wheel labels={labels} rotation={rotation} winner={winner} />
+        <Wheel color={color} labels={labels} rotation={rotation} winner={winner} />
         {error && <p role="alert" className="rounded-xl border border-line bg-s2 px-4 py-3 text-sm text-bad">{error}</p>}
         {phase === "won" ? (
           <>

@@ -6,9 +6,7 @@ export const metadata: Metadata = { title: "Moja denarnica", robots: { index: fa
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-svh bg-canvas">
-      {/* mehka barvna atmosfera na vrhu */}
-      <div className="atmo-top pointer-events-none absolute inset-x-0 top-0 h-96" aria-hidden="true" />
+    <div className="app-ui relative min-h-svh bg-canvas">
       <header className="relative mx-auto flex max-w-6xl items-center px-6 pt-8">
         <Logo href="/app" />
       </header>

@@ -21,7 +21,7 @@ export default async function Lokali() {
   const venues: DirectoryVenue[] = listed
     .map((v) => toVenueView(v, rewards.get(v.id) ?? null))
     .filter((v) => v.live)
-    .map((v) => ({ code: v.code, name: v.name, category: v.category, city: v.city, color: v.color, reward: v.reward, goal: v.goal, mine: mine.has(v.id) }));
+    .map((v) => ({ code: v.code, name: v.name, category: v.category, city: v.city, color: v.color, logoUrl: v.logoUrl, coverUrl: v.coverUrl, reward: v.reward, goal: v.goal, mine: mine.has(v.id) }));
 
   return (
     <div className="flex flex-col gap-8">

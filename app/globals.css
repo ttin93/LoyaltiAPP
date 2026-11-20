@@ -43,6 +43,16 @@
   --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+/* Aplikacija (denarnica, stran lokala, pole): nevtralna podlaga in glavna dejanja v črnilu.
+   Barvo prinese lokal (naslovna fotografija, kartica, žigi). Rdeča ostane na predstavitvenih straneh. */
+.app-ui {
+  --color-accent: #0b1826;
+  --color-accent-deep: #1e2c3d;
+  --color-on-accent: #ffffff;
+  --color-canvas: #f4f5f7;
+  --shadow-card: 0 0 0 1px rgb(11 24 38 / 0.04), 0 8px 24px -16px rgb(11 24 38 / 0.16);
+}
+
 html {
   -webkit-tap-highlight-color: transparent;
   background: #fdfdfe;
@@ -56,8 +66,11 @@ body {
   font-synthesis: none;
 }
 
-h1, h2, h3 { text-wrap: balance; }
-p { text-wrap: pretty; }
+/* V sloju base, da jih razredi (npr. truncate) lahko povozijo: text-wrap sicer vklopi prelom tudi tam, kjer ga razred izklopi. */
+@layer base {
+  h1, h2, h3 { text-wrap: balance; }
+  p { text-wrap: pretty; }
+}
 
 ::selection { background: #1f8bf5; color: #ffffff; }
 

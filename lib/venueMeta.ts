@@ -14,9 +14,21 @@ export type VenueMeta = {
   about: string;
   /** Ali je lokal viden v javnem imeniku. */
   listed: boolean;
+  /** Kratek opis pod imenom lokala (ena vrstica). */
+  tagline: string;
+  /** Naslovna fotografija strani lokala (javni naslov slike). */
+  coverUrl: string;
+  /** Ime omrežja Wi-Fi za goste in geslo. Vidno vsem, ki odprejo stran lokala. */
+  wifiName: string;
+  wifiPass: string;
+  /** Povezava do menija ali cenika (naložena datoteka ali spletna stran). */
+  menuUrl: string;
+  /** Uporabniško ime na Instagramu, brez afne. */
+  instagram: string;
 };
 
 type WithAutomations = { automations?: unknown };
+const str = (v: unknown): string => (typeof v === "string" ? v : "");
 
 export function venueMeta(v: WithAutomations | null | undefined): VenueMeta {
   const raw = ((v?.automations as Record<string, unknown> | null | undefined)?.__v2 ?? {}) as Partial<VenueMeta>;
@@ -29,6 +41,12 @@ export function venueMeta(v: WithAutomations | null | undefined): VenueMeta {
     hours: typeof raw.hours === "string" ? raw.hours : "",
     about: typeof raw.about === "string" ? raw.about : "",
     listed: raw.listed === true,
+    tagline: str(raw.tagline),
+    coverUrl: str(raw.coverUrl),
+    wifiName: str(raw.wifiName),
+    wifiPass: str(raw.wifiPass),
+    menuUrl: str(raw.menuUrl),
+    instagram: str(raw.instagram),
   };
 }
 

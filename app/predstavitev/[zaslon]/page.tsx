@@ -7,8 +7,7 @@ import WalletView from "@/app/ui/WalletView";
 import VenueDirectory from "@/app/ui/VenueDirectory";
 import VenueClient from "@/app/p/[public_code]/VenueClient";
 import WheelSheet from "@/app/ui/WheelSheet";
-import Icon3D from "@/app/ui/Icon3D";
-import { StampDots } from "@/app/ui/LoyaltyCard";
+import { Stamps } from "@/app/ui/LoyaltyCard";
 import Dashboard from "@/app/dashboard/Dashboard";
 import { sampleDash } from "../sampleDash";
 
@@ -17,9 +16,10 @@ import { sampleDash } from "../sampleDash";
 export const dynamic = "force-dynamic";
 
 const LIPA: VenueView = {
-  id: "demo-lipa", code: "kavarna-lipa", name: "Kavarna Lipa", category: "kavarna", city: "Ljubljana", color: "#1F8BF5", logoUrl: null,
+  id: "demo-lipa", code: "kavarna-lipa", name: "Kavarna Lipa", category: "kavarna", city: "Ljubljana", color: "#1F8BF5", logoUrl: "/vzorec/logo-lipa.webp",
   goal: 10, reward: "Brezplačna kava", phone: null, address: "Trubarjeva cesta 21, Ljubljana", website: "", hours: "Vsak dan od 7.00 do 20.00",
-  about: "Sveže pražena kava in domače pecivo v središču mesta.", checkin: "both", live: true,
+  about: "Sveže pražena kava in domače pecivo v središču mesta.", tagline: "Sveže pražena kava in domače pecivo.", coverUrl: "/vzorec/lipa-cover.jpg",
+  wifiName: "Lipa gostje", wifiPass: "kava2026", menuUrl: "#", instagram: "kavarnalipa", checkin: "both", live: true,
   wheel: { enabled: true, segments: ["Brezplačna kava", "Popust 10 %", "Sladko presenečenje", "Popust 15 %", "Brezplačen dodatek", "Popust 5 %"] },
   redemptionMinutes: 5, reviewUrl: "#",
 };
@@ -30,8 +30,7 @@ const coupon = (status: Coupon["status"]): Coupon => ({
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-svh bg-canvas">
-      <div className="atmo-top pointer-events-none absolute inset-x-0 top-0 h-96" aria-hidden="true" />
+    <div className="app-ui relative min-h-svh bg-canvas">
       <header className="relative mx-auto flex max-w-6xl items-center px-6 pt-8">
         <Logo href={null} />
       </header>
@@ -58,8 +57,10 @@ export default async function Showcase({ params }: { params: Promise<{ zaslon: s
   if (process.env.NODE_ENV === "production") notFound();
   const { zaslon } = await params;
 
-  if (zaslon === "plosca" || zaslon === "plosca-gostje" || zaslon === "plosca-demo") {
-    return <Dashboard data={sampleDash()} initialSection={zaslon === "plosca" ? "pregled" : zaslon === "plosca-demo" ? "narocnina" : "gostje"} isNew={false} billingSuccess={false} />;
+  if (zaslon.startsWith("plosca")) {
+    // plosca, plosca-gostje, plosca-demo, plosca-nastavitve, plosca-kolo …
+    const section = ({ plosca: "pregled", "plosca-gostje": "gostje", "plosca-demo": "narocnina", "plosca-nastavitve": "nastavitve", "plosca-kolo": "kolo", "plosca-kartica": "kartica" } as const)[zaslon] ?? "pregled";
+    return <Dashboard data={sampleDash()} initialSection={section} isNew={false} billingSuccess={false} />;
   }
 
   if (zaslon === "denarnica") {
@@ -69,14 +70,13 @@ export default async function Showcase({ params }: { params: Promise<{ zaslon: s
           name="Maja"
           showBirthday
           rewards={[
-            { id: "r1", href: "#", name: "Brezplačna kava", venue: "Kavarna Lipa", category: "kavarna", active: false },
             { id: "r2", href: "#", name: "Brezplačen rogljiček", venue: "Pekarna Zrno", category: "pekarna", active: false },
           ]}
           cards={[
-            { id: "1", href: "#", card: { name: "Kavarna Lipa", category: "kavarna", color: "#1F8BF5", stamps: 7, goal: 10, reward: "Brezplačna kava" } },
-            { id: "2", href: "#", card: { name: "Pekarna Zrno", category: "pekarna", color: "#F59A23", stamps: 3, goal: 8, reward: "Brezplačen rogljiček" } },
-            { id: "3", href: "#", card: { name: "Brivnica Karlo", category: "frizer", color: "#0B1826", stamps: 4, goal: 6, reward: "Brezplačno striženje" } },
-            { id: "4", href: "#", card: { name: "Cvetličarna Vrtnica", category: "cvetlicarna", color: "#E63F26", stamps: 2, goal: 5, reward: "Brezplačen šopek" } },
+            { id: "1", href: "#", card: { name: "Kavarna Lipa", category: "kavarna", color: "#1F8BF5", logoUrl: "/vzorec/logo-lipa.webp", stamps: 7, goal: 10, reward: "Brezplačna kava" } },
+            { id: "2", href: "#", card: { name: "Pekarna Zrno", category: "pekarna", color: "#F59A23", logoUrl: "/vzorec/logo-zrno.webp", stamps: 8, goal: 8, reward: "Brezplačen rogljiček" } },
+            { id: "3", href: "#", card: { name: "Brivnica Karlo", category: "frizer", color: "#0B1826", logoUrl: "/vzorec/logo-karlo.webp", stamps: 4, goal: 6, reward: "Brezplačno striženje" } },
+            { id: "4", href: "#", card: { name: "Cvetličarna Vrtnica", category: "cvetlicarna", color: "#E63F26", logoUrl: "/vzorec/logo-vrtnica.webp", stamps: 2, goal: 5, reward: "Brezplačen šopek" } },
           ]}
         />
       </Shell>
@@ -93,12 +93,12 @@ export default async function Showcase({ params }: { params: Promise<{ zaslon: s
           </div>
           <VenueDirectory
             venues={[
-              { code: "a", name: "Kavarna Lipa", category: "kavarna", city: "Ljubljana", color: "#1F8BF5", reward: "Brezplačna kava", goal: 10, mine: true },
-              { code: "b", name: "Pekarna Zrno", category: "pekarna", city: "Ljubljana", color: "#F59A23", reward: "Brezplačen rogljiček", goal: 8, mine: true },
-              { code: "c", name: "Brivnica Karlo", category: "frizer", city: "Maribor", color: "#0B1826", reward: "Brezplačno striženje", goal: 6, mine: false },
-              { code: "d", name: "Cvetličarna Vrtnica", category: "cvetlicarna", city: "Kranj", color: "#E63F26", reward: "Brezplačen šopek", goal: 5, mine: false },
-              { code: "e", name: "Sladoledarna Luna", category: "slascicarna", city: "Koper", color: "#FF7FB2", reward: "Brezplačna kepica", goal: 6, mine: false },
-              { code: "f", name: "Burger Hiša", category: "hitra-hrana", city: "Celje", color: "#FFC533", reward: "Brezplačen obrok", goal: 8, mine: false },
+              { code: "a", name: "Kavarna Lipa", category: "kavarna", city: "Ljubljana", color: "#1F8BF5", logoUrl: "/vzorec/logo-lipa.webp", coverUrl: "/vzorec/lipa-cover.jpg", reward: "Brezplačna kava", goal: 10, mine: true },
+              { code: "b", name: "Pekarna Zrno", category: "pekarna", city: "Ljubljana", color: "#F59A23", logoUrl: "/vzorec/logo-zrno.webp", coverUrl: "/photos/bakery.jpg", reward: "Brezplačen rogljiček", goal: 8, mine: true },
+              { code: "c", name: "Brivnica Karlo", category: "frizer", city: "Maribor", color: "#0B1826", logoUrl: "/vzorec/logo-karlo.webp", coverUrl: "/photos/salon.jpg", reward: "Brezplačno striženje", goal: 6, mine: false },
+              { code: "d", name: "Cvetličarna Vrtnica", category: "cvetlicarna", city: "Kranj", color: "#E63F26", logoUrl: "/vzorec/logo-vrtnica.webp", coverUrl: "/photos/florist.jpg", reward: "Brezplačen šopek", goal: 5, mine: false },
+              { code: "e", name: "Sladoledarna Luna", category: "slascicarna", city: "Koper", color: "#FF7FB2", logoUrl: "/vzorec/logo-luna.webp", coverUrl: "/photos/icecream.jpg", reward: "Brezplačna kepica", goal: 6, mine: false },
+              { code: "f", name: "Burger Hiša", category: "hitra-hrana", city: "Celje", color: "#FFC533", logoUrl: "/vzorec/logo-burger.webp", coverUrl: "", reward: "Brezplačen obrok", goal: 8, mine: false },
             ]}
           />
         </div>
@@ -113,10 +113,10 @@ export default async function Showcase({ params }: { params: Promise<{ zaslon: s
 
   if (zaslon === "kolo") {
     return (
-      <>
+      <div className="app-ui">
         <VenueClient venue={LIPA} signedIn member={{ stamps: 0 }} coupons={[]} canSpin flags={flags} />
-        <WheelSheet open venueCode={LIPA.code} venueName={LIPA.name} labels={LIPA.wheel.segments} onClose={noop} onWon={noop} />
-      </>
+        <WheelSheet open venueCode={LIPA.code} venueName={LIPA.name} color={LIPA.color} labels={LIPA.wheel.segments} onClose={noop} onWon={noop} />
+      </div>
     );
   }
 
@@ -126,15 +126,14 @@ export default async function Showcase({ params }: { params: Promise<{ zaslon: s
         <VenueClient venue={LIPA} signedIn member={{ stamps: 8 }} coupons={[]} canSpin={false} flags={flags} />
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-scrim backdrop-blur-sm">
           <div className="flex w-full flex-col items-center gap-6 rounded-t-3xl bg-card p-6 pt-10 text-center shadow-pop">
-            <Icon3D name="zig" size={120} className="drop-shadow-lg" />
-            <div className="text-brand">
-              <StampDots total={10} filled={8} size="lg" ink="#ffffff" />
+            <div className="flex w-full justify-center pt-2">
+              <Stamps total={10} filled={8} category="kavarna" ink="#1F8BF5" paper="#ffffff" max={56} />
             </div>
             <div className="flex flex-col gap-2">
               <h2 className="text-3xl font-semibold tracking-tight text-fg">Žig je tvoj</h2>
               <p className="text-base text-mute">Še 2 obiska do nagrade: Brezplačna kava.</p>
             </div>
-            <span className="w-full rounded-2xl bg-accent px-4 py-3 text-base font-semibold text-on-accent">Super</span>
+            <span className="w-full rounded-2xl bg-fg px-4 py-4 text-lg font-semibold text-card">Super</span>
           </div>
         </div>
       </>

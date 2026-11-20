@@ -22,6 +22,12 @@ export type VenueView = {
   website: string;
   hours: string;
   about: string;
+  tagline: string;
+  coverUrl: string;
+  wifiName: string;
+  wifiPass: string;
+  menuUrl: string;
+  instagram: string;
   checkin: CheckinMode;
   /** Ali lokal lahko sprejema žige (aktivirano skeniranje oz. stojalo). */
   live: boolean;
@@ -71,6 +77,12 @@ export function toVenueView(v: Venue, stampReward: string | null): VenueView {
     website: meta.website,
     hours: meta.hours,
     about: meta.about,
+    tagline: meta.tagline,
+    coverUrl: meta.coverUrl,
+    wifiName: meta.wifiName,
+    wifiPass: meta.wifiPass,
+    menuUrl: meta.menuUrl,
+    instagram: meta.instagram,
     checkin: meta.checkin,
     live,
     wheel: { enabled: wheel.enabled !== false, segments: wheel.segments.map((s) => s.label || "Nagrada") },

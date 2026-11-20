@@ -17,7 +17,7 @@ export default async function Prijava({ searchParams }: { searchParams: Promise<
   const google = await googleEnabled();
 
   return (
-    <main id="vsebina" className="mx-auto flex min-h-svh w-full max-w-md flex-col gap-12 px-6 py-8">
+    <main id="vsebina" className="app-ui mx-auto flex min-h-svh w-full max-w-md flex-col gap-12 px-6 py-8">
       <div className="flex items-center justify-between">
         <Logo />
         <Link href="/" className="flex items-center gap-2 rounded-lg text-sm font-medium text-mute transition-all duration-700 ease-spring hover:text-fg">

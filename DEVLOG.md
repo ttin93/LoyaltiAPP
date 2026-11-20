@@ -49,6 +49,21 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-11-20 (zvečer) — OBJAVA: prenova aplikacije gosta je na `main` in loyavi.app — Fable 5.2
+- **Tin je videz potrdil** (»realno zgleda top«, sam je na localhostu poskeniral tri račune do nagrade). Veja `v2` je zato šla na `main`.
+- **Vzorčni lokal `demo`** (Kavarna Lipa) ima v bazi logotip, naslovno fotografijo, slogan in vzorčni Wi-Fi (`/vzorec/…`), da `/p/demo` ni prazen.
+- **Shramba preverjena:** vedro `logos` je javno, brez omejitve velikosti in vrste datotek, torej sprejme tudi PDF menija.
+  Samih akcij `uploadCover` in `uploadMenu` v brskalniku še nisem sprožil.
+- **Testne kode računov:** `kode.mjs` v začasni mapi seje naredi veljavne kode iz davčne številke lokala (ZOI je naključen).
+  To je hkrati dokaz luknje: davčna številka je javna, zato si žige lahko naredi vsak, ki pozna obliko kode.
+- **Odprta odločitev (Tin še ni odgovoril):** privzeto največ en žig na gosta na dan pri istem lokalu. Danes je premor med žigi
+  privzeto izklopljen (`scan_cooldown_minutes = 0`), zato lokal z načinom »oboje« da dva žiga na obisk (stojalo + račun),
+  gost pa lahko poskenira tudi več tujih računov zapored.
+- **Ocena zrelosti, ki sem jo dal Tinu:** dovolj za prvih nekaj lokalov, ki jih postavi osebno; ni še za oglase na hladno.
+  Manjka: prvi pravi lokal kot dokaz, pravilo proti dvojnim žigom, prijava brez gesla, lasten SMTP za pozabljeno geslo,
+  podatki ponudnika v pravnih straneh (ni podjetja), prenova nadzorne plošče.
+- **Naslednje:** pravilo en žig na dan (po potrditvi), prijava brez gesla, takojšnji osebni demo iz imena lokala ali Instagrama.
+
 ### 2026-11-20 — Demo je na domeni; prenova aplikacije gosta (lokal v ospredju) — Fable 5.2
 > **Na `main` in loyavi.app:** demo obdobje (commit `2ffcc4c`, Tin potrdil). **Samo na veji `v2`, še NI na `main`:** prenova aplikacije
 > spodaj. Tin mora videz najprej potrditi (aplikacijo je do zdaj zavrnil trikrat), šele nato objava.

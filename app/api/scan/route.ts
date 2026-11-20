@@ -1,7 +1,7 @@
 import { NextResponse, after } from "next/server";
 import { getServiceClient } from "@/lib/supabase/server";
 import { parseFiscalQR, FiscalQRError } from "@/lib/fiscalQr";
-import { getGuest, ensureMembership } from "@/lib/guest";
+import { getGuest, ensureMembership, NEEDS_CONSENT } from "@/lib/guest";
 import { venueByCode, venueHasAccess } from "@/lib/venues";
 import { venueMeta } from "@/lib/venueMeta";
 import { awardStamp, cooldownLeft, DuplicateStamp } from "@/lib/stamp";
@@ -13,6 +13,7 @@ export async function POST(req: Request) {
   try {
     const guest = await getGuest();
     if (!guest) return NextResponse.json({ ok: false, error: "Prijavi se." }, { status: 401 });
+    if (!guest.termsOk) return NextResponse.json(NEEDS_CONSENT, { status: 403 });
 
     const { venueCode, payload } = await req.json();
     if (!venueCode || !payload) return NextResponse.json({ ok: false, error: "Manjkajo podatki." }, { status: 400 });

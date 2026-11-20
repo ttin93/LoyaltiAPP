@@ -7,6 +7,8 @@ import WalletView from "@/app/ui/WalletView";
 import VenueDirectory from "@/app/ui/VenueDirectory";
 import VenueClient from "@/app/p/[public_code]/VenueClient";
 import WheelSheet from "@/app/ui/WheelSheet";
+import ReviewSheet from "@/app/ui/ReviewSheet";
+import ConsentCard from "@/app/ui/ConsentCard";
 import { Stamps } from "@/app/ui/LoyaltyCard";
 import Dashboard from "@/app/dashboard/Dashboard";
 import { sampleDash } from "../sampleDash";
@@ -59,7 +61,19 @@ export default async function Showcase({ params }: { params: Promise<{ zaslon: s
 
   if (zaslon.startsWith("plosca")) {
     // plosca, plosca-gostje, plosca-demo, plosca-nastavitve, plosca-kolo …
-    const section = ({ plosca: "pregled", "plosca-gostje": "gostje", "plosca-demo": "narocnina", "plosca-nastavitve": "nastavitve", "plosca-kolo": "kolo", "plosca-kartica": "kartica" } as const)[zaslon] ?? "pregled";
+    const section =
+      (
+        {
+          plosca: "pregled",
+          "plosca-gostje": "gostje",
+          "plosca-demo": "narocnina",
+          "plosca-nastavitve": "nastavitve",
+          "plosca-kolo": "kolo",
+          "plosca-kartica": "kartica",
+          "plosca-marketing": "marketing",
+          "plosca-ocene": "ocene",
+        } as const
+      )[zaslon] ?? "pregled";
     return <Dashboard data={sampleDash()} initialSection={section} isNew={false} billingSuccess={false} />;
   }
 
@@ -109,6 +123,26 @@ export default async function Showcase({ params }: { params: Promise<{ zaslon: s
   const flags = { join: false, stand: false, coupon: zaslon === "kupon" ? "c1" : null };
   if (zaslon === "lokal" || zaslon === "kupon") {
     return <VenueClient venue={LIPA} signedIn member={{ stamps: 7 }} coupons={[coupon(zaslon === "kupon" ? "active" : "ready")]} canSpin={false} flags={flags} />;
+  }
+
+  if (zaslon === "ocena") {
+    return (
+      <div className="app-ui">
+        <VenueClient venue={LIPA} signedIn member={{ stamps: 8 }} coupons={[]} canSpin={false} flags={flags} />
+        <ReviewSheet open venueCode={LIPA.code} venueName={LIPA.name} reviewUrl="#" onClose={noop} initialStars={5} />
+      </div>
+    );
+  }
+
+  if (zaslon === "soglasje") {
+    return (
+      <main className="app-ui mx-auto flex min-h-svh w-full max-w-md flex-col gap-12 px-6 py-8">
+        <Logo href={null} />
+        <div className="flex flex-1 flex-col justify-center pb-16">
+          <ConsentCard next="/app" email="maja@primer.si" />
+        </div>
+      </main>
+    );
   }
 
   if (zaslon === "kolo") {

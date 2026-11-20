@@ -1,7 +1,7 @@
 import { NextResponse, after } from "next/server";
 import { cookies } from "next/headers";
 import { getServiceClient } from "@/lib/supabase/server";
-import { getGuest, ensureMembership, localDay } from "@/lib/guest";
+import { getGuest, ensureMembership, localDay, NEEDS_CONSENT } from "@/lib/guest";
 import { venueByCode, venueHasAccess } from "@/lib/venues";
 import { venueMeta } from "@/lib/venueMeta";
 import { awardStamp, cooldownLeft, DuplicateStamp, STAND_COOKIE, standCookieValid } from "@/lib/stamp";
@@ -14,6 +14,7 @@ export async function POST(req: Request) {
   try {
     const guest = await getGuest();
     if (!guest) return NextResponse.json({ ok: false, error: "Prijavi se." }, { status: 401 });
+    if (!guest.termsOk) return NextResponse.json(NEEDS_CONSENT, { status: 403 });
 
     const { venueCode } = await req.json();
     const db = getServiceClient();

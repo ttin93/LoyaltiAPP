@@ -14,7 +14,7 @@ import { safeHex } from "@/lib/color";
 import { mergeVenueMeta, newStandKey, venueMeta, type CheckinMode } from "@/lib/venueMeta";
 import { grantCoupon } from "@/lib/coupons";
 import { campaignParts, notifyAdminLead } from "@/lib/notify";
-import { unsubscribedIds } from "@/lib/unsub";
+import { marketingAllowedIds } from "@/lib/consent";
 import { DEMO, DEMO_CAMPAIGNS_PER_WEEK } from "@/lib/demo";
 
 type Result = { ok: true } | { ok: false; error: string };
@@ -263,10 +263,10 @@ export async function sendCampaign(
     const activeIds = new Set((recent ?? []).map((r) => r.customer_id as string));
     list = list.filter((c) => (a.segment === "active" ? activeIds.has(c.id) : !activeIds.has(c.id)));
   }
-  // gostje, ki so se odjavili od sporočil tega lokala, jih ne prejmejo
-  const off = await unsubscribedIds(db, venue.id);
-  list = list.filter((c) => !off.has(c.id));
-  if (!list.length) return { ok: false, error: "V izbrani skupini ni gostov." };
+  // ponudbe prejmejo samo gostje, ki so jih izrecno dovolili in se niso odjavili
+  const allowed = await marketingAllowedIds(db, venue.id);
+  list = list.filter((c) => allowed.has(c.id));
+  if (!list.length) return { ok: false, error: "V izbrani skupini ni gostov, ki so dovolili ponudbe." };
   if (list.length > 400) return { ok: false, error: "Skupina je prevelika za eno pošiljanje. Izberi ožjo skupino." };
 
   // demo: omejeno število kampanj na teden (vsi lokali si delijo isto kvoto pošte)

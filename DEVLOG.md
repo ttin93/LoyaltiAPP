@@ -49,6 +49,35 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-11-20 (pozno) — Soglasja gosta in sekcija »Funkcije« na strani za lokale — Fable 5.2
+> **Samo na veji `v2`, še NI na `main`.** Tin mora pogledati in potrditi (predogled `docs/predogled/31-funkcije-in-soglasja.jpg`).
+> **Ob objavi se zgodi tole:** ponudbe (kampanje in samodejna sporočila) dobijo samo gostje z izrecnim dovoljenjem. V bazi takih
+> gostov še ni, zato po objavi kampanja ne doseže nikogar, dokler gostje ne gredo skozi korak s soglasji.
+- **Povod (Tin):** sekcija s tremi številkami iz raziskav na `/partnerji` mu ni všeč (»wtf je ta sekcija«); stran naj bolj pokaže funkcije,
+  ki lokalu prinesejo vrednost (ocene na Googlu, samodejna sporočila, kampanje); ob prijavi mora gost obkljukati soglasja, da je vse po pravilih.
+- **Stran za lokale:** sekcija »Zakaj zvestoba« je odstranjena. Nova sekcija `#funkcije` s tremi vrsticami in pravimi zasloni:
+  ocene na Googlu (`/screens/ocena.webp`), samodejna sporočila (`/screens/sporocilo.webp`), kampanje (`/screens/kampanja.webp`).
+  Posnetke naredi `scripts/dev/screens-funkcije.mjs` (novi predstavitveni zasloni `ocena`, `soglasje`, `plosca-marketing`, `plosca-ocene`).
+  V »Prednostih« sta namesto ocen in povabila zdaj kolo dobrodošlice in stran lokala. Novo vprašanje »Ali smem gostom pošiljati ponudbe?«.
+- **Soglasja (`lib/consent.ts`, brez spremembe sheme):**
+  - Sprejem pogojev in izbira o ponudbah sta v `app_metadata.consent` uporabnika (`terms`, `terms_at`, `marketing`, `marketing_at`), piše samo strežnik.
+  - Dovoljenje za ponudbe posameznega lokala je vrstica `email_log` s `kind = 'marketing_optin'` (`ref` = različica besedila in vir), odjava je `unsubscribe`.
+    Lokal sme pošiljati, če ima gost dovoljenje in ni odjave: `marketingAllowedIds()`. Prej je veljalo »vsi razen odjavljenih«.
+  - Korak po prvi prijavi `/prijava/soglasje` (`app/ui/ConsentCard.tsx`): obvezno polje (15 let, pogoji, zasebnost) in ločeno neobvezno polje za ponudbe,
+    obe privzeto prazni. »Ne strinjam se« odjavi; nov račun brez kartic in brez lokala se ob tem izbriše (`/api/consent`, `decline`).
+  - Vrata: `/app`, `/app/lokali`, `/app/profil` in `/p/[koda]` prijavljenega gosta brez pogojev preusmerijo na korak; poti `join`, `scan`, `checkin`, `wheel` vrnejo 403.
+    Velja tudi za obstoječe račune in za prijavo z Googlom, ker je preverjanje po prijavi in ne v obrazcu.
+  - Profil ima stikalo »Ponudbe lokalov« (velja za vse kartice), `/odjava` ostane za posamezen lokal. Nova kartica prevzame izbiro z računa.
+  - Samodejna sporočila v cronu (rojstni dan, pogrešamo te, obletnica, praznik lokala) in kampanje gredo samo gostom z dovoljenjem.
+    Dobrodošlica in obvestilo o polni kartici sta del kartice in gresta vsem.
+  - Nadzorna plošča: `GuestRow.marketing` pomeni »je dovolil«, obrazec kampanje pokaže »X od Y« gostov. Dnevnik pošte in superadmin vrstic soglasij ne štejeta kot pošto.
+  - Pravni strani `/pogoji` in `/zasebnost` opisujeta isto (datum 20. november 2026).
+- **Preverjeno:** tsc, eslint, `next build`; 13 preverb na localhostu s testnim gostom (`consent-test.mjs` v začasni mapi: preusmeritve, zavrnitev poti,
+  obvezno polje, zapis v `app_metadata` in `email_log`, stikalo v profilu). Testni gost je po preizkusu vrnjen v stanje brez soglasij.
+- **Ni preverjeno:** prijava z Googlom skozi korak (Google še ni nastavljen), pot `decline` z brisanjem računa, kampanja in cron z novim pravilom na pravem pošiljanju.
+- **Česar koda ne reši:** upravljavec podatkov mora biti pravna oseba (podjetja še ni, pravni strani sta brez podatkov ponudnika), lokali potrebujejo
+  pogodbo o obdelavi podatkov, besedila naj pregleda pravnik. »100 % po pravilih« brez tega ne drži.
+
 ### 2026-11-20 (zvečer) — OBJAVA: prenova aplikacije gosta je na `main` in loyavi.app — Fable 5.2
 - **Tin je videz potrdil** (»realno zgleda top«, sam je na localhostu poskeniral tri račune do nagrade). Veja `v2` je zato šla na `main`.
 - **Vzorčni lokal `demo`** (Kavarna Lipa) ima v bazi logotip, naslovno fotografijo, slogan in vzorčni Wi-Fi (`/vzorec/…`), da `/p/demo` ni prazen.

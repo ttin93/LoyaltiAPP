@@ -2,8 +2,21 @@
 // Članstvo = vrstica v `customers` (venue_id + email). Povezava z računom po e-naslovu.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getCurrentUser } from "@/lib/supabase/ssrServer";
+import { consentOf, setVenueMarketing } from "@/lib/consent";
 
-export type Guest = { id: string; email: string; name: string | null; birthday: string | null };
+export type Guest = {
+  id: string;
+  email: string;
+  name: string | null;
+  birthday: string | null;
+  /** Gost je sprejel veljavne pogoje uporabe. Brez tega ne zbira žigov. */
+  termsOk: boolean;
+  /** Gost želi ponudbe lokalov, pri katerih ima kartico. */
+  marketing: boolean;
+};
+
+/** Odgovor poti API, kadar gost še ni potrdil pogojev. */
+export const NEEDS_CONSENT = { ok: false, consent: true, error: "Najprej potrdi pogoje uporabe." } as const;
 
 export type Member = {
   id: string;
@@ -35,6 +48,7 @@ export async function getGuest(): Promise<Guest | null> {
     email: u.email.toLowerCase(),
     name: name?.trim() || null,
     birthday: validBirthday(md.birthday) ? md.birthday : null,
+    ...consentOf(u),
   };
 }
 
@@ -66,7 +80,16 @@ export async function ensureMembership(db: SupabaseClient, venueId: string, gues
     if (again) return { member: again, isNew: false };
     throw error;
   }
-  return { member: data as Member, isNew: true };
+  const member = data as Member;
+  // izbira o ponudbah z računa velja tudi za novo kartico
+  if (guest.marketing) {
+    try {
+      await setVenueMarketing(db, venueId, member.id, true, "pridruzitev");
+    } catch {
+      /* brez zapisa lokal gostu ponudb ne pošilja, kartica pa deluje */
+    }
+  }
+  return { member, isNew: true };
 }
 
 /** Datum v Sloveniji (YYYY-MM-DD) — za dnevno omejitev žiga s stojala. */

@@ -1,6 +1,6 @@
 import { NextResponse, after } from "next/server";
 import { getServiceClient } from "@/lib/supabase/server";
-import { getGuest, ensureMembership } from "@/lib/guest";
+import { getGuest, ensureMembership, NEEDS_CONSENT } from "@/lib/guest";
 import { venueByCode, wheelOf } from "@/lib/venues";
 import { hasWelcome } from "@/lib/coupons";
 import { notifyWelcome } from "@/lib/notify";
@@ -11,6 +11,7 @@ export async function POST(req: Request) {
   try {
     const guest = await getGuest();
     if (!guest) return NextResponse.json({ ok: false, error: "Prijavi se." }, { status: 401 });
+    if (!guest.termsOk) return NextResponse.json(NEEDS_CONSENT, { status: 403 });
     const { venueCode } = await req.json();
     const db = getServiceClient();
     const venue = await venueByCode(db, String(venueCode || ""));

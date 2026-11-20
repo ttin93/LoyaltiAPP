@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase/server";
 import { getGuest, memberships } from "@/lib/guest";
+import { consentPath } from "@/lib/consent";
 import ProfileForm from "@/app/ui/ProfileForm";
 import { BRAND_EMAIL } from "@/lib/brand";
 
@@ -10,13 +11,14 @@ export const dynamic = "force-dynamic";
 export default async function Profil() {
   const guest = await getGuest();
   if (!guest) redirect("/prijava?next=/app/profil");
+  if (!guest.termsOk) redirect(consentPath("/app/profil"));
   const ms = await memberships(getServiceClient(), guest.email);
   const birthday = ms.find((m) => m.birthday)?.birthday ?? guest.birthday;
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-8">
       <h1 className="text-4xl font-semibold tracking-tight text-fg">Profil</h1>
-      <ProfileForm email={guest.email} name={guest.name} birthday={birthday} />
+      <ProfileForm email={guest.email} name={guest.name} birthday={birthday} marketing={guest.marketing} />
       <div className="flex flex-col gap-3 text-sm text-mute">
         <p>
           Imaš lokal?{" "}

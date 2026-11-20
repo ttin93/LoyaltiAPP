@@ -157,7 +157,7 @@ function Campaign({ data }: { data: DashData }) {
   const [done, setDone] = useState<{ sent: number; failed: number } | null>(null);
 
   const sizes = useMemo(() => {
-    const list = guests.filter((g) => g.marketing); // odjavljeni ne prejmejo sporočil
+    const list = guests.filter((g) => g.marketing); // samo gostje, ki so dovolili ponudbe
     const active = list.filter((g) => g.lastVisit && daysAgo(g.lastVisit) <= 30).length;
     return { all: list.length, active, inactive: list.length - active, close: list.filter((g) => venue.goal - g.stamps <= 2).length };
   }, [guests, venue.goal]);
@@ -195,6 +195,9 @@ function Campaign({ data }: { data: DashData }) {
           Poslano: {done.sent}. {done.failed ? `Neuspelo: ${done.failed}.` : "Vsa sporočila so bila oddana."}
         </p>
       )}
+      <p className="rounded-2xl bg-s2 p-4 text-sm text-mute">
+        Ponudbe prejmejo samo gostje, ki so jih ob prijavi dovolili: <span className="font-semibold text-fg">{sizes.all} od {guests.length}</span>. Tako zahteva zakon, vsako sporočilo pa ima tudi povezavo za odjavo.
+      </p>
       <Field label="Komu">
         <Select value={segment} onChange={(e) => setSegment(e.target.value as Segment)}>
           <option value="all">Vsi gostje ({sizes.all})</option>

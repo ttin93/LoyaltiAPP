@@ -10,8 +10,23 @@ import { Textarea } from "./Field";
  * Ocena obiska. Vsak gost lahko oceno odda na Googlu; pri nižji oceni najprej
  * ponudimo neposredno sporočilo lokalu, povezava do Googla pa ostane na voljo.
  */
-export default function ReviewSheet({ open, venueCode, venueName, reviewUrl, onClose }: { open: boolean; venueCode: string; venueName: string; reviewUrl: string; onClose: () => void }) {
-  const [stars, setStars] = useState(0);
+export default function ReviewSheet({
+  open,
+  venueCode,
+  venueName,
+  reviewUrl,
+  onClose,
+  initialStars = 0,
+}: {
+  open: boolean;
+  venueCode: string;
+  venueName: string;
+  reviewUrl: string;
+  onClose: () => void;
+  /** Samo za predstavitveni zaslon: vnaprej izbrana ocena. */
+  initialStars?: number;
+}) {
+  const [stars, setStars] = useState(initialStars);
   const [comment, setComment] = useState("");
   const [done, setDone] = useState<"google" | "private" | null>(null);
   const [busy, setBusy] = useState(false);

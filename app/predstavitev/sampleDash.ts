@@ -29,7 +29,7 @@ export function sampleDash(): DashData {
       lastVisit: iso((i * 3) % 41, i % 9),
       joined: iso(20 + ((i * 11) % 200)),
       birthday: i % 3 === 0 ? "05-14" : null,
-      marketing: i % 29 !== 0,
+      marketing: i % 3 !== 0, // vzorec: del gostov ponudb ni dovolil
     };
   });
 

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase/server";
 import { getGuest, membership } from "@/lib/guest";
+import { consentPath } from "@/lib/consent";
 import { hasWelcome, openCoupons } from "@/lib/coupons";
 import { stampRewardName, toVenueView, venueByCode } from "@/lib/venues";
 import { categoryLabel } from "@/lib/categories";
@@ -28,6 +29,15 @@ export default async function VenuePage({ params, searchParams }: Params) {
   if (!venue) notFound();
 
   const [guest, reward] = await Promise.all([getGuest(), stampRewardName(db, venue.id)]);
+  // prijavljen gost brez sprejetih pogojev jih najprej potrdi, nato se vrne sem (z istimi zastavicami)
+  if (guest && !guest.termsOk) {
+    const q = new URLSearchParams();
+    if (sp.join === "1") q.set("join", "1");
+    if (sp.stand === "1") q.set("stand", "1");
+    if (sp.kupon) q.set("kupon", sp.kupon);
+    const qs = q.toString();
+    redirect(consentPath(`/p/${venue.public_code}${qs ? `?${qs}` : ""}`));
+  }
   const view = toVenueView(venue, reward);
   const member = guest ? await membership(db, venue.id, guest.email) : null;
   const [coupons, spun] = member ? await Promise.all([openCoupons(db, [member.id]), hasWelcome(db, member.id)]) : [[], true];

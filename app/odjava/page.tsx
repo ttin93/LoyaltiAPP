@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getServiceClient } from "@/lib/supabase/server";
-import { isUnsubscribed, unsubValid } from "@/lib/unsub";
+import { unsubValid } from "@/lib/unsub";
+import { venueMarketingOn } from "@/lib/consent";
 import Logo from "@/app/ui/Logo";
 import { Button, ButtonLink } from "@/app/ui/Button";
 import { setMarketing } from "./actions";
@@ -16,7 +17,7 @@ export default async function Unsubscribe({ searchParams }: { searchParams: Prom
   const ok = unsubValid(id, token);
   const { data: cust } = ok ? await db.from("customers").select("id, venue_id, venues(name, public_code)").eq("id", id).maybeSingle() : { data: null };
   const venue = cust ? ((Array.isArray(cust.venues) ? cust.venues[0] : cust.venues) as { name: string; public_code: string } | null) : null;
-  const off = cust ? await isUnsubscribed(db, cust.venue_id as string, id) : false;
+  const off = cust ? !(await venueMarketingOn(db, cust.venue_id as string, id)) : false;
 
   return (
     <main id="vsebina" className="mx-auto flex min-h-svh w-full max-w-md flex-col gap-12 px-6 py-8">
@@ -32,8 +33,8 @@ export default async function Unsubscribe({ searchParams }: { searchParams: Prom
           </>
         ) : off ? (
           <>
-            <h1 className="text-3xl font-semibold tracking-tight text-fg">Odjava je urejena</h1>
-            <p className="text-base text-mute">Lokal {venue.name} ti ne bo več pošiljal novic in ponudb. Kartica in žigi ostanejo, obvestilo o polni kartici še vedno prejmeš.</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-fg">Ponudb ne prejemaš</h1>
+            <p className="text-base text-mute">Lokal {venue.name} ti ne pošilja novic in ponudb. Kartica in žigi ostanejo, obvestilo o polni kartici še vedno prejmeš.</p>
             <form action={setMarketing.bind(null, id, token, false)}>
               <Button type="submit" variant="secondary" size="lg" full>
                 Želim spet prejemati sporočila

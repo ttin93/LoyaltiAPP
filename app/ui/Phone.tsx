@@ -12,8 +12,8 @@ export default function Phone({ src, alt, priority = false, sizes = "(min-width:
   );
 }
 
-/** Okno brskalnika s posnetkom nadzorne plošče. */
-export function BrowserFrame({ src, alt, priority = false, className = "" }: { src: string; alt: string; priority?: boolean; className?: string }) {
+/** Okno brskalnika s posnetkom nadzorne plošče. `aspect` naj ustreza razmerju posnetka. */
+export function BrowserFrame({ src, alt, priority = false, className = "", aspect = "aspect-[16/10]" }: { src: string; alt: string; priority?: boolean; className?: string; aspect?: string }) {
   return (
     <div className={`overflow-hidden rounded-3xl bg-card shadow-pop ${className}`}>
       <div className="flex items-center gap-2 bg-s2 px-4 py-3" aria-hidden="true">
@@ -22,7 +22,7 @@ export function BrowserFrame({ src, alt, priority = false, className = "" }: { s
         <span className="size-3 rounded-full bg-s3" />
         <span className="ml-2 rounded-full bg-card px-3 py-1 font-mono text-xs text-dim">loyavi.app/dashboard</span>
       </div>
-      <div className="relative aspect-[16/10]">
+      <div className={`relative ${aspect}`}>
         <Image src={src} alt={alt} fill sizes="(min-width: 1024px) 1100px, 100vw" priority={priority} className="object-cover object-top" />
       </div>
     </div>

@@ -7,6 +7,8 @@ import { createBrowserSupabase } from "@/lib/supabase/ssrClient";
 import { Button } from "./Button";
 import { Field, Input } from "./Field";
 
+const legal = "font-medium text-mute underline underline-offset-4 transition-all duration-700 ease-spring hover:text-fg";
+
 type Mode = "auth" | "reset";
 
 /**
@@ -45,6 +47,7 @@ export default function AuthCard({ next, google, owner = false }: { next: string
     if (password.length < 6) return setError("Geslo naj ima vsaj 6 znakov.");
     setBusy(true);
     try {
+      let created = false;
       const signIn = await supabase.auth.signInWithPassword({ email: mail, password });
       if (signIn.error) {
         // računa ni ali je geslo napačno → poskusi ustvariti račun
@@ -58,8 +61,10 @@ export default function AuthCard({ next, google, owner = false }: { next: string
           setInfo("Račun je ustvarjen. Potrdi ga s povezavo, ki smo jo poslali na tvoj naslov, nato se prijavi.");
           return;
         }
+        created = true;
       }
-      router.replace(next);
+      // nov gost najprej potrdi pogoje; obstoječega po potrebi tja usmeri stran sama
+      router.replace(created && !owner ? `/prijava/soglasje?next=${encodeURIComponent(next)}` : next);
       router.refresh();
     } catch {
       setError("Povezava ni uspela. Preveri internet in poskusi znova.");
@@ -116,6 +121,20 @@ export default function AuthCard({ next, google, owner = false }: { next: string
           <GoogleLogo size={20} weight="bold" aria-hidden="true" />
           Nadaljuj z Googlom
         </Button>
+      )}
+
+      {mode === "auth" && (
+        <p className="text-center text-sm text-dim">
+          {owner ? "Z ustvarjanjem računa sprejemaš " : "Nov račun v naslednjem koraku potrdi "}
+          <a href="/pogoji" target="_blank" rel="noreferrer" className={legal}>
+            pogoje uporabe
+          </a>
+          . Kako ravnamo s podatki, piše v{" "}
+          <a href="/zasebnost" target="_blank" rel="noreferrer" className={legal}>
+            politiki zasebnosti
+          </a>
+          .
+        </p>
       )}
 
       <button

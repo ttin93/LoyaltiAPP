@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Cake, Check, SignOut } from "@phosphor-icons/react/dist/ssr";
+import { Cake, Check, EnvelopeSimple, SignOut } from "@phosphor-icons/react/dist/ssr";
 import { createBrowserSupabase } from "@/lib/supabase/ssrClient";
 import { Button } from "./Button";
-import { Field, Input, Select } from "./Field";
+import { Field, Input, Select, Toggle } from "./Field";
 import { MONTHS, birthdayLabel } from "@/lib/sl";
 
-export default function ProfileForm({ email, name, birthday }: { email: string; name: string | null; birthday: string | null }) {
+export default function ProfileForm({ email, name, birthday, marketing }: { email: string; name: string | null; birthday: string | null; marketing: boolean }) {
   const router = useRouter();
   const [nm, setNm] = useState(name ?? "");
   const [day, setDay] = useState("");
@@ -16,6 +16,28 @@ export default function ProfileForm({ email, name, birthday }: { email: string; 
   const [busy, setBusy] = useState<"name" | "bday" | null>(null);
   const [saved, setSaved] = useState<"name" | "bday" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [offers, setOffers] = useState(marketing);
+  const [offersBusy, setOffersBusy] = useState(false);
+
+  async function saveOffers(on: boolean) {
+    if (offersBusy) return;
+    setError(null);
+    setOffers(on);
+    setOffersBusy(true);
+    try {
+      const r = await fetch("/api/consent", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ marketing: on }) });
+      const j = await r.json();
+      if (!j.ok) {
+        setOffers(!on);
+        setError(j.error || "Shranjevanje ni uspelo.");
+      } else router.refresh();
+    } catch {
+      setOffers(!on);
+      setError("Povezava ni uspela. Poskusi znova.");
+    } finally {
+      setOffersBusy(false);
+    }
+  }
 
   async function save(kind: "name" | "bday") {
     setError(null);
@@ -72,7 +94,7 @@ export default function ProfileForm({ email, name, birthday }: { email: string; 
           </span>
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-fg">Rojstni dan</h2>
-            <p className="text-sm text-mute">Potrebujemo samo dan in mesec. Lokali, ki to ponujajo, te takrat presenetijo z darilom.</p>
+            <p className="text-sm text-mute">Potrebujemo samo dan in mesec. Lokali, ki to ponujajo, ti takrat pošljejo darilo, če imaš vklopljene ponudbe lokalov.</p>
           </div>
         </div>
         {birthday ? (
@@ -109,6 +131,22 @@ export default function ProfileForm({ email, name, birthday }: { email: string; 
             </Button>
           </>
         )}
+      </section>
+
+      <section className="flex items-start gap-4 rounded-3xl bg-card shadow-card p-6">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-s3 text-brand-ink">
+          <EnvelopeSimple size={24} weight="bold" aria-hidden="true" />
+        </span>
+        <div className="flex flex-1 flex-col gap-1">
+          <h2 className="text-lg font-semibold tracking-tight text-fg">Ponudbe lokalov</h2>
+          <p className="text-sm text-mute">
+            Lokali, pri katerih zbiraš žige, ti po elektronski pošti pošljejo ponudbe, novosti in darilo za rojstni dan. Obvestilo o polni kartici dobiš v vsakem primeru.
+          </p>
+          <p className="text-sm font-medium text-fg" role="status">
+            {offers ? "Vklopljeno" : "Izklopljeno"}
+          </p>
+        </div>
+        <Toggle checked={offers} onChange={saveOffers} label="Ponudbe lokalov po elektronski pošti" />
       </section>
 
       {error && <p role="alert" className="rounded-xl border border-line bg-s2 px-4 py-3 text-sm text-bad">{error}</p>}

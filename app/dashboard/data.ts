@@ -10,7 +10,7 @@ import { siteOrigin } from "@/lib/brand";
 import { localDay } from "@/lib/guest";
 import { SOURCE, type CouponSource } from "@/lib/coupons";
 import type { Access } from "@/lib/access";
-import { unsubscribedIds, UNSUB_KIND } from "@/lib/unsub";
+import { marketingAllowedIds, NON_EMAIL_KINDS } from "@/lib/consent";
 
 export type GuestRow = {
   id: string;
@@ -20,7 +20,7 @@ export type GuestRow = {
   lastVisit: string | null;
   joined: string;
   birthday: string | null;
-  /** false = gost se je odjavil od sporočil tega lokala */
+  /** true = gost je dovolil ponudbe tega lokala in se ni odjavil */
   marketing: boolean;
 };
 
@@ -171,7 +171,7 @@ export async function loadDashboard(db: SupabaseClient, venue: Venue): Promise<O
   const now = Date.now();
   const since30 = new Date(now - 30 * DAY).toISOString();
 
-  const [dashVenue, custs, scans, daily, reds, redeemedRes, openRes, reviews, log, visitsRes, guestsRes, off] = await Promise.all([
+  const [dashVenue, custs, scans, daily, reds, redeemedRes, openRes, reviews, log, visitsRes, guestsRes, allowed] = await Promise.all([
     toDashVenue(db, venue),
     pageAll<CustRow>((from, to) => db.from("customers").select("id, email, stamps, birthday, created_at").eq("venue_id", id).order("created_at", { ascending: false }).range(from, to), 5000),
     pageAll<ScanLite>((from, to) => db.from("scans").select("customer_id, created_at").eq("venue_id", id).order("created_at", { ascending: false }).range(from, to), 20000),
@@ -180,10 +180,10 @@ export async function loadDashboard(db: SupabaseClient, venue: Venue): Promise<O
     db.from("redemptions").select("id", { count: "exact", head: true }).eq("venue_id", id).eq("status", "redeemed"),
     db.from("redemptions").select("id", { count: "exact", head: true }).eq("venue_id", id).in("status", ["pending", "ready", "active"]),
     db.from("reviews").select("id, stars, comment, to_google, created_at, customer_id").eq("venue_id", id).order("created_at", { ascending: false }).limit(300),
-    db.from("email_log").select("id, kind, created_at, customer_id").eq("venue_id", id).neq("kind", UNSUB_KIND).order("created_at", { ascending: false }).limit(100),
+    db.from("email_log").select("id, kind, created_at, customer_id").eq("venue_id", id).not("kind", "in", `(${NON_EMAIL_KINDS.join(",")})`).order("created_at", { ascending: false }).limit(100),
     db.from("scans").select("id", { count: "exact", head: true }).eq("venue_id", id),
     db.from("customers").select("id", { count: "exact", head: true }).eq("venue_id", id),
-    unsubscribedIds(db, id),
+    marketingAllowedIds(db, id),
   ]);
 
   // obiski in zadnji obisk na gosta
@@ -205,7 +205,7 @@ export async function loadDashboard(db: SupabaseClient, venue: Venue): Promise<O
       lastVisit: lastBy.get(c.id) ?? null,
       joined: c.created_at,
       birthday: c.birthday,
-      marketing: !off.has(c.id),
+      marketing: allowed.has(c.id),
     }));
 
   // zadnjih 30 dni + prejšnjih 30 (za primerjavo)

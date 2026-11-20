@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { consentPath } from "@/lib/consent";
 import { getServiceClient } from "@/lib/supabase/server";
 import { getGuest, memberships } from "@/lib/guest";
 import { stampRewardNames, toVenueView } from "@/lib/venues";
@@ -11,6 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function Lokali() {
   const guest = await getGuest();
   if (!guest) redirect("/prijava?next=/app/lokali");
+  if (!guest.termsOk) redirect(consentPath("/app/lokali"));
 
   const db = getServiceClient();
   const [{ data }, ms] = await Promise.all([db.from("venues").select("*").order("name").limit(1000), memberships(db, guest.email)]);

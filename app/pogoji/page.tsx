@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Splošni pogoji uporabe", alternates
 
 export default function Pogoji() {
   return (
-    <LegalShell title="Splošni pogoji uporabe" updated={DEMO ? "17. november 2026" : "16. november 2026"}>
+    <LegalShell title="Splošni pogoji uporabe" updated="20. november 2026">
       <Section h="1. Splošno">
         <p>
           Ti splošni pogoji urejajo uporabo storitve {BRAND}, spletne platforme za digitalne kartice zvestobe. Gostje jo uporabljajo brezplačno, lokali pa{" "}
@@ -27,6 +27,10 @@ export default function Pogoji() {
       </Section>
       <Section h="3. Račun in dostop">
         <p>Za uporabo je potreben račun z elektronskim naslovom in geslom. Odgovorni ste za točnost podatkov, za varovanje gesla in za vse dejavnosti, izvedene prek vašega računa.</p>
+        <p>
+          Gost ob prvi prijavi izrecno potrdi te pogoje in potrdi, da je dopolnil 15 let. Brez potrditve zbiranje žigov ni mogoče. Kdor pogojev ne sprejme, se odjavi, račun brez kartic pa
+          se ob tem izbriše.
+        </p>
       </Section>
       {DEMO ? (
         <Section h="4. Demo obdobje in cene">
@@ -65,7 +69,8 @@ export default function Pogoji() {
       <Section h="6. Obveznosti lokala">
         <p>
           Lokal se zavezuje, da storitve ne bo uporabljal v nezakonite namene in da bo pri pošiljanju sporočil gostom spoštoval veljavno zakonodajo, vključno s Splošno uredbo o varstvu podatkov
-          in pravili o elektronskih komunikacijah. Vsako tržno sporočilo vsebuje povezavo za odjavo, ki jo mora lokal spoštovati.
+          in pravili o elektronskih komunikacijah. Ponudbe in novice lokala prejmejo samo gostje, ki so jih izrecno dovolili. Dovoljenje gost da ločeno od sprejema pogojev in ga lahko
+          kadar koli prekliče. Vsako tržno sporočilo vsebuje povezavo za odjavo. Seznama gostov lokal ne sme uporabiti za pošiljanje sporočil mimo storitve.
         </p>
       </Section>
       <Section h="7. Podatki gostov">

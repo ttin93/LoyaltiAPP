@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Politika zasebnosti", alternates: { 
 
 export default function Zasebnost() {
   return (
-    <LegalShell title="Politika zasebnosti" updated="16. november 2026">
+    <LegalShell title="Politika zasebnosti" updated="20. november 2026">
       <Section h="1. Upravljavec">
         <p>
           Ta politika pojasnjuje, kako {BRAND} obdeluje osebne podatke. Glede uporabniških računov gostov in lastnikov lokalov je upravljavec ponudnik {BRAND}. Glede podatkov o obiskih, kuponih in
@@ -25,9 +25,17 @@ export default function Zasebnost() {
       </Section>
       <Section h="3. Nameni in pravna podlaga">
         <p>
-          Podatke obdelujemo za delovanje kartic zvestobe, podeljevanje nagrad in pregled obiskov za lokal (izvajanje pogodbe). Lokal lahko gostom, ki so dodali njegovo kartico, pošilja novice in
-          ponudbe po elektronski pošti (zakoniti interes oziroma privolitev). Vsako tako sporočilo vsebuje povezavo za odjavo.
+          Podatke obdelujemo za delovanje kartic zvestobe, podeljevanje nagrad in pregled obiskov za lokal (izvajanje pogodbe). Sem spadajo tudi obvestila o kartici, na primer da je kartica
+          polna in vas čaka nagrada.
         </p>
+        <p>
+          <strong>Ponudbe in novice lokalov</strong> pošiljamo samo na podlagi vaše privolitve. Privolitev daste ob prvi prijavi ali kasneje v profilu, ločeno od sprejema pogojev uporabe, in ni
+          pogoj za uporabo kartic. Velja za lokale, pri katerih imate kartico. Sporočila pošlje {BRAND} v imenu lokala. Hranimo zapis o tem, kdaj ste privolitev dali.
+        </p>
+        <p>
+          Privolitev lahko kadar koli prekličete: v profilu za vse lokale hkrati ali s povezavo za odjavo v vsakem sporočilu za posamezen lokal. Preklic ne vpliva na kartice, žige in kupone.
+        </p>
+        <p>Storitev je namenjena osebam, ki so dopolnile 15 let.</p>
       </Section>
       <Section h="4. Kdo vidi vaše podatke">
         <p>Lokal vidi elektronski naslov gosta, njegove obiske, kupone in ocene pri tem lokalu. Drugi lokali teh podatkov ne vidijo. Osebnih podatkov ne prodajamo.</p>

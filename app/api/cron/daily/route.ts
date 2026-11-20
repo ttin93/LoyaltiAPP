@@ -5,7 +5,7 @@ import { bestOwnerPlan, PLANS } from "@/lib/plans";
 import { notifyMarketing, notifyAdminExpiring } from "@/lib/notify";
 import type { MarketingKind } from "@/lib/emailTemplate";
 import { grantCoupon, type CouponSource } from "@/lib/coupons";
-import { unsubscribedIds } from "@/lib/unsub";
+import { marketingAllowedIds } from "@/lib/consent";
 import { venueHasAccess } from "@/lib/venues";
 import { ownerAccess } from "@/lib/access";
 import { localDay } from "@/lib/guest";
@@ -110,13 +110,14 @@ export async function GET(req: Request) {
     // lokal brez veljavnega dostopa (iztekel preizkus) ne pošilja
     if (!(await venueHasAccess(db, v))) continue;
 
-    const off = await unsubscribedIds(db, v.id);
+    // samodejna sporočila so ponudbe: samo gostom, ki so jih dovolili
+    const allowed = await marketingAllowedIds(db, v.id);
 
     // ── ROJSTNI DAN GOSTA ──
     if (bday) {
       for (const c of await customersOf(v.id, { birthday: todayMMDD })) {
         if (sent >= CAP) break;
-        if (off.has(c.id) || (await sentRecently("birthday_guest", v.id, c.id, 300))) continue;
+        if (!allowed.has(c.id) || (await sentRecently("birthday_guest", v.id, c.id, 300))) continue;
         if (await deliver(v, c, "birthday_guest", bday, "Vse najboljše. Ob prazniku te pri nas čaka darilo.", "birthday")) await logSent("birthday_guest", v.id, c.id);
       }
     }
@@ -129,7 +130,7 @@ export async function GET(req: Request) {
       await logSent("birthday_venue", v.id, null); // najprej zapis, da ponovni zagon ne podvoji pošiljanja
       for (const c of custs) {
         if (sent >= CAP) break;
-        if (off.has(c.id)) continue;
+        if (!allowed.has(c.id)) continue;
         await deliver(v, c, "birthday_venue", feast, "Danes praznujemo in to želimo deliti s tabo.", "campaign");
       }
     }
@@ -148,7 +149,7 @@ export async function GET(req: Request) {
       const missDays = Math.min(365, Math.max(7, miss?.days || 30));
       for (const c of custs) {
         if (sent >= CAP) break;
-        if (off.has(c.id)) continue;
+        if (!allowed.has(c.id)) continue;
         // pogrešamo te: zadnji obisk točno N dni nazaj (enodnevno okno, da pošljemo enkrat)
         const ls = miss ? lastScan.get(c.id) : undefined;
         if (miss && ls && Math.floor((now - new Date(ls).getTime()) / DAY) === missDays && !(await sentRecently("we_miss_you", v.id, c.id, 30))) {

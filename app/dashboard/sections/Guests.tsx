@@ -51,7 +51,7 @@ function GuestSheet({ guest, goal, venueId, coupons, onClose }: { guest: GuestRo
           ))}
         </dl>
 
-        {!guest.marketing && <p className="rounded-2xl bg-s2 p-4 text-sm text-mute">Gost se je odjavil od tvojih sporočil. Kartico še naprej uporablja kot prej.</p>}
+        {!guest.marketing && <p className="rounded-2xl bg-s2 p-4 text-sm text-mute">Gost ponudb po elektronski pošti ni dovolil ali se je od njih odjavil, zato mu kampanj ne pošiljamo. Kartico uporablja kot prej.</p>}
 
         <div className="flex flex-col gap-3">
           <Button type="button" variant="secondary" size="lg" full disabled={stamp.pending} onClick={() => stamp.run(() => addManualStamp(venueId, guest.id), "Žig je dodan.")}>

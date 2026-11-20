@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { NON_EMAIL_KINDS } from "@/lib/consent";
 import { isSupabaseConfigured, getServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/ssrServer";
 import { isSuperadmin } from "@/lib/superadmin";
@@ -82,7 +83,7 @@ export default async function SuperadminPage() {
       db.from("redemptions").select("id, venue_id, created_at").limit(8000),
       db.from("reviews").select("id, venue_id, stars, created_at").limit(8000),
       db.auth.admin.listUsers({ page: 1, perPage: 1000 }),
-      db.from("email_log").select("kind, created_at").order("created_at", { ascending: false }).limit(20000),
+      db.from("email_log").select("kind, created_at").not("kind", "in", `(${NON_EMAIL_KINDS.join(",")})`).order("created_at", { ascending: false }).limit(20000),
     ]);
 
   const venues = (venuesRes.data ?? []) as Venue[];

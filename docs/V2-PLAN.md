@@ -82,6 +82,12 @@ Vzor je Candour (candour.app), ki ga je Tin pohvalil. Pravila, ki veljajo za `/a
 - 3D grafike samo za velike trenutke (nagrada, kolo, prazna denarnica) in kot nadomestek, ko lokal nima fotografije.
 - Polja strani lokala so v `lib/venueMeta.ts` (`tagline`, `coverUrl`, `wifiName`, `wifiPass`, `menuUrl`, `instagram`).
 
+## Soglasja gosta (2026-11-20, `lib/consent.ts`)
+- Po prvi prijavi korak `/prijava/soglasje`: obvezno (15 let, pogoji, zasebnost) in ločeno neobvezno (ponudbe lokalov). Brez obveznega gost ne zbira žigov.
+- Pogoji in izbira o ponudbah: `app_metadata.consent` uporabnika. Dovoljenje po lokalu: `email_log` `kind = 'marketing_optin'`, odjava `unsubscribe`.
+- Ponudbe (kampanje, samodejna sporočila) samo gostom z dovoljenjem: `marketingAllowedIds()`. Obvestila o kartici gredo vsem.
+- Ob bistveni spremembi pogojev povečaj `TERMS_MIN`: takrat vsi potrdijo znova.
+
 ## Demo obdobje (od 2026-11-17, stikalo `DEMO` v `lib/demo.ts`)
 Tinova odločitev: dokler traja demo (predvidoma mesec ali dva), je Loyavi za lokale brezplačen. Cilj je zbrati bazo lokalov.
 - **Dostop:** `ownerAccess` vrne stanje `demo` (brez izteka, brez plačila). Cenik, preizkus in Polar so skriti, koda ostane.

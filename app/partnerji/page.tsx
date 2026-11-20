@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 const NAV = [
-  { href: "/partnerji#prednosti", label: "Prednosti" },
+  { href: "/partnerji#funkcije", label: "Funkcije" },
   { href: "/partnerji#kako", label: "Kako deluje" },
   DEMO ? { href: "/partnerji#demo", label: "Demo" } : { href: "/partnerji#cenik", label: "Cenik" },
   { href: "/", label: "Za goste" },
@@ -35,17 +35,30 @@ const HERO_CTA = DEMO ? "Ustvari račun lokala" : "Preizkusi 30 dni brezplačno"
 const HERO_PILL = DEMO ? "Demo obdobje: brezplačno za vse lokale" : "Za kavarne, lokale in storitve";
 const HERO_TRUST = DEMO ? ["0 € v demo obdobju", "Brez vpisa kartice", "Vse funkcije vključene"] : ["Brez vpisa kartice", "Brez vezave", "Postavitev v nekaj minutah"];
 
-const STATS = [
-  { value: "25 do 95 %", text: "več dobička, ko se delež gostov, ki se vračajo, poveča za 5 %.", ref: 1 },
-  { value: "5 do 25×", text: "dražje je pridobiti novega gosta, kot obdržati obstoječega.", ref: 1 },
-  { value: "34 % proti 19 %", text: "gostov napolni kartico, če jo začnejo z dvema podarjenima žigoma, v primerjavi s prazno kartico.", ref: 2 },
+type Point = [Icon3DName, string];
+
+// Tri funkcije, ki lokalu prinesejo največ: ocene, samodejna sporočila in kampanje.
+const REVIEWS: Point[] = [
+  ["zvezda", "Povabilo pride takoj po obisku, ne teden pozneje"],
+  ["pismo", "Pripombe prejmeš ti, v nadzorni plošči"],
+  ["koledar", "Istega gosta vprašamo največ enkrat na dva meseca"],
+];
+const AUTOMATIONS: Point[] = [
+  ["torta", "Rojstni dan gosta z darilom"],
+  ["zvonec", "Povabilo, ko gosta ni bilo več tednov"],
+  ["koledar", "Obletnica kartice in praznik tvojega lokala"],
+];
+const CAMPAIGNS: Point[] = [
+  ["megafon", "Skupine: vsi, aktivni, neaktivni in tik pred nagrado"],
+  ["kupon", "Kupon dodaš z enim poljem"],
+  ["scit", "Prejmejo jih gostje, ki so ponudbe dovolili. Odjava je v vsakem sporočilu."],
 ];
 
 const BENEFITS = [
   { icon: "srce" as Icon3DName, title: "Gostje se vračajo pogosteje", text: "Kartica je vedno v telefonu in napredek do nagrade vedno na očeh. Pozabljen kartonček ni več izgovor.", wide: true },
   { icon: "kartice" as Icon3DName, title: "Veš, kdo so tvoji stalni gostje", text: "Vidiš obiske, zadnji obisk in koga loči en sam žig do nagrade. Prvič imaš seznam svojih gostov.", wide: true },
-  { icon: "zvezda" as Icon3DName, title: "Več ocen na Googlu", text: "Po obisku gosta povabimo k oceni. Kdor ni bil zadovoljen, lahko to najprej sporoči tebi." },
-  { icon: "megafon" as Icon3DName, title: "Povabilo, ko gosta dolgo ni", text: "Samodejno sporočilo z darilom za goste, ki jih ni bilo več tednov. Nastaviš enkrat." },
+  { icon: "kolo" as Icon3DName, title: "Kolo dobrodošlice", text: "Nov gost enkrat zavrti kolo. Nagrado odklene prvi zabeležen obisk, zato ima razlog, da pride." },
+  { icon: "kavarna" as Icon3DName, title: "Stran lokala z menijem", text: "Gost na tvoji strani najde meni, geslo za Wi-Fi, Instagram in pot do tebe. Odpre jo ob vsakem obisku." },
   { icon: "telefon" as Icon3DName, title: "Brez nove opreme", text: "Deluje z računom, ki ga že izdajaš, ali s kodo na pultu. Blagajne ne menjaš." },
 ];
 
@@ -63,6 +76,7 @@ const FAQ_PAID: FaqItem[] = [
   { q: "Morajo gostje namestiti aplikacijo?", a: "Ne. Loyavi deluje v brskalniku telefona. Gost ustvari račun z elektronskim naslovom in geslom v manj kot minuti." },
   { q: "Kaj se zgodi po 30 dneh?", a: "Izbereš paket in nadaljuješ brez prekinitve. Če se ne odločiš, se zbiranje žigov ustavi, kartice in podatki pa ostanejo shranjeni." },
   { q: "Ali lahko kadar koli prekinem?", a: "Da. Mesečna naročnina nima vezave. Prekineš jo v nadzorni plošči in velja do konca plačanega obdobja." },
+  { q: "Ali smem gostom pošiljati ponudbe?", a: "Da, tistim, ki so to dovolili. Gost ob prvi prijavi sam označi, ali želi ponudbe lokalov, pri katerih zbira žige. Čas privolitve shranimo, vsako sporočilo ima povezavo za odjavo. Obvestilo o polni kartici dobijo vsi gostje, ker je del kartice." },
   { q: "Kdo vidi podatke o mojih gostih?", a: "Podatke o gostih svojega lokala vidiš samo ti. Drugi lokali jih ne vidijo in jih ne prodajamo." },
 ];
 
@@ -76,6 +90,7 @@ const FAQ_DEMO: FaqItem[] = [
   { q: "V čem je razlika med računom in stojalom?", a: "Račun je dokaz nakupa: vsak račun šteje enkrat in samo pri tvojem lokalu. Stojalo je hitrejše, saj gost samo približa telefon, vendar nakupa ne preverja, zato je omejeno na en žig na dan. Izbereš enega ali oba načina." },
   { q: "Morajo gostje namestiti aplikacijo?", a: "Ne. Loyavi deluje v brskalniku telefona. Gost ustvari račun z elektronskim naslovom in geslom v manj kot minuti." },
   { q: "Ali lahko kadar koli preneham?", a: "Da. Vezave ni. Če Loyavi ne želiš več uporabljati, nam piši in račun lokala s podatki izbrišemo." },
+  { q: "Ali smem gostom pošiljati ponudbe?", a: "Da, tistim, ki so to dovolili. Gost ob prvi prijavi sam označi, ali želi ponudbe lokalov, pri katerih zbira žige. Čas privolitve shranimo, vsako sporočilo ima povezavo za odjavo. Obvestilo o polni kartici dobijo vsi gostje, ker je del kartice." },
   { q: "Kdo vidi podatke o mojih gostih?", a: "Podatke o gostih svojega lokala vidiš samo ti. Drugi lokali jih ne vidijo in jih ne prodajamo." },
 ];
 
@@ -88,6 +103,32 @@ function SectionHead({ eyebrow, title, text }: { eyebrow: string; title: string;
       <h2 className="text-4xl font-semibold tracking-tight text-fg lg:text-5xl">{title}</h2>
       {text && <p className="text-lg text-mute">{text}</p>}
     </Reveal>
+  );
+}
+
+/** Funkcija s pravim zaslonom: besedilo in točke na eni strani, posnetek na drugi. */
+function FeatureRow({ pill, title, text, points, flip = false, children }: { pill: string; title: string; text: string; points: Point[]; flip?: boolean; children: React.ReactNode }) {
+  return (
+    <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+      <Reveal className={`flex flex-col items-start gap-6 ${flip ? "lg:order-2" : ""}`}>
+        <p className="rounded-full bg-tint px-3 py-1 text-sm font-semibold text-brand-ink">{pill}</p>
+        <h3 className="text-3xl font-semibold tracking-tight text-fg lg:text-4xl">{title}</h3>
+        <p className="text-lg text-mute">{text}</p>
+        <ul className="flex w-full flex-col gap-3">
+          {points.map(([icon, t]) => (
+            <li key={t} className="flex items-center gap-4 rounded-2xl bg-card p-3 pr-6 shadow-card">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-tint">
+                <Icon3D name={icon} size={40} />
+              </span>
+              <span className="text-base font-medium text-fg">{t}</span>
+            </li>
+          ))}
+        </ul>
+      </Reveal>
+      <Reveal delay={150} className={`relative mx-auto w-full ${flip ? "lg:order-1" : ""}`}>
+        {children}
+      </Reveal>
+    </div>
   );
 }
 
@@ -150,25 +191,55 @@ export default function Partnerji() {
           </div>
         </section>
 
-        {/* ZAKAJ ZVESTOBA */}
-        <section className="mx-auto max-w-6xl px-6 py-24">
-          <SectionHead eyebrow="Zakaj zvestoba" title="Stalni gost je vreden več kot nov." text="Raziskave to potrjujejo že desetletja. Loyavi ti da preprost način, da gosta pripelješ nazaj." />
-          <div className="mt-12 grid gap-4 lg:grid-cols-3">
-            {STATS.map((s, i) => (
-              <Reveal key={s.value} delay={i * 100} className="flex flex-col gap-4 rounded-3xl bg-card shadow-card p-8">
-                <p className="font-mono text-4xl font-semibold tracking-tight text-brand-ink">{s.value}</p>
-                <p className="text-base text-mute">
-                  {s.text}
-                  <sup className="ml-1 text-dim">{s.ref}</sup>
-                </p>
-              </Reveal>
-            ))}
+        {/* FUNKCIJE: kaj Loyavi dela za lokal, ko ima gost kartico */}
+        <section id="funkcije" className="scroll-mt-24 px-6 py-24">
+          <div className="mx-auto flex max-w-6xl flex-col gap-24">
+            <SectionHead
+              eyebrow="Funkcije"
+              title="Žig je šele začetek."
+              text="Ko gost doda tvojo kartico, Loyavi dela naprej. Prosi za oceno, čestita za rojstni dan in povabi nazaj goste, ki jih dolgo ni bilo."
+            />
+
+            <FeatureRow
+              pill="Ocene na Googlu"
+              title="Zadovoljen gost te oceni, dokler je še pri tebi."
+              text="Ko gost zabeleži obisk, ga vprašamo, kako je bilo. Zadovoljen gost z enim dotikom odpre tvojo stran na Googlu. Kdor ni bil zadovoljen, lahko najprej piše tebi."
+              points={REVIEWS}
+            >
+              <div className="relative mx-auto flex h-96 w-full justify-center overflow-hidden rounded-3xl bg-tint px-12 lg:h-auto lg:max-w-xs lg:overflow-visible lg:rounded-none lg:bg-transparent lg:p-0 items-end pb-8">
+                <Phone src="/screens/ocena.webp" alt="Gost po obisku oceni lokal s petimi zvezdicami in odpre oceno na Googlu" className="w-full max-w-56 shrink-0 lg:max-w-none" />
+                <Icon3D name="zvezda" size={120} className="absolute -right-16 top-24 hidden rotate-12 drop-shadow-lg lg:block" />
+                <Icon3D name="srce" size={96} className="absolute -left-20 bottom-48 hidden -rotate-12 drop-shadow-lg lg:block" />
+              </div>
+            </FeatureRow>
+
+            <FeatureRow
+              flip
+              pill="Samodejna sporočila"
+              title="Nastaviš enkrat. Potem se pošilja samo."
+              text="Loyavi gostu čestita za rojstni dan, ga povabi nazaj, ko ga dolgo ni bilo, in se mu zahvali ob obletnici. Vsakemu sporočilu lahko dodaš kupon, ki se shrani v gostovo denarnico."
+              points={AUTOMATIONS}
+            >
+              <div className="relative mx-auto flex h-96 w-full justify-center overflow-hidden rounded-3xl bg-tint px-12 lg:h-auto lg:max-w-xs lg:overflow-visible lg:rounded-none lg:bg-transparent lg:p-0 items-start pt-8">
+                <Phone src="/screens/sporocilo.webp" alt="Sporočilo lokala gostu za rojstni dan s kuponom za kos torte" className="w-full max-w-56 shrink-0 lg:max-w-none" />
+                <Icon3D name="torta" size={120} className="absolute -left-24 top-16 hidden -rotate-12 drop-shadow-lg lg:block" />
+                <Icon3D name="darilo" size={104} className="absolute -right-20 bottom-24 hidden rotate-6 drop-shadow-lg lg:block" />
+              </div>
+            </FeatureRow>
+
+            <FeatureRow
+              pill="Kampanje"
+              title="Novica ali ponudba vsem gostom v nekaj minutah."
+              text="Napišeš sporočilo, izbereš skupino in pošlješ. Na primer vsem, ki jih ni bilo mesec dni, ali tistim, ki jim do nagrade manjkata dva žiga."
+              points={CAMPAIGNS}
+            >
+              <div className="relative">
+                <BrowserFrame src="/screens/kampanja.webp" alt="Nadzorna plošča Loyavi z obrazcem za novo sporočilo gostom" aspect="aspect-[5/4]" />
+                <Icon3D name="megafon" size={112} className="absolute -right-8 -top-12 hidden rotate-6 drop-shadow-lg lg:block" />
+              </div>
+              <p className="mt-4 text-center text-sm text-dim">Primer prikaza z vzorčnimi podatki.</p>
+            </FeatureRow>
           </div>
-          <Reveal className="mt-6 flex flex-col gap-1 text-xs text-dim">
-            <p>1 Frederick Reichheld, Bain &amp; Company, povzeto v Harvard Business Review, The Value of Keeping the Right Customers, 2014.</p>
-            <p>2 Nunes in Drèze, The Endowed Progress Effect, Journal of Consumer Research, 2006.</p>
-            <p>Številke so iz neodvisnih raziskav in niso rezultati, izmerjeni z Loyavi.</p>
-          </Reveal>
         </section>
 
         {/* SLOGAN */}
@@ -182,7 +253,7 @@ export default function Partnerji() {
         {/* PREDNOSTI */}
         <section id="prednosti" className="atmo scroll-mt-24 px-6 py-24">
           <div className="mx-auto flex max-w-6xl flex-col gap-12">
-            <SectionHead eyebrow="Prednosti" title="Kaj dobi tvoj lokal." />
+            <SectionHead eyebrow="Prednosti" title="Kaj še dobi tvoj lokal." />
             <div className="grid gap-4 lg:grid-cols-6">
               {BENEFITS.map((b, i) => (
                 <Reveal key={b.title} delay={i * 80} className={`group flex flex-col gap-4 rounded-3xl bg-card p-8 shadow-card transition-all duration-700 ease-spring hover:-translate-y-1 hover:shadow-pop ${b.wide ? "lg:col-span-3" : "lg:col-span-2"}`}>

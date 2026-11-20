@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase/server";
 import { getGuest, memberships } from "@/lib/guest";
+import { consentPath } from "@/lib/consent";
 import { openCoupons } from "@/lib/coupons";
 import { stampRewardNames, toVenueView } from "@/lib/venues";
 import type { Venue } from "@/lib/types";
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function Wallet() {
   const guest = await getGuest();
   if (!guest) redirect("/prijava?next=/app");
+  if (!guest.termsOk) redirect(consentPath("/app"));
 
   const db = getServiceClient();
   const ms = await memberships(db, guest.email);

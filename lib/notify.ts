@@ -8,7 +8,7 @@ import { venueMeta } from "@/lib/venueMeta";
 import { stampRewardName } from "@/lib/venues";
 import { categoryDefaultReward } from "@/lib/categories";
 import { unsubUrl } from "@/lib/unsub";
-import { superadminEmails } from "@/lib/superadmin";
+import { leadEmails } from "@/lib/platform";
 import type { Venue } from "@/lib/types";
 
 type V = Pick<Venue, "id" | "name" | "brand_color" | "public_code" | "stamp_goal" | "plan" | "resend_api_key" | "email_from" | "automations" | "venue_type">;
@@ -106,8 +106,8 @@ export function campaignParts(v: V, customerId: string) {
 export async function notifyAdminLead(d: { heading: string; rows: [string, string][]; message: string; replyTo?: string | null }) {
   if (!emailConfigured()) return;
   try {
-    const html = T.emailLead({ ...d, ctaUrl: `${siteOrigin()}/superadmin` });
-    for (const to of superadminEmails()) {
+    const html = T.emailLead({ ...d, ctaUrl: `${siteOrigin()}/superadmin?t=povprasevanja` });
+    for (const to of await leadEmails(getServiceClient())) {
       await sendEmail({ to, subject: `Loyavi: ${d.heading}`, html, replyTo: d.replyTo || undefined });
     }
   } catch (e) {
@@ -143,5 +143,46 @@ export async function notifyAdminExpiring(email: string | null | undefined, d: {
     await sendEmail({ to: email, subject, html: T.emailAdminExpiring({ ...d, ctaUrl: `${dash()}?s=narocnina` }) });
   } catch (e) {
     console.error("[notify admin-expiring]", e);
+  }
+}
+
+// ── RAČUN: menjava elektronskega naslova ─────────────────────────────────────
+/** Povezava za potrditev gre na NOVI naslov. Vrne, ali je bila pošta oddana. */
+export async function notifyEmailChangeRequest(newEmail: string, oldEmail: string, url: string): Promise<boolean> {
+  if (!emailConfigured()) return false;
+  try {
+    const r = await sendEmail({
+      to: newEmail,
+      subject: "Potrdi nov elektronski naslov",
+      html: T.emailOwnerMessage({
+        heading: "Potrdi nov naslov",
+        message: `Za račun Loyavi z naslovom ${oldEmail} je bila zahtevana menjava naslova na ${newEmail}.\n\nPotrdi jo z gumbom spodaj. Povezava velja eno uro. Kartice, žigi in kuponi ostanejo.\n\nČe tega nisi zahteval ti, sporočilo prezri in se ne spremeni nič.`,
+        ctaText: "Potrdi nov naslov",
+        ctaUrl: url,
+      }),
+    });
+    return r.ok;
+  } catch (e) {
+    console.error("[notify email-change]", e);
+    return false;
+  }
+}
+
+/** Obvestilo na STARI naslov, da lastnik računa opazi spremembo, ki je ni naredil sam. */
+export async function notifyEmailChanged(oldEmail: string, maskedNew: string) {
+  if (!emailConfigured()) return;
+  try {
+    await sendEmail({
+      to: oldEmail,
+      subject: "Elektronski naslov tvojega računa je spremenjen",
+      html: T.emailOwnerMessage({
+        heading: "Naslov računa je spremenjen",
+        message: `Račun Loyavi, ki je bil prijavljen s tem naslovom, zdaj uporablja naslov ${maskedNew}.\n\nČe si spremembo naredil ti, ni treba storiti ničesar. Če je nisi, nam takoj piši na info@loyavi.app.`,
+        ctaText: "Odpri Loyavi",
+        ctaUrl: siteOrigin(),
+      }),
+    });
+  } catch (e) {
+    console.error("[notify email-changed]", e);
   }
 }

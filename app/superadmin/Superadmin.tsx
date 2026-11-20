@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { SAVenue, SAOwner, SATotals, SADay, SARevenue } from "./page";
-import { adminUpdateVenue, adminExtendTrial, sendOwnerCampaign, adminVenueLog } from "./actions";
+import type { SAVenue, SAOwner, SATotals, SADay, SARevenue, SALead } from "./page";
+import { adminUpdateVenue, adminExtendTrial, sendOwnerCampaign, adminVenueLog, adminSetLeadEmail, adminTestLeadEmail } from "./actions";
 import type { LogEntry } from "@/lib/types";
 import type { PlanKey, SubStatus } from "@/lib/types";
 import { PLANS, PLAN_ORDER, STATUS_LABEL, fmtEur, chargedAmount, monthlyEquivalent, isPaying } from "@/lib/plans";
@@ -58,6 +58,9 @@ export default function Superadmin({
   series,
   revenue,
   adminEmail,
+  leads,
+  leadTo,
+  initialTab,
 }: {
   venues: SAVenue[];
   owners: SAOwner[];
@@ -65,8 +68,11 @@ export default function Superadmin({
   series: SADay[];
   revenue: SARevenue;
   adminEmail: string;
+  leads: SALead[];
+  leadTo: string[];
+  initialTab: "pregled" | "povprasevanja";
 }) {
-  const [tab, setTab] = useState<"pregled" | "lokali" | "narocnine" | "lastniki" | "sporocila">("pregled");
+  const [tab, setTab] = useState<"pregled" | "lokali" | "narocnine" | "lastniki" | "sporocila" | "povprasevanja">(initialTab);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<SAVenue | null>(null);
 
@@ -104,7 +110,7 @@ export default function Superadmin({
       {/* TABS */}
       <div style={{ background: CREAM, borderBottom: `1px solid ${BORD}`, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: "0 20px", display: "flex", gap: 4 }}>
-          {([["pregled", "Pregled"], ["lokali", `Lokali · ${venues.length}`], ["narocnine", "Naročnine"], ["sporocila", "Sporočila"], ["lastniki", `Lastniki · ${totals.owners}`]] as const).map(([k, label]) => (
+          {([["pregled", "Pregled"], ["lokali", `Lokali · ${venues.length}`], ["narocnine", "Naročnine"], ["povprasevanja", `Povpraševanja · ${leads.length}`], ["sporocila", "Sporočila"], ["lastniki", `Lastniki · ${totals.owners}`]] as const).map(([k, label]) => (
             <button
               key={k}
               onClick={() => setTab(k)}
@@ -134,6 +140,7 @@ export default function Superadmin({
           <Lokali venues={filtered} query={query} setQuery={setQuery} onOpen={setSelected} total={venues.length} />
         )}
         {tab === "narocnine" && <Narocnine revenue={revenue} venues={venues} onOpen={setSelected} onTrial={totals.onTrial} />}
+        {tab === "povprasevanja" && <Povprasevanja leads={leads} leadTo={leadTo} />}
         {tab === "sporocila" && <Sporocila />}
         {tab === "lastniki" && <Lastniki owners={owners} />}
       </div>
@@ -745,6 +752,86 @@ function Sporocila() {
           </div>
         </div>
       </Card>
+    </div>
+  );
+}
+
+/* ---------------- POVPRAŠEVANJA (leadi) ---------------- */
+
+const LEAD_SOURCE: Record<string, string> = { veriga: "Več lokalov" };
+
+function Povprasevanja({ leads, leadTo }: { leads: SALead[]; leadTo: string[] }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [emails, setEmails] = useState(leadTo.join(", "));
+  const [result, setResult] = useState("");
+  const run = (fn: () => Promise<{ ok: boolean; emails?: string[]; error?: string }>, done: (list: string[]) => string) => {
+    setResult("");
+    start(async () => {
+      try {
+        const r = await fn();
+        if (!r.ok) return setResult("⚠ " + (r.error || "Ni uspelo."));
+        if (r.emails) setEmails(r.emails.join(", "));
+        setResult(done(r.emails ?? []));
+        router.refresh();
+      } catch (e) {
+        setResult("⚠ " + (e instanceof Error ? e.message : "Napaka."));
+      }
+    });
+  };
+  const save = () => {
+    const fd = new FormData();
+    fd.set("emails", emails);
+    run(() => adminSetLeadEmail(fd), (l) => `Shranjeno. Obvestila gredo na: ${l.join(", ")}.`);
+  };
+  const btn: React.CSSProperties = { height: 44, padding: "0 20px", borderRadius: 12, fontFamily: JAK, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: pending ? 0.6 : 1 };
+  return (
+    <div className="flex flex-col" style={{ gap: 16 }}>
+      <Card>
+        <div className="flex flex-col" style={{ gap: 12, maxWidth: 620 }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800 }}>Kam pridejo obvestila</div>
+            <div style={{ fontSize: 13, color: MUTED, marginTop: 2 }}>Vsako novo povpraševanje (kontaktni obrazec, prošnja za več lokalov) pošljemo na ta naslov. Več naslovov loči z vejico.</div>
+          </div>
+          <label className="flex flex-col" style={{ gap: 6 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: MUTED }}>Elektronski naslov za povpraševanja</span>
+            <input value={emails} onChange={(e) => setEmails(e.target.value)} placeholder="ime@primer.si" inputMode="email" autoCapitalize="none" style={inp} aria-label="Elektronski naslov za povpraševanja" />
+          </label>
+          <div className="flex flex-wrap items-center" style={{ gap: 10 }}>
+            <button onClick={save} disabled={pending} style={{ ...btn, border: "none", background: INK, color: CREAM }}>{pending ? "Shranjujem…" : "Shrani naslov"}</button>
+            <button onClick={() => run(adminTestLeadEmail, (l) => `Testno obvestilo je poslano na: ${l.join(", ")}.`)} disabled={pending} style={{ ...btn, border: `1px solid ${BORD}`, background: CREAM, color: INK }}>Pošlji testno obvestilo</button>
+          </div>
+          {result && <div role="status" style={{ fontSize: 13, fontWeight: 700, color: result.startsWith("⚠") ? CORAL : GREEN }}>{result}</div>}
+        </div>
+      </Card>
+
+      {leads.length === 0 ? (
+        <Empty>Povpraševanj še ni. Ko nekdo odda kontaktni obrazec, se pojavi tukaj.</Empty>
+      ) : (
+        <div className="flex flex-col" style={{ gap: 10 }}>
+          {leads.map((l) => (
+            <Card key={l.id}>
+              <div className="flex flex-wrap items-start justify-between" style={{ gap: 10 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 15.5, fontWeight: 800 }}>{l.venue || l.name || l.email || "Brez imena"}</div>
+                  <div style={{ fontSize: 13, color: MUTED, marginTop: 2 }}>
+                    {[l.venue && l.name ? l.name : null, l.city].filter(Boolean).join(" · ") || "Brez dodatnih podatkov"}
+                  </div>
+                </div>
+                <div className="flex items-center" style={{ gap: 8 }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: "0.04em", textTransform: "uppercase", color: l.heard === "veriga" ? CORAL : MUTED, background: PAPER, border: `1px solid ${BORD}`, borderRadius: 999, padding: "4px 10px" }}>{LEAD_SOURCE[l.heard ?? ""] ?? "Kontakt"}</span>
+                  <span style={{ fontSize: 12.5, color: MUTED }}>{relTime(l.created_at)}</span>
+                </div>
+              </div>
+              {l.message && <div style={{ fontSize: 14, lineHeight: 1.55, marginTop: 10, whiteSpace: "pre-line" }}>{l.message}</div>}
+              <div className="flex flex-wrap" style={{ gap: 14, marginTop: 12, fontSize: 13.5, fontWeight: 700 }}>
+                {l.email && <a href={`mailto:${l.email}`} style={{ color: CORAL }}>{l.email}</a>}
+                {l.phone && <a href={`tel:${l.phone.replace(/\s+/g, "")}`} style={{ color: CORAL }}>{l.phone}</a>}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

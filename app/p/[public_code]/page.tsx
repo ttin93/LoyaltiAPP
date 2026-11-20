@@ -5,6 +5,7 @@ import { getGuest, membership } from "@/lib/guest";
 import { consentPath } from "@/lib/consent";
 import { hasWelcome, openCoupons } from "@/lib/coupons";
 import { stampRewardName, toVenueView, venueByCode } from "@/lib/venues";
+import { stampedToday } from "@/lib/stamp";
 import { categoryLabel } from "@/lib/categories";
 import VenueClient from "./VenueClient";
 
@@ -40,7 +41,9 @@ export default async function VenuePage({ params, searchParams }: Params) {
   }
   const view = toVenueView(venue, reward);
   const member = guest ? await membership(db, venue.id, guest.email) : null;
-  const [coupons, spun] = member ? await Promise.all([openCoupons(db, [member.id]), hasWelcome(db, member.id)]) : [[], true];
+  const [coupons, spun, doneToday] = member
+    ? await Promise.all([openCoupons(db, [member.id]), hasWelcome(db, member.id), view.dailyLimit ? stampedToday(db, venue.id, member.id) : false])
+    : [[], true, false];
 
   return (
     <VenueClient
@@ -49,6 +52,7 @@ export default async function VenuePage({ params, searchParams }: Params) {
       member={member ? { stamps: member.stamps ?? 0 } : null}
       coupons={coupons}
       canSpin={view.wheel.enabled && !spun}
+      doneToday={doneToday}
       flags={{ join: sp.join === "1", stand: sp.stand === "1", coupon: sp.kupon ?? null }}
     />
   );

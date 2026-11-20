@@ -25,6 +25,8 @@ export type VenueMeta = {
   menuUrl: string;
   /** Uporabniško ime na Instagramu, brez afne. */
   instagram: string;
+  /** Največ en žig na gosta na dan, ne glede na način (račun ali stojalo). Privzeto vklopljeno. */
+  dailyLimit: boolean;
 };
 
 type WithAutomations = { automations?: unknown };
@@ -47,6 +49,7 @@ export function venueMeta(v: WithAutomations | null | undefined): VenueMeta {
     wifiPass: str(raw.wifiPass),
     menuUrl: str(raw.menuUrl),
     instagram: str(raw.instagram),
+    dailyLimit: raw.dailyLimit !== false,
   };
 }
 

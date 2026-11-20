@@ -49,6 +49,31 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-11-21 (ponoči) — Popravek vseh slabosti iz preizkusa od A do Ž — Fable 5.2
+> **Na veji `v2`, še NI na `main`.** Tin je rekel »fix vse to« in naj se PC po koncu ugasne. Za objavo manjka samo njegov »dej na domeno«.
+> **Ob objavi preveri:** `<link rel="canonical">` na www.loyavi.app mora kazati na `https://www.loyavi.app/...`. Če še kaže na golo domeno,
+> je na Vercelu nastavljen `NEXT_PUBLIC_SITE_URL` in ga je treba tam spremeniti na `https://www.loyavi.app` (seznama spremenljivk nisem mogel prebrati).
+- **En žig na dan (`lib/stamp.ts` `stampedToday`, nastavitev `__v2.dailyLimit`, privzeto vklopljeno):** gost dobi pri lokalu največ en žig na dan,
+  z računom ali s stojalom. Zapre dvojni žig v načinu »Oboje« in skeniranje tujih računov. Lastnik pravilo izklopi v Nastavitve → Pravila
+  (takrat se spet pokaže »Premor med žigi«). Gost namesto gumba vidi »Današnji obisk je zabeležen«. Poti `scan` in `checkin` vrneta `today: true`.
+  **Demo lokal `demo` (Kavarna Lipa) ima v bazi `dailyLimit: false`**, da Tin na predstavitvi lahko vpiše več kod zapored.
+- **Povpraševanja (`lib/platform.ts`):** obvestilo gre na EN naslov (prej na oba v `DEFAULT_SUPERADMINS`, vsak mail dvakrat). Vrstni red: nastavitev
+  v superadminu → `LEAD_NOTIFY_EMAIL` → prvi skrbnik. Nastavitev je vrstica `email_log` s `kind = 'platform_setting'` (brez nove tabele).
+  Superadmin ima nov zavihek **Povpraševanja**: naslov za obvestila, gumb »Pošlji testno obvestilo« in seznam vseh leadov (prej jih ni bilo nikjer videti).
+  Popravljena tudi mrtva povezava (`#`) v sporočilih lastnikom iz superadmina.
+- **Menjava elektronskega naslova (`lib/emailChange.ts`, `/api/account/email`, `/racun/naslov`, `app/ui/EmailChange.tsx`):** gost v profilu, lastnik v
+  Nastavitve → Račun. Na NOVI naslov gre podpisana povezava (velja 1 uro), šele potrditev zamenja naslov računa in vseh kartic (`customers.email`),
+  na STARI naslov gre obvestilo. Največ 5 zahtev na dan, zaseden naslov je zavrnjen, ista povezava drugič ne velja. Geslo in seja ostaneta.
+- **Dnevna sporočila:** `/api/cron/daily?venue=<id>` požene samo en lokal (s `CRON_SECRET`). Na testnem lokalu preverjeno: odjavljen gost ne dobi nič,
+  gost z dovoljenjem dobi voščilo za rojstni dan in kupon za 30 dni, ponoven zagon ne pošlje drugič.
+- **Naložene datoteke:** strežnik vrsto prepozna po vsebini (PNG, JPG, WEBP, PDF), ne po končnici. Smeti s končnico `.png` ali `.pdf` so zavrnjene.
+- **Kanonični naslov:** `siteOrigin()` privzeto `https://www.loyavi.app` (gola domena preusmeri tja), zato kode QR, nalepke NFC, pošta in canonical ne delajo več preusmeritve.
+- **Plačilo (samo preverjeno, nič spremenjeno):** žeton Polar velja, štirje produkti obstajajo s pravimi cenami (49,99 / 499,90 / 79,99 / 799,90 EUR).
+  Nakupa ni mogoče preklikati, dokler je `DEMO = true` in dokler ni peskovnika Polar (`POLAR_API_BASE` + testni produkti). `VERCEL_TOKEN` v `.env.local` ne velja več.
+- **Preverjeno:** tsc, eslint, `next build`, 55 novih preverb v brskalniku na localhostu (skupaj 207). Skripti: `scratchpad/t/s9-popravki2.mjs`, `s10-superadmin.mjs` (začasna mapa).
+- **Testni podatki v produkcijski bazi še čakajo na Tinov »pobriši«:** lokal `58df92bc-…` (Bistro Pod Lipo AZ, skrit iz imenika), računi
+  `delivered+az-*-4515281@resend.dev` (gost 3 ima zdaj naslov `…gost3b…`), leadi z naslovom `delivered+az-lastnik-4515281@resend.dev`, datoteke v `logos/58df92bc-…/`.
+
 ### 2026-11-21 — Preizkus od A do Ž kot pravi kupec + trije popravki — Opus 5.5
 > Popravki so na veji `v2`, še **NI** na `main`.
 - **Kaj:** Tin je naročil, da kot naključen lastnik in gost preklikam celoten Loyavi. Na localhostu (baza je produkcijska) sem

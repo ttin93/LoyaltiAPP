@@ -58,6 +58,7 @@ export type VenuePatch = {
   cooldownMinutes?: number;
   redemptionMinutes?: number;
   googleReviewUrl?: string;
+  dailyLimit?: boolean;
 };
 
 export async function saveVenue(venueId: string, p: VenuePatch): Promise<Result> {
@@ -86,6 +87,7 @@ export async function saveVenue(venueId: string, p: VenuePatch): Promise<Result>
   if (p.hours !== undefined) meta.hours = text(p.hours, 200);
   if (p.about !== undefined) meta.about = text(p.about, 300);
   if (p.listed !== undefined) meta.listed = !!p.listed;
+  if (p.dailyLimit !== undefined) meta.dailyLimit = !!p.dailyLimit;
   if (p.tagline !== undefined) meta.tagline = text(p.tagline, 80);
   if (p.wifiName !== undefined) meta.wifiName = text(p.wifiName, 40);
   if (p.wifiPass !== undefined) meta.wifiPass = text(p.wifiPass, 64);
@@ -341,24 +343,31 @@ export async function uploadLogo(venueId: string, formData: FormData): Promise<R
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return fail("Izberi sliko.");
   if (file.size > 2 * 1024 * 1024) return fail("Slika naj bo manjša od 2 MB.");
-  if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) return fail("Dovoljene so slike PNG, JPG in WEBP.");
-  const ext = file.type.includes("png") ? "png" : file.type.includes("webp") ? "webp" : "jpg";
-  const path = `${venue.id}/logo-${Date.now()}.${ext}`;
   const buf = Buffer.from(await file.arrayBuffer());
-  const { error: upErr } = await db.storage.from("logos").upload(path, buf, { contentType: file.type, upsert: true });
-  if (upErr) return fail("Nalaganje ni uspelo.");
-  const url = db.storage.from("logos").getPublicUrl(path).data.publicUrl;
+  const kind = sniff(buf);
+  if (!kind || kind.ext === "pdf") return fail("Dovoljene so slike PNG, JPG in WEBP.");
+  const url = await storeFile(db, venue.id, buf, kind, "logo");
+  if (!url) return fail("Nalaganje ni uspelo.");
   await db.from("venues").update({ logo_url: url }).eq("id", venue.id);
   revalidatePath("/dashboard");
   return { ok: true };
 }
 
+type FileKind = { ext: "png" | "jpg" | "webp" | "pdf"; mime: string };
+
+/** Vrsta datoteke po vsebini (prvi bajti). Končnici in vrsti, ki ju pošlje brskalnik, ne zaupamo. */
+function sniff(buf: Buffer): FileKind | null {
+  if (buf.length >= 8 && buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return { ext: "png", mime: "image/png" };
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return { ext: "jpg", mime: "image/jpeg" };
+  if (buf.length >= 12 && buf.toString("latin1", 0, 4) === "RIFF" && buf.toString("latin1", 8, 12) === "WEBP") return { ext: "webp", mime: "image/webp" };
+  if (buf.length >= 5 && buf.toString("latin1", 0, 5) === "%PDF-") return { ext: "pdf", mime: "application/pdf" };
+  return null;
+}
+
 /** Naloži sliko ali PDF v javno shrambo in vrne javni naslov. */
-async function storeFile(db: Awaited<ReturnType<typeof owned>>["db"], venueId: string, file: File, name: string): Promise<string | null> {
-  const ext = file.type === "application/pdf" ? "pdf" : file.type.includes("png") ? "png" : file.type.includes("webp") ? "webp" : "jpg";
-  const path = `${venueId}/${name}-${Date.now()}.${ext}`;
-  const buf = Buffer.from(await file.arrayBuffer());
-  const { error } = await db.storage.from("logos").upload(path, buf, { contentType: file.type, upsert: true });
+async function storeFile(db: Awaited<ReturnType<typeof owned>>["db"], venueId: string, buf: Buffer, kind: FileKind, name: string): Promise<string | null> {
+  const path = `${venueId}/${name}-${Date.now()}.${kind.ext}`;
+  const { error } = await db.storage.from("logos").upload(path, buf, { contentType: kind.mime, upsert: true });
   if (error) return null;
   return db.storage.from("logos").getPublicUrl(path).data.publicUrl;
 }
@@ -369,8 +378,10 @@ export async function uploadCover(venueId: string, formData: FormData): Promise<
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return fail("Izberi fotografijo.");
   if (file.size > 4 * 1024 * 1024) return fail("Fotografija naj bo manjša od 4 MB.");
-  if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) return fail("Dovoljene so slike PNG, JPG in WEBP.");
-  const url = await storeFile(db, venue.id, file, "cover");
+  const buf = Buffer.from(await file.arrayBuffer());
+  const kind = sniff(buf);
+  if (!kind || kind.ext === "pdf") return fail("Dovoljene so slike PNG, JPG in WEBP.");
+  const url = await storeFile(db, venue.id, buf, kind, "cover");
   if (!url) return fail("Nalaganje ni uspelo.");
   await db.from("venues").update({ automations: mergeVenueMeta(venue.automations, { coverUrl: url }) }).eq("id", venue.id);
   revalidatePath("/dashboard");
@@ -390,8 +401,10 @@ export async function uploadMenu(venueId: string, formData: FormData): Promise<R
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return fail("Izberi datoteko.");
   if (file.size > 4 * 1024 * 1024) return fail("Datoteka naj bo manjša od 4 MB.");
-  if (!/^(image\/(png|jpe?g|webp)|application\/pdf)$/.test(file.type)) return fail("Dovoljene so slike PNG, JPG, WEBP in dokumenti PDF.");
-  const url = await storeFile(db, venue.id, file, "menu");
+  const buf = Buffer.from(await file.arrayBuffer());
+  const kind = sniff(buf);
+  if (!kind) return fail("Dovoljene so slike PNG, JPG, WEBP in dokumenti PDF.");
+  const url = await storeFile(db, venue.id, buf, kind, "menu");
   if (!url) return fail("Nalaganje ni uspelo. Poskusi s sliko ali vpiši povezavo do menija.");
   await db.from("venues").update({ automations: mergeVenueMeta(venue.automations, { menuUrl: url }) }).eq("id", venue.id);
   revalidatePath("/dashboard");

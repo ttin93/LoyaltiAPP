@@ -36,7 +36,9 @@ export async function GET(req: Request) {
   const now = Date.now();
   const todayMMDD = localDay().slice(5); // datum v Sloveniji
 
-  const { data: venueRows } = await db.from("venues").select("*");
+  // ?venue=<id> omeji zagon na en lokal (za preizkus), brez opomnikov lastnikom
+  const only = new URL(req.url).searchParams.get("venue");
+  const { data: venueRows } = only ? await db.from("venues").select("*").eq("id", only) : await db.from("venues").select("*");
   const venues = (venueRows ?? []) as Venue[];
   let sent = 0;
 
@@ -81,7 +83,7 @@ export async function GET(req: Request) {
   // Naročnina je na ravni lastnika (živi na njegovem prvem lokalu), zato gledamo lastnika, ne lokala.
   const byOwner = new Map<string, Venue[]>();
   for (const v of venues) if (v.owner_user_id) byOwner.set(v.owner_user_id, [...(byOwner.get(v.owner_user_id) ?? []), v]);
-  for (const [ownerId, list] of byOwner) {
+  for (const [ownerId, list] of only ? [] : byOwner) {
     if (sent >= CAP) break;
     const bill = [...list].sort((a, b) => a.created_at.localeCompare(b.created_at))[0];
     const plan = bestOwnerPlan(list);

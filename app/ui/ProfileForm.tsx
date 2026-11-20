@@ -6,6 +6,7 @@ import { Cake, Check, EnvelopeSimple, SignOut } from "@phosphor-icons/react/dist
 import { createBrowserSupabase } from "@/lib/supabase/ssrClient";
 import { Button } from "./Button";
 import { Field, Input, Select, Toggle } from "./Field";
+import EmailChange from "./EmailChange";
 import { MONTHS, birthdayLabel } from "@/lib/sl";
 
 export default function ProfileForm({ email, name, birthday, marketing }: { email: string; name: string | null; birthday: string | null; marketing: boolean }) {
@@ -71,6 +72,7 @@ export default function ProfileForm({ email, name, birthday, marketing }: { emai
         <Field label="Elektronski naslov">
           <Input value={email} disabled readOnly />
         </Field>
+        <EmailChange email={email} />
         <Field label="Ime" hint="Tako te bomo nagovorili v denarnici.">
           <Input value={nm} onChange={(e) => setNm(e.target.value)} placeholder="Tvoje ime" maxLength={60} autoComplete="given-name" />
         </Field>

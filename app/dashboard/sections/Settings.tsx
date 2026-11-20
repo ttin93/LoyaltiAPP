@@ -5,6 +5,7 @@ import { CircleNotch, Trash, UploadSimple } from "@phosphor-icons/react/dist/ssr
 import { removeCover, saveVenue, uploadCover, uploadMenu } from "@/app/actions";
 import { Button } from "@/app/ui/Button";
 import { Field, Input, Select, Textarea, Toggle } from "@/app/ui/Field";
+import EmailChange from "@/app/ui/EmailChange";
 import { CATEGORIES } from "@/lib/categories";
 import type { DashVenue } from "../data";
 import { Panel, SectionHead, useAct, useToast } from "../parts";
@@ -25,7 +26,7 @@ async function downscale(file: File, max = 1600, quality = 0.82): Promise<File> 
   }
 }
 
-export default function Settings({ venue }: { venue: DashVenue }) {
+export default function Settings({ venue, ownerEmail }: { venue: DashVenue; ownerEmail: string }) {
   const [f, setF] = useState({
     name: venue.name,
     category: venue.category,
@@ -78,7 +79,7 @@ export default function Settings({ venue }: { venue: DashVenue }) {
     fd.set("file", picked.type === "application/pdf" ? picked : await downscale(picked, 2200, 0.85));
     menu.run(() => uploadMenu(venue.id, fd), "Meni je naložen.");
   }
-  const [r, setR] = useState({ scanWindowHours: venue.scanWindowHours, cooldownMinutes: venue.cooldownMinutes, redemptionMinutes: venue.redemptionMinutes });
+  const [r, setR] = useState({ scanWindowHours: venue.scanWindowHours, cooldownMinutes: venue.cooldownMinutes, redemptionMinutes: venue.redemptionMinutes, dailyLimit: venue.meta.dailyLimit });
   const profile = useAct();
   const rules = useAct();
   const up = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((p) => ({ ...p, [k]: v }));
@@ -215,13 +216,22 @@ export default function Settings({ venue }: { venue: DashVenue }) {
         }}
       >
         <Panel title="Pravila" text="Varovalke, ki preprečujejo zlorabe. Privzete vrednosti ustrezajo večini lokalov.">
+          <div className="flex items-center justify-between gap-4 rounded-2xl bg-s2 p-4">
+            <span>
+              <span className="block text-sm font-semibold text-fg">Največ en žig na dan</span>
+              <span className="block text-sm text-mute">Gost dobi en žig na dan, tudi če skenira več računov ali uporabi še stojalo. Priporočamo.</span>
+            </span>
+            <Toggle checked={r.dailyLimit} onChange={(v) => setR((p) => ({ ...p, dailyLimit: v }))} label="Največ en žig na dan" />
+          </div>
           <div className="grid gap-4 lg:grid-cols-3">
             <Field label="Veljavnost računa (ure)" hint="Kako star račun še prinese žig.">
               <Input type="number" min={1} max={720} value={r.scanWindowHours} onChange={(e) => setR((p) => ({ ...p, scanWindowHours: Number(e.target.value) }))} className="font-mono" />
             </Field>
-            <Field label="Premor med žigi (minute)" hint="0 pomeni brez premora.">
-              <Input type="number" min={0} max={1440} value={r.cooldownMinutes} onChange={(e) => setR((p) => ({ ...p, cooldownMinutes: Number(e.target.value) }))} className="font-mono" />
-            </Field>
+            {!r.dailyLimit && (
+              <Field label="Premor med žigi (minute)" hint="0 pomeni brez premora.">
+                <Input type="number" min={0} max={1440} value={r.cooldownMinutes} onChange={(e) => setR((p) => ({ ...p, cooldownMinutes: Number(e.target.value) }))} className="font-mono" />
+              </Field>
+            )}
             <Field label="Čas za prevzem (minute)" hint="Koliko časa ima gost, da pokaže kupon osebju.">
               <Input type="number" min={1} max={60} value={r.redemptionMinutes} onChange={(e) => setR((p) => ({ ...p, redemptionMinutes: Number(e.target.value) }))} className="font-mono" />
             </Field>
@@ -234,6 +244,13 @@ export default function Settings({ venue }: { venue: DashVenue }) {
           </div>
         </Panel>
       </form>
+
+      <Panel title="Račun" text="S tem naslovom se prijavljaš. Nanj pošiljamo tudi obvestila o lokalu.">
+        <Field label="Elektronski naslov">
+          <Input value={ownerEmail} disabled readOnly />
+        </Field>
+        <EmailChange email={ownerEmail} />
+      </Panel>
     </>
   );
 }

@@ -2,7 +2,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Venue } from "@/lib/types";
-import type { Member } from "@/lib/guest";
+import { localDay, type Member } from "@/lib/guest";
 import { grantCoupon, unlockPending } from "@/lib/coupons";
 import { stampRewardName } from "@/lib/venues";
 import { categoryDefaultReward } from "@/lib/categories";
@@ -18,6 +18,21 @@ export type StampResult = {
   unlocked: string[];
   askReview: boolean;
 };
+
+export const ALREADY_TODAY = "Današnji obisk je že zabeležen. Naslednji žig dobiš jutri.";
+
+/** Ali ima gost pri tem lokalu danes (po slovenskem času) že žig, z računom ali s stojalom. */
+export async function stampedToday(db: SupabaseClient, venueId: string, customerId: string): Promise<boolean> {
+  const { data: last } = await db
+    .from("scans")
+    .select("created_at")
+    .eq("venue_id", venueId)
+    .eq("customer_id", customerId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return !!last && localDay(new Date(last.created_at as string)) === localDay();
+}
 
 /** Minute do naslednjega dovoljenega žiga (0 = lahko takoj). */
 export async function cooldownLeft(db: SupabaseClient, venue: Venue, customerId: string): Promise<number> {

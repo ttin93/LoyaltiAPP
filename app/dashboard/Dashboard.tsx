@@ -212,7 +212,7 @@ export default function Dashboard({ data, initialSection, isNew, billingSuccess 
           {section === "ocene" && <Reviews data={data} />}
           {section === "kolo" && <WheelSection venue={venue} />}
           {section === "obiski" && <Checkin venue={venue} />}
-          {section === "nastavitve" && <Settings venue={venue} />}
+          {section === "nastavitve" && <Settings venue={venue} ownerEmail={data.ownerEmail} />}
           {section === "narocnina" && <Billing billing={data.billing} success={billingSuccess} />}
         </div>
       </main>

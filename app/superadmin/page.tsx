@@ -4,6 +4,7 @@ import { isSupabaseConfigured, getServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/ssrServer";
 import { isSuperadmin } from "@/lib/superadmin";
 import { monthlyEquivalent, isPaying, PLANS, PLAN_ORDER } from "@/lib/plans";
+import { leadEmails } from "@/lib/platform";
 import Superadmin from "./Superadmin";
 import type { Venue, PlanKey } from "@/lib/types";
 
@@ -62,16 +63,18 @@ export type SARevenue = {
   byPlan: { plan: PlanKey; label: string; count: number; mrr: number }[];
 };
 
+export type SALead = { id: string; name: string | null; venue: string | null; email: string | null; phone: string | null; city: string | null; heard: string | null; message: string | null; created_at: string };
+
 const dayKey = (d: Date) => d.toISOString().slice(0, 10);
 
-export default async function SuperadminPage() {
+export default async function SuperadminPage({ searchParams }: { searchParams: Promise<{ t?: string }> }) {
   if (!isSupabaseConfigured()) notFound();
   const user = await getCurrentUser();
   if (!user || !isSuperadmin(user.email)) notFound();
 
   const db = getServiceClient();
 
-  const [venuesRes, customersRes, scansRes, redemptionsRes, reviewsRes, usersRes, emailsRes] =
+  const [venuesRes, customersRes, scansRes, redemptionsRes, reviewsRes, usersRes, emailsRes, leadsRes, leadTo, sp] =
     await Promise.all([
       db.from("venues").select("*").order("created_at", { ascending: false }),
       db.from("customers").select("id, venue_id, created_at"),
@@ -84,6 +87,9 @@ export default async function SuperadminPage() {
       db.from("reviews").select("id, venue_id, stars, created_at").limit(8000),
       db.auth.admin.listUsers({ page: 1, perPage: 1000 }),
       db.from("email_log").select("kind, created_at").not("kind", "in", `(${NON_EMAIL_KINDS.join(",")})`).order("created_at", { ascending: false }).limit(20000),
+      db.from("leads").select("id, name, venue, email, phone, city, heard, message, created_at").order("created_at", { ascending: false }).limit(300),
+      leadEmails(db),
+      searchParams,
     ]);
 
   const venues = (venuesRes.data ?? []) as Venue[];
@@ -239,6 +245,9 @@ export default async function SuperadminPage() {
       series={series}
       revenue={revenue}
       adminEmail={user.email ?? ""}
+      leads={(leadsRes.data ?? []) as SALead[]}
+      leadTo={leadTo}
+      initialTab={sp?.t === "povprasevanja" ? "povprasevanja" : "pregled"}
     />
   );
 }

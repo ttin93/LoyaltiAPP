@@ -4,7 +4,7 @@ import { parseFiscalQR, FiscalQRError } from "@/lib/fiscalQr";
 import { getGuest, ensureMembership, NEEDS_CONSENT } from "@/lib/guest";
 import { venueByCode, venueHasAccess } from "@/lib/venues";
 import { venueMeta } from "@/lib/venueMeta";
-import { awardStamp, cooldownLeft, DuplicateStamp } from "@/lib/stamp";
+import { ALREADY_TODAY, awardStamp, cooldownLeft, DuplicateStamp, stampedToday } from "@/lib/stamp";
 import { notifyCouponEarned, notifyWelcome } from "@/lib/notify";
 import { errMsg } from "@/lib/loyalty";
 
@@ -29,7 +29,8 @@ export async function POST(req: Request) {
     const venue = await venueByCode(db, String(venueCode));
     if (!venue) return NextResponse.json({ ok: false, error: "Lokal ne obstaja." }, { status: 404 });
 
-    if (venueMeta(venue).checkin === "stand") {
+    const meta = venueMeta(venue);
+    if (meta.checkin === "stand") {
       return NextResponse.json({ ok: false, error: "Ta lokal beleži obiske na stojalu ob blagajni." });
     }
     if (!venue.davcna_stevilka) return NextResponse.json({ ok: false, error: "Lokal še ni vklopil skeniranja računov." });
@@ -43,6 +44,8 @@ export async function POST(req: Request) {
     const { member, isNew } = await ensureMembership(db, venue.id, guest);
     if (isNew) after(() => notifyWelcome(venue, guest.email));
 
+    // en žig na dan: drugi račun istega dne (tudi tuj) ali račun po stojalu ne šteje
+    if (meta.dailyLimit && (await stampedToday(db, venue.id, member.id))) return NextResponse.json({ ok: false, today: true, error: ALREADY_TODAY });
     const wait = await cooldownLeft(db, venue, member.id);
     if (wait > 0) return NextResponse.json({ ok: false, error: `Naslednji račun lahko skeniraš čez ${wait} min.` });
 

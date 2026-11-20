@@ -6,6 +6,7 @@
 // Obvestila o kartici (dobrodošlica, polna kartica) niso ponudbe in soglasja ne potrebujejo.
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { UNSUB_KIND } from "@/lib/unsub";
+import { SETTING_KIND } from "@/lib/platform";
 
 /** Različica besedil, ki jih gost potrdi (datum zadnje vsebinske spremembe pogojev). */
 export const TERMS_VERSION = "2026-11-20";
@@ -13,7 +14,7 @@ export const TERMS_VERSION = "2026-11-20";
 export const TERMS_MIN = "2026-11-20";
 export const OPTIN_KIND = "marketing_optin";
 /** Vrstice v dnevniku, ki niso poslana sporočila. */
-export const NON_EMAIL_KINDS = [UNSUB_KIND, OPTIN_KIND];
+export const NON_EMAIL_KINDS = [UNSUB_KIND, OPTIN_KIND, SETTING_KIND];
 
 export type ConsentState = { termsOk: boolean; marketing: boolean };
 type Stored = { terms?: string; terms_at?: string; marketing?: boolean; marketing_at?: string };

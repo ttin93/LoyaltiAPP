@@ -107,7 +107,7 @@ export default function Checkin({ venue }: { venue: DashVenue }) {
       </Panel>
 
       {mode !== "stand" && (
-        <Panel title="Skeniranje računov" text={`Žig velja samo za račun tvojega lokala, ki ni starejši od ${venue.scanWindowHours} ur. Vsak račun šteje enkrat.`}>
+        <Panel title="Skeniranje računov" text={`Žig velja samo za račun tvojega lokala, ki ni starejši od ${venue.scanWindowHours} ur. Vsak račun šteje enkrat.${venue.meta.dailyLimit ? " Gost dobi največ en žig na dan." : ""}`}>
           {venue.davcna ? (
             <p className="flex items-start gap-3 rounded-2xl bg-s2 p-4 text-sm text-fg">
               <CheckCircle size={20} weight="fill" className="mt-0.5 shrink-0 text-brand-ink" aria-hidden="true" />

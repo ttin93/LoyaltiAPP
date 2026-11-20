@@ -82,6 +82,12 @@ Vzor je Candour (candour.app), ki ga je Tin pohvalil. Pravila, ki veljajo za `/a
 - 3D grafike samo za velike trenutke (nagrada, kolo, prazna denarnica) in kot nadomestek, ko lokal nima fotografije.
 - Polja strani lokala so v `lib/venueMeta.ts` (`tagline`, `coverUrl`, `wifiName`, `wifiPass`, `menuUrl`, `instagram`).
 
+## Pravila in račun (2026-11-21)
+- **En žig na dan:** `__v2.dailyLimit` (privzeto vklopljeno, izklop v Nastavitve → Pravila). Preverba `stampedToday()` v `lib/stamp.ts` velja za račun in stojalo.
+- **Menjava naslova:** `lib/emailChange.ts`. Potrditev s povezave na novem naslovu, nato se zamenja naslov računa in `customers.email`. Članstvo ostaja vezano na naslov.
+- **Nastavitve platforme:** `lib/platform.ts`, vrstica `email_log` s `kind = 'platform_setting'`. Zdaj samo naslov za povpraševanja (`leadEmails()`).
+- **Preizkus dnevnih sporočil:** `/api/cron/daily?venue=<id>` z glavo `Authorization: Bearer CRON_SECRET`.
+
 ## Soglasja gosta (2026-11-20, `lib/consent.ts`)
 - Po prvi prijavi korak `/prijava/soglasje`: obvezno (15 let, pogoji, zasebnost) in ločeno neobvezno (ponudbe lokalov). Brez obveznega gost ne zbira žigov.
 - Pogoji in izbira o ponudbah: `app_metadata.consent` uporabnika. Dovoljenje po lokalu: `email_log` `kind = 'marketing_optin'`, odjava `unsubscribe`.

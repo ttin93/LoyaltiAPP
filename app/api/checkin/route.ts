@@ -4,7 +4,7 @@ import { getServiceClient } from "@/lib/supabase/server";
 import { getGuest, ensureMembership, localDay, NEEDS_CONSENT } from "@/lib/guest";
 import { venueByCode, venueHasAccess } from "@/lib/venues";
 import { venueMeta } from "@/lib/venueMeta";
-import { awardStamp, cooldownLeft, DuplicateStamp, STAND_COOKIE, standCookieValid } from "@/lib/stamp";
+import { ALREADY_TODAY, awardStamp, cooldownLeft, DuplicateStamp, STAND_COOKIE, standCookieValid, stampedToday } from "@/lib/stamp";
 import { notifyCouponEarned, notifyWelcome } from "@/lib/notify";
 import { errMsg } from "@/lib/loyalty";
 
@@ -34,6 +34,7 @@ export async function POST(req: Request) {
     const { member, isNew } = await ensureMembership(db, venue.id, guest);
     if (isNew) after(() => notifyWelcome(venue, guest.email));
 
+    if (meta.dailyLimit && (await stampedToday(db, venue.id, member.id))) return NextResponse.json({ ok: false, today: true, error: ALREADY_TODAY });
     const wait = await cooldownLeft(db, venue, member.id);
     if (wait > 0) return NextResponse.json({ ok: false, error: `Naslednji obisk lahko zabeležiš čez ${wait} min.` });
 
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
       // umetni ključ: en žig na gosta na dan (unikatnost zagotovi baza)
       result = await awardStamp(db, venue, member, { zoi: `stand:${member.id}:${localDay()}`, davcna: null, issuedAt: new Date() });
     } catch (e) {
-      if (e instanceof DuplicateStamp) return NextResponse.json({ ok: false, error: "Današnji obisk je že zabeležen. Se vidimo jutri." });
+      if (e instanceof DuplicateStamp) return NextResponse.json({ ok: false, today: true, error: ALREADY_TODAY });
       throw e;
     }
     if (result.cardCompleted) after(() => notifyCouponEarned(venue, guest.email, { rewardName: result.rewardName }));

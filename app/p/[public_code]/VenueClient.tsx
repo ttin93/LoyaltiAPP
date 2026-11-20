@@ -33,10 +33,12 @@ type Props = {
   member: { stamps: number } | null;
   coupons: Coupon[];
   canSpin: boolean;
+  /** Gost ima pri lokalu z dnevno omejitvijo danes že žig. */
+  doneToday: boolean;
   flags: { join: boolean; stand: boolean; coupon: string | null };
 };
 
-export default function VenueClient({ venue, signedIn, member, coupons, canSpin, flags }: Props) {
+export default function VenueClient({ venue, signedIn, member, coupons, canSpin, doneToday, flags }: Props) {
   const router = useRouter();
   const [stamps, setStamps] = useState(member?.stamps ?? 0);
   const [isMember, setIsMember] = useState(!!member);
@@ -44,6 +46,7 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
   const [spinAvailable, setSpinAvailable] = useState(canSpin && !!member);
   const [scanning, setScanning] = useState(false);
   const [busy, setBusy] = useState<"join" | "stamp" | null>(null);
+  const [today, setToday] = useState(doneToday);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<StampResult | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -55,6 +58,7 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
 
   useEffect(() => setStamps(member?.stamps ?? 0), [member?.stamps]);
   useEffect(() => setIsMember(!!member), [member]);
+  useEffect(() => setToday(doneToday), [doneToday]);
 
   const refresh = useCallback(() => router.refresh(), [router]);
 
@@ -71,9 +75,10 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
     (j: StampResult) => {
       setStamps(j.cardCompleted ? j.goal : j.stamps);
       setResult(j);
+      if (venue.dailyLimit) setToday(true);
       refresh();
     },
-    [refresh],
+    [refresh, venue.dailyLimit],
   );
 
   const checkin = useCallback(async () => {
@@ -81,6 +86,8 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
     setBusy("stamp");
     const j = await post("/api/checkin", { venueCode: venue.code });
     setBusy(null);
+    // današnji žig že ima: to ni napaka, samo mirno obvestilo namesto gumba
+    if (!j.ok && j.today === true) return setToday(true);
     if (!j.ok) return setError(j.error || "Obiska ni bilo mogoče zabeležiti.");
     onStamped(j as unknown as StampResult);
   }, [post, venue.code, onStamped]);
@@ -117,6 +124,7 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
     setBusy("stamp");
     const j = await post("/api/scan", { venueCode: venue.code, payload });
     setBusy(null);
+    if (!j.ok && j.today === true) return setToday(true);
     if (!j.ok) return setError(j.error || "Računa ni bilo mogoče potrditi.");
     onStamped(j as unknown as StampResult);
   }
@@ -218,7 +226,17 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
         )}
 
         {member_ &&
-          (venue.live ? (
+          (venue.live && venue.dailyLimit && today ? (
+            <p className="flex items-center gap-3 rounded-3xl bg-card p-4 text-base text-fg shadow-card">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ background: tone.bg, color: tone.fg }}>
+                <Check size={20} weight="bold" aria-hidden="true" />
+              </span>
+              <span>
+                <span className="block font-semibold">Današnji obisk je zabeležen</span>
+                <span className="block text-sm text-mute">Naslednji žig dobiš jutri.</span>
+              </span>
+            </p>
+          ) : venue.live ? (
             <div className="flex flex-col gap-3">
               {canReceipt && (
                 <Button

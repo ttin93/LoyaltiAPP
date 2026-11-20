@@ -29,6 +29,8 @@ export type VenueView = {
   menuUrl: string;
   instagram: string;
   checkin: CheckinMode;
+  /** Največ en žig na gosta na dan. */
+  dailyLimit: boolean;
   /** Ali lokal lahko sprejema žige (aktivirano skeniranje oz. stojalo). */
   live: boolean;
   wheel: { enabled: boolean; segments: string[] };
@@ -84,6 +86,7 @@ export function toVenueView(v: Venue, stampReward: string | null): VenueView {
     menuUrl: meta.menuUrl,
     instagram: meta.instagram,
     checkin: meta.checkin,
+    dailyLimit: meta.dailyLimit,
     live,
     wheel: { enabled: wheel.enabled !== false, segments: wheel.segments.map((s) => s.label || "Nagrada") },
     redemptionMinutes: v.redemption_minutes || 5,

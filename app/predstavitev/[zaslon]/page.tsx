@@ -21,7 +21,7 @@ const LIPA: VenueView = {
   id: "demo-lipa", code: "kavarna-lipa", name: "Kavarna Lipa", category: "kavarna", city: "Ljubljana", color: "#1F8BF5", logoUrl: "/vzorec/logo-lipa.webp",
   goal: 10, reward: "Brezplačna kava", phone: null, address: "Trubarjeva cesta 21, Ljubljana", website: "", hours: "Vsak dan od 7.00 do 20.00",
   about: "Sveže pražena kava in domače pecivo v središču mesta.", tagline: "Sveže pražena kava in domače pecivo.", coverUrl: "/vzorec/lipa-cover.jpg",
-  wifiName: "Lipa gostje", wifiPass: "kava2026", menuUrl: "#", instagram: "kavarnalipa", checkin: "both", live: true,
+  wifiName: "Lipa gostje", wifiPass: "kava2026", menuUrl: "#", instagram: "kavarnalipa", checkin: "both", dailyLimit: true, live: true,
   wheel: { enabled: true, segments: ["Brezplačna kava", "Popust 10 %", "Sladko presenečenje", "Popust 15 %", "Brezplačen dodatek", "Popust 5 %"] },
   redemptionMinutes: 5, reviewUrl: "#",
 };
@@ -122,13 +122,13 @@ export default async function Showcase({ params }: { params: Promise<{ zaslon: s
 
   const flags = { join: false, stand: false, coupon: zaslon === "kupon" ? "c1" : null };
   if (zaslon === "lokal" || zaslon === "kupon") {
-    return <VenueClient venue={LIPA} signedIn member={{ stamps: 7 }} coupons={[coupon(zaslon === "kupon" ? "active" : "ready")]} canSpin={false} flags={flags} />;
+    return <VenueClient venue={LIPA} signedIn member={{ stamps: 7 }} coupons={[coupon(zaslon === "kupon" ? "active" : "ready")]} canSpin={false} doneToday={false} flags={flags} />;
   }
 
   if (zaslon === "ocena") {
     return (
       <div className="app-ui">
-        <VenueClient venue={LIPA} signedIn member={{ stamps: 8 }} coupons={[]} canSpin={false} flags={flags} />
+        <VenueClient venue={LIPA} signedIn member={{ stamps: 8 }} coupons={[]} canSpin={false} doneToday={false} flags={flags} />
         <ReviewSheet open venueCode={LIPA.code} venueName={LIPA.name} reviewUrl="#" onClose={noop} initialStars={5} />
       </div>
     );
@@ -148,7 +148,7 @@ export default async function Showcase({ params }: { params: Promise<{ zaslon: s
   if (zaslon === "kolo") {
     return (
       <div className="app-ui">
-        <VenueClient venue={LIPA} signedIn member={{ stamps: 0 }} coupons={[]} canSpin flags={flags} />
+        <VenueClient venue={LIPA} signedIn member={{ stamps: 0 }} coupons={[]} canSpin doneToday={false} flags={flags} />
         <WheelSheet open venueCode={LIPA.code} venueName={LIPA.name} color={LIPA.color} labels={LIPA.wheel.segments} onClose={noop} onWon={noop} />
       </div>
     );
@@ -157,7 +157,7 @@ export default async function Showcase({ params }: { params: Promise<{ zaslon: s
   if (zaslon === "zig") {
     return (
       <>
-        <VenueClient venue={LIPA} signedIn member={{ stamps: 8 }} coupons={[]} canSpin={false} flags={flags} />
+        <VenueClient venue={LIPA} signedIn member={{ stamps: 8 }} coupons={[]} canSpin={false} doneToday={false} flags={flags} />
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-scrim backdrop-blur-sm">
           <div className="flex w-full flex-col items-center gap-6 rounded-t-3xl bg-card p-6 pt-10 text-center shadow-pop">
             <div className="flex w-full justify-center pt-2">

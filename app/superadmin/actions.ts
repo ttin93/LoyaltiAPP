@@ -8,6 +8,9 @@ import { bestOwnerPlan } from "@/lib/plans";
 import { sendBatch, emailConfigured } from "@/lib/email";
 import { emailOwnerMessage } from "@/lib/emailTemplate";
 import type { PlanKey, LogEntry } from "@/lib/types";
+import { leadEmails, setLeadEmails } from "@/lib/platform";
+import { notifyAdminLead } from "@/lib/notify";
+import { siteOrigin } from "@/lib/brand";
 
 async function assertSuperadmin() {
   const user = await getCurrentUser();
@@ -114,11 +117,10 @@ export async function sendOwnerCampaign(formData: FormData): Promise<{ sent: num
     if (match) recipients.push(u.email);
   }
 
-  const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "";
   const items = recipients.map((to) => ({
     to,
     subject,
-    html: emailOwnerMessage({ heading: subject, message, ctaText: "Odpri Loyavi", ctaUrl: origin ? `${origin}/dashboard` : "#" }),
+    html: emailOwnerMessage({ heading: subject, message, ctaText: "Odpri Loyavi", ctaUrl: `${siteOrigin()}/dashboard` }),
   }));
   const { sent, failed } = await sendBatch(items, { from: process.env.RESEND_FROM });
   return { sent, failed, total: items.length };
@@ -157,4 +159,26 @@ export async function adminExtendTrial(formData: FormData) {
   const { error } = await db.from("venues").update({ trial_ends_at: next }).eq("id", venueId);
   if (error) throw error;
   revalidatePath("/superadmin");
+}
+
+/** Naslov (ali več naslovov), kamor pridejo obvestila o novih povpraševanjih. */
+export async function adminSetLeadEmail(formData: FormData): Promise<{ ok: boolean; emails?: string[]; error?: string }> {
+  const db = await assertSuperadmin();
+  const saved = await setLeadEmails(db, String(formData.get("emails") || ""));
+  if (!saved) return { ok: false, error: "Vpiši vsaj en veljaven elektronski naslov." };
+  revalidatePath("/superadmin");
+  return { ok: true, emails: saved };
+}
+
+/** Pošlje testno obvestilo na shranjene naslove, da preveriš, ali pošta res pride. */
+export async function adminTestLeadEmail(): Promise<{ ok: boolean; emails?: string[]; error?: string }> {
+  const db = await assertSuperadmin();
+  if (!emailConfigured()) return { ok: false, error: "Pošiljanje pošte ni nastavljeno (RESEND_API_KEY)." };
+  const emails = await leadEmails(db);
+  await notifyAdminLead({
+    heading: "Testno obvestilo",
+    rows: [["Namen", "Preizkus naslova za povpraševanja"]],
+    message: "Če to bereš, obvestila o povpraševanjih prihajajo na pravi naslov.",
+  });
+  return { ok: true, emails };
 }

@@ -55,9 +55,15 @@ export default function SiteFooter() {
           ))}
         </div>
       </div>
-      <div className="mx-auto max-w-6xl px-6 pb-8">
+      <div className="mx-auto flex max-w-6xl flex-col gap-2 px-6 pb-8 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
         <p className="text-xs text-white/40">
           © {new Date().getFullYear()} Loyavi. Narejeno v Sloveniji.{DEMO ? " Loyavi je v demo obdobju: za lokale je brezplačen." : ""}
+        </p>
+        <p className="shrink-0 text-xs text-white/40">
+          Izdelava:{" "}
+          <a href="https://gudweb.si" target="_blank" rel="noopener" className="rounded-lg font-medium text-white/70 underline underline-offset-4 transition-all duration-700 ease-spring hover:text-white">
+            gudweb.si
+          </a>
         </p>
       </div>
     </footer>

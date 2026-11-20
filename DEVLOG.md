@@ -50,9 +50,10 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 ## Dnevnik (najnovejše na vrhu)
 
 ### 2026-11-20 (pozno) — Soglasja gosta in sekcija »Funkcije« na strani za lokale — Fable 5.2
-> **Samo na veji `v2`, še NI na `main`.** Tin mora pogledati in potrditi (predogled `docs/predogled/31-funkcije-in-soglasja.jpg`).
-> **Ob objavi se zgodi tole:** ponudbe (kampanje in samodejna sporočila) dobijo samo gostje z izrecnim dovoljenjem. V bazi takih
-> gostov še ni, zato po objavi kampanja ne doseže nikogar, dokler gostje ne gredo skozi korak s soglasji.
+> **OBJAVLJENO na `main` in loyavi.app.** Tin je pogledal predogled in rekel »dej na domeno«. Pred objavo je bil slogan na `/partnerji`
+> (»Kartonček se izgubi …«) poravnan na sredino na njegovo željo; slogan na naslovnici za goste je ostal levo.
+> **Posledica objave:** ponudbe (kampanje in samodejna sporočila) dobijo samo gostje z izrecnim dovoljenjem. V bazi takih gostov ob objavi
+> ni bilo, zato kampanja ne doseže nikogar, dokler gostje ne gredo skozi korak s soglasji (dobijo ga ob naslednjem obisku aplikacije).
 - **Povod (Tin):** sekcija s tremi številkami iz raziskav na `/partnerji` mu ni všeč (»wtf je ta sekcija«); stran naj bolj pokaže funkcije,
   ki lokalu prinesejo vrednost (ocene na Googlu, samodejna sporočila, kampanje); ob prijavi mora gost obkljukati soglasja, da je vse po pravilih.
 - **Stran za lokale:** sekcija »Zakaj zvestoba« je odstranjena. Nova sekcija `#funkcije` s tremi vrsticami in pravimi zasloni:

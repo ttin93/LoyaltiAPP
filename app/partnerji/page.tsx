@@ -243,9 +243,9 @@ export default function Partnerji() {
         </section>
 
         {/* SLOGAN */}
-        <section className="mx-auto max-w-6xl px-6 py-24">
+        <section id="slogan" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
           <WordReveal
-            className="display max-w-4xl text-5xl sm:text-7xl lg:text-8xl"
+            className="display mx-auto max-w-4xl text-balance text-center text-5xl sm:text-7xl lg:text-8xl"
             lines={["Kartonček se izgubi.", "Gost s kartico v telefonu se vrne."]}
           />
         </section>

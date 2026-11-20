@@ -49,6 +49,26 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-11-21 — Preizkus od A do Ž kot pravi kupec + trije popravki — Opus 5.5
+> Popravki so na veji `v2`, še **NI** na `main`.
+- **Kaj:** Tin je naročil, da kot naključen lastnik in gost preklikam celoten Loyavi. Na localhostu (baza je produkcijska) sem
+  ustvaril lastnika, lokal »Bistro Pod Lipo AZ« (`bistro-pod-lipo-az-80929937`, imenik izklopljen) in tri goste ter šel skozi
+  čarovnik, vse nastavitve, nalaganje slik in PDF, kartico, kolo, način beleženja, plakat, Google povezavo, samodejna sporočila,
+  soglasja, kolo, žige z računom in stojalom, pravila proti zlorabam, oceno, polno kartico, prevzem kupona, profil, odjavo,
+  zavrnitev pogojev (izbris praznega računa), seznam gostov, ročni žig, darilo, izvoz CSV, kampanjo z demo omejitvijo,
+  povpraševanje za več lokalov, kontaktni obrazec, preusmeritve domene in dostavo pošte v Resend. 152 preverb, vse prave napake popravljene.
+- **Popravki:**
+  - `Settings.tsx`: po nalaganju menija (slika ali PDF) polje »Meni ali cenik« zdaj sledi novi povezavi. Prej je naslednji
+    »Shrani stran lokala« naloženo datoteko povozil s staro ali prazno povezavo.
+  - `dashboard/data.ts`: dnevi v grafu obiskov se štejejo po koledarju. Prej se je med 23. in 24. uro po premiku ure en dan podvojil (React: dvojni ključ `2026-10-25`), drug izgubil.
+  - `VenueClient.tsx`, `WalletView.tsx`: ime kupona gre v dve vrstici namesto »Brezplačno kosilo …«.
+- **Ugotovljeno, ni popravljeno (čaka Tina):** način »Oboje« da isti dan žig z računom in še s stojala; obvestila o leadih gredo
+  na oba naslova v `DEFAULT_SUPERADMINS` (vsak mail dvakrat), menjave naslova ni v vmesniku; lastnik in gost ne moreta zamenjati
+  elektronskega naslova; povezave v nadzorni plošči kažejo na `loyavi.app` brez www (ena preusmeritev več); strežnik ne preveri
+  vsebine slike (2,5 MB smeti s končnico .png se naloži kot naslovna); `cron/daily` ni bil pognan, ker bi pisal gostom vseh lokalov.
+- **Testni podatki v produkcijski bazi** (brisanje šele s Tinovim da): lokal `58df92bc-…`, računi `delivered+az-*-4515281@resend.dev`,
+  dva leada (`e27fbd08-…`, `8722cdf1-…`), datoteke v `logos/58df92bc-…/`.
+
 ### 2026-11-20 (pozno) — Soglasja gosta in sekcija »Funkcije« na strani za lokale — Fable 5.2
 > **OBJAVLJENO na `main` in loyavi.app.** Tin je pogledal predogled in rekel »dej na domeno«. Pred objavo je bil slogan na `/partnerji`
 > (»Kartonček se izgubi …«) poravnan na sredino na njegovo željo; slogan na naslovnici za goste je ostal levo.

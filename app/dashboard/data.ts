@@ -213,8 +213,10 @@ export async function loadDashboard(db: SupabaseClient, venue: Venue): Promise<O
   const days: { day: string; cnt: number }[] = [];
   let visits30 = 0;
   let visitsPrev30 = 0;
+  // dneve štejemo po koledarju, ne po 24 urah: ob premiku ure bi se sicer en dan podvojil, drugi izgubil
+  const [ty, tm, td] = localDay(new Date(now)).split("-").map(Number);
   for (let i = 59; i >= 0; i--) {
-    const day = localDay(new Date(now - i * DAY));
+    const day = new Date(Date.UTC(ty, tm - 1, td - i)).toISOString().slice(0, 10);
     const cnt = cntByDay.get(day) ?? 0;
     if (i < 30) {
       days.push({ day, cnt });

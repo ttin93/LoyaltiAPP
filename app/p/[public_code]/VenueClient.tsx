@@ -275,7 +275,7 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
                     <Lock size={24} weight="bold" aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-base font-semibold text-fg">{c.name}</span>
+                    <span className="line-clamp-2 text-balance text-base font-semibold text-fg">{c.name}</span>
                     <span className="block text-sm text-mute">Velja od naslednjega zabeleženega obiska.</span>
                   </span>
                 </div>
@@ -289,7 +289,7 @@ export default function VenueClient({ venue, signedIn, member, coupons, canSpin,
                   <Icon3D name="darilo" size={56} className="shrink-0 -rotate-6 transition-all duration-700 ease-spring group-hover:rotate-0" />
                   <span className="min-w-0 flex-1">
                     <span className="block text-xs font-medium text-white/60">{c.status === "active" ? "Prevzem poteka" : "Pripravljen za prevzem"}</span>
-                    <span className="block truncate text-lg font-semibold tracking-tight">{c.name}</span>
+                    <span className="line-clamp-2 text-balance text-lg font-semibold tracking-tight">{c.name}</span>
                   </span>
                   <span className="shrink-0 rounded-full bg-card px-4 py-2 text-sm font-semibold text-fg">{c.status === "active" ? "Odpri" : "Unovči"}</span>
                 </button>

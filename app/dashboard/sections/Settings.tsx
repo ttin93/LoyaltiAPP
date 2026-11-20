@@ -52,6 +52,14 @@ export default function Settings({ venue }: { venue: DashVenue }) {
   const menuInput = useRef<HTMLInputElement>(null);
   const upG = <K extends keyof typeof g>(k: K, v: (typeof g)[K]) => setG((p) => ({ ...p, [k]: v }));
 
+  // Naložen meni (slika ali PDF) zamenja povezavo na strežniku. Polje mora slediti, sicer bi naslednji
+  // klik na »Shrani stran lokala« naloženo datoteko povozil s staro povezavo.
+  const [seenMenu, setSeenMenu] = useState(venue.meta.menuUrl);
+  if (venue.meta.menuUrl !== seenMenu) {
+    setSeenMenu(venue.meta.menuUrl);
+    setG((p) => ({ ...p, menuUrl: venue.meta.menuUrl }));
+  }
+
   async function onCover(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = e.target.files?.[0];
     e.target.value = "";

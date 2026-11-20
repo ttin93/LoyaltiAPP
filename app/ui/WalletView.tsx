@@ -50,7 +50,7 @@ export default function WalletView({ name, cards, rewards, showBirthday, extra }
                 <Link href={r.href} className="group flex items-center gap-3 rounded-3xl bg-fg p-3 pr-4 text-card shadow-pop transition-all duration-700 ease-spring hover:-translate-y-0.5 active:scale-[0.98]">
                   <Icon3D name="darilo" size={56} className="shrink-0 -rotate-6 transition-all duration-700 ease-spring group-hover:rotate-0" />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-lg font-semibold tracking-tight">{r.name}</span>
+                    <span className="line-clamp-2 text-balance text-lg font-semibold tracking-tight">{r.name}</span>
                     <span className="block truncate text-sm text-white/60">{r.venue}</span>
                   </span>
                   <span className="shrink-0 rounded-full bg-card px-4 py-2 text-sm font-semibold text-fg">{r.active ? "Odpri" : "Unovči"}</span>

@@ -70,7 +70,7 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 - **Kanonični naslov:** `siteOrigin()` privzeto `https://www.loyavi.app` (gola domena preusmeri tja), zato kode QR, nalepke NFC, pošta in canonical ne delajo več preusmeritve.
 - **Plačilo (samo preverjeno, nič spremenjeno):** žeton Polar velja, štirje produkti obstajajo s pravimi cenami (49,99 / 499,90 / 79,99 / 799,90 EUR).
   Nakupa ni mogoče preklikati, dokler je `DEMO = true` in dokler ni peskovnika Polar (`POLAR_API_BASE` + testni produkti). `VERCEL_TOKEN` v `.env.local` ne velja več.
-- **Preverjeno:** tsc, eslint, `next build`, 55 novih preverb v brskalniku na localhostu (skupaj 207). Skripti: `scratchpad/t/s9-popravki2.mjs`, `s10-superadmin.mjs` (začasna mapa).
+- **Preverjeno:** tsc, eslint, `next build`, 55 novih preverb v brskalniku na localhostu (skupaj 207). Vsi skripti preizkusa so v `scripts/dev/e2e/` (navodilo v README tam).
 - **Testni podatki v produkcijski bazi še čakajo na Tinov »pobriši«:** lokal `58df92bc-…` (Bistro Pod Lipo AZ, skrit iz imenika), računi
   `delivered+az-*-4515281@resend.dev` (gost 3 ima zdaj naslov `…gost3b…`), leadi z naslovom `delivered+az-lastnik-4515281@resend.dev`, datoteke v `logos/58df92bc-…/`.
 

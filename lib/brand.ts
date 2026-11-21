@@ -22,7 +22,12 @@ export const COLOR = {
   accent: "#E63F26",
 } as const;
 
-/** Kanonični naslov strani. Gola domena loyavi.app preusmeri sem, zato povezave, kode QR in pošta kažejo naravnost na www. */
+/**
+ * Kanonični naslov strani. Gola domena loyavi.app samo preusmeri na www, zato povezave, kode QR,
+ * nalepke NFC, pošta in oznaka canonical kažejo naravnost na www (brez dodatne preusmeritve).
+ * Če je v okolju še vpisana gola domena, jo popravimo tukaj.
+ */
 export function siteOrigin(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://www.loyavi.app";
+  const env = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  return !env || env === "https://loyavi.app" ? "https://www.loyavi.app" : env;
 }

@@ -49,10 +49,20 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-11-21 (dopoldne) — Objava popravkov in izbris testnih lokalov — Fable 5.2
+> **OBJAVLJENO na `main` in loyavi.app** (Tin: »dej na domeno in da, pobriši testne lokale«). `main` = `v2`.
+- **Objava:** vsi popravki iz obeh spodnjih vnosov so v živo. Na domeni preverjeno: `/racun/naslov` 200, `/api/account/email` brez prijave zavrne,
+  `/api/cron/daily` brez ključa 401, izbrisani testni lokal 404.
+- **Kanonični naslov:** na Vercelu je `NEXT_PUBLIC_SITE_URL` še gola domena, zato je `siteOrigin()` po prvi objavi še vračal `https://loyavi.app`.
+  Zdaj jo koda sama popravi na `https://www.loyavi.app` (`lib/brand.ts`). Nastavitve na Vercelu ni treba spreminjati.
+- **Izbrisano iz produkcijske baze (nepovratno):** lokala »Bistro Pod Lipo AZ« in »Test E2E Pekarna« z vsemi gosti, žigi, kuponi, ocenami in dnevnikom pošte,
+  njune naložene datoteke, pet računov `delivered+az-*-4515281@resend.dev` in pet testnih povpraševanj.
+- **Ostalo namenoma:** testna računa iz `docs/TESTNI-RACUN.local.md` (`delivered+demo…`, `delivered+loyaviowner…`; slednji je zdaj brez lokala in ob prijavi dobi čarovnik),
+  trije stari testni gostje s kartico na lokalu `demo`, lokal »Gudweb« (ustvarjen 20. 11. s testnim računom, viden v imeniku) in Tinovi lokali. Za te Tin še ni odločil.
+- **Pregled baze:** `node scripts/dev/e2e/pregled-baze.mjs` (samo branje) izpiše lokale z lastniki, račune in povpraševanja.
+
 ### 2026-11-21 (ponoči) — Popravek vseh slabosti iz preizkusa od A do Ž — Fable 5.2
-> **Na veji `v2`, še NI na `main`.** Tin je rekel »fix vse to« in naj se PC po koncu ugasne. Za objavo manjka samo njegov »dej na domeno«.
-> **Ob objavi preveri:** `<link rel="canonical">` na www.loyavi.app mora kazati na `https://www.loyavi.app/...`. Če še kaže na golo domeno,
-> je na Vercelu nastavljen `NEXT_PUBLIC_SITE_URL` in ga je treba tam spremeniti na `https://www.loyavi.app` (seznama spremenljivk nisem mogel prebrati).
+> **OBJAVLJENO 2026-11-21 dopoldne** (glej vnos zgoraj). Tin je rekel »fix vse to«.
 - **En žig na dan (`lib/stamp.ts` `stampedToday`, nastavitev `__v2.dailyLimit`, privzeto vklopljeno):** gost dobi pri lokalu največ en žig na dan,
   z računom ali s stojalom. Zapre dvojni žig v načinu »Oboje« in skeniranje tujih računov. Lastnik pravilo izklopi v Nastavitve → Pravila
   (takrat se spet pokaže »Premor med žigi«). Gost namesto gumba vidi »Današnji obisk je zabeležen«. Poti `scan` in `checkin` vrneta `today: true`.
@@ -71,11 +81,10 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 - **Plačilo (samo preverjeno, nič spremenjeno):** žeton Polar velja, štirje produkti obstajajo s pravimi cenami (49,99 / 499,90 / 79,99 / 799,90 EUR).
   Nakupa ni mogoče preklikati, dokler je `DEMO = true` in dokler ni peskovnika Polar (`POLAR_API_BASE` + testni produkti). `VERCEL_TOKEN` v `.env.local` ne velja več.
 - **Preverjeno:** tsc, eslint, `next build`, 55 novih preverb v brskalniku na localhostu (skupaj 207). Vsi skripti preizkusa so v `scripts/dev/e2e/` (navodilo v README tam).
-- **Testni podatki v produkcijski bazi še čakajo na Tinov »pobriši«:** lokal `58df92bc-…` (Bistro Pod Lipo AZ, skrit iz imenika), računi
-  `delivered+az-*-4515281@resend.dev` (gost 3 ima zdaj naslov `…gost3b…`), leadi z naslovom `delivered+az-lastnik-4515281@resend.dev`, datoteke v `logos/58df92bc-…/`.
+- **Testni podatki tega preizkusa so izbrisani** (glej vnos zgoraj).
 
 ### 2026-11-21 — Preizkus od A do Ž kot pravi kupec + trije popravki — Opus 5.5
-> Popravki so na veji `v2`, še **NI** na `main`.
+> **OBJAVLJENO 2026-11-21 dopoldne** (glej vnos zgoraj).
 - **Kaj:** Tin je naročil, da kot naključen lastnik in gost preklikam celoten Loyavi. Na localhostu (baza je produkcijska) sem
   ustvaril lastnika, lokal »Bistro Pod Lipo AZ« (`bistro-pod-lipo-az-80929937`, imenik izklopljen) in tri goste ter šel skozi
   čarovnik, vse nastavitve, nalaganje slik in PDF, kartico, kolo, način beleženja, plakat, Google povezavo, samodejna sporočila,
@@ -91,8 +100,7 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
   na oba naslova v `DEFAULT_SUPERADMINS` (vsak mail dvakrat), menjave naslova ni v vmesniku; lastnik in gost ne moreta zamenjati
   elektronskega naslova; povezave v nadzorni plošči kažejo na `loyavi.app` brez www (ena preusmeritev več); strežnik ne preveri
   vsebine slike (2,5 MB smeti s končnico .png se naloži kot naslovna); `cron/daily` ni bil pognan, ker bi pisal gostom vseh lokalov.
-- **Testni podatki v produkcijski bazi** (brisanje šele s Tinovim da): lokal `58df92bc-…`, računi `delivered+az-*-4515281@resend.dev`,
-  dva leada (`e27fbd08-…`, `8722cdf1-…`), datoteke v `logos/58df92bc-…/`.
+- **Testni podatki tega preizkusa so izbrisani** (glej vnos zgoraj).
 
 ### 2026-11-20 (pozno) — Soglasja gosta in sekcija »Funkcije« na strani za lokale — Fable 5.2
 > **OBJAVLJENO na `main` in loyavi.app.** Tin je pogledal predogled in rekel »dej na domeno«. Pred objavo je bil slogan na `/partnerji`

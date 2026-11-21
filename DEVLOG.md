@@ -49,6 +49,14 @@ Repo: **github.com/ttin93/LoyaltiAPP** (zaseben), branch **main**.
 
 ## Dnevnik (najnovejše na vrhu)
 
+### 2026-11-21 — ODPRTO: čiščenje lokalov po snemanju reklame — Opus 5.5
+> **Ne briši ničesar, dokler Tin ne reče, da je reklama posneta.** Lokali so trenutno v uporabi za snemanje.
+- **Tinova odločitev:** po snemanju pobrišemo vse lokale razen »Kavarna Lipa«, ki ostane kot lokal za predstavitve in se označi kot demo.
+  Na listi za izbris: PrTinu (`prtinu`, 502 gosta), PrMaticku, »a«, Tina butik, Gudweb, ena od dveh Lip in štirje prazni testni računi.
+- **Pred izbrisom vprašaj, katera Lipa ostane:** `demo` (javna stran za prodajo, brez lastnika in nadzorne plošče, link v `marketing/PITCHI.md`)
+  ali `kavarnalipa` (Tinova, nadzorna plošča s 121 gosti). Predlog: obdržimo `demo` in ga pripnemo na Tinov račun, da je ena Lipa za oboje.
+- Pregled stanja: `node scripts/dev/e2e/pregled-baze.mjs` (samo branje).
+
 ### 2026-11-21 (dopoldne) — Objava popravkov in izbris testnih lokalov — Fable 5.2
 > **OBJAVLJENO na `main` in loyavi.app** (Tin: »dej na domeno in da, pobriši testne lokale«). `main` = `v2`.
 - **Objava:** vsi popravki iz obeh spodnjih vnosov so v živo. Na domeni preverjeno: `/racun/naslov` 200, `/api/account/email` brez prijave zavrne,
